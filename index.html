@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R'MouV – Centre sport santé (kiné & coaching)</title>
+    <meta name="description" content="Centre pluridisciplinaire de sport-santé : kinésithérapeutes et coachs, protocoles personnalisés, cours collectifs, rééducation et réathlétisation.">
+    <meta name="keywords" content="sport santé, kinésithérapeute, rééducation, réathlétisation, cours collectifs, coaching">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="R'MouV – Rehab ton MouV">
+    <meta property="og:description" content="Reprends ton corps en main. Révèle-toi.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="placeholder">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="placeholder">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                        colors: {
+                            primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                            secondary: "#FF8A3E", // Orange équilibré
+                            neutral: "#37474F"    // Gris ardoise
+                        },
+                            fontFamily: {
+                                sans: ['Now', 'sans-serif']
+                            }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .to-secondary\/10 {
+            --tw-gradient-to: rgba(255, 138, 62, 0.1) !important;
+        }
+        .from-primary\/10 {
+            --tw-gradient-from: rgba(25, 118, 210, 0.3) !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        
+        /* Gradient avec bleu accentué */
+        section#hero {
+            background: linear-gradient(to right, rgba(25, 118, 210, 0.2), rgba(255, 138, 62, 0.05)) !important;
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        .sticky-nav #user-menu {
+            align-items: center !important;
+        }
+        .sticky-nav #user-dropdown-toggle {
+            align-items: center !important;
+            justify-content: center;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        .manifesto-text::after {
+            content: "|";
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .section-padding {
+            padding: 5rem 1.5rem;
+        }
+        @media (max-width: 768px) {
+            .section-padding {
+                padding: 3rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu (hidden by default) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                <a href="#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-r from-primary/10 to-secondary/10" id="hero">
+        <div class="container mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 text-neutral-800">
+                <span class="text-primary">R'</span><span class="text-secondary">MouV</span> : Rehab ton MouV
+            </h1>
+            <div class="text-xl md:text-2xl h-10 text-primary mb-8">
+                <span class="manifesto-text" id="manifesto">Reprends ton corps en main</span>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mb-12">
+                <a href="#projet" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg">
+                    Découvrir le projet
+                </a>
+                <a href="rejoindre.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg">
+                    Rejoindre R'MouV
+                </a>
+            </div>
+            
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-primary mb-2">+</div>
+                    <div class="text-sm font-medium text-neutral-600">Kinés + Coachs</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-primary mb-2">✨</div>
+                    <div class="text-sm font-medium text-neutral-600">Cours hebdo</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-primary mb-2">100%</div>
+                    <div class="text-sm font-medium text-neutral-600">Protocoles personnalisés</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notre Projet -->
+    <section id="projet" class="section-padding bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-primary">Notre Projet</h2>
+                <div class="w-24 h-1 bg-primary mx-auto"></div>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <p class="text-lg mb-8 text-center">
+                    <span class="font-bold text-primary">R'</span><span class="font-bold text-secondary">MouV</span>, votre espace innovant dédié à la santé et au sport.<br>
+                    <span class="font-bold">Notre objectif :</span> Redonner du mouvement à votre corps, quelque soit le point de départ!
+                </p>
+                
+                <div class="grid md:grid-cols-2 gap-8 mt-12">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-secondary">Nos points forts</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Notre équipe pluridisciplinaire</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Notre large réseau de professionnels de la santé</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Nos spécialisations en neurologie et en réathlétisation</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Un accompagnement personnalisé</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Notre détermination à vous aider 💪</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 text-secondary">Nos services</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Bilan kinésithérapique complet</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Espace cours collectifs</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Coachings personnalisés</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Dispositifs technologiques de pointe en rééducation</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-primary mt-1 mr-3"></i>
+                                <span>Collaboration avec votre médecin 🤝</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-12 p-6 bg-neutral-50 rounded-lg border-l-4 border-primary">
+                    <p class="text-neutral-700 mb-4">
+                        <i class="fas fa-info-circle text-primary mr-2"></i>
+                        Parce que chaque corps est unique, notre approche est sur mesure, à l'écoute de vos besoins et de vos objectifs.
+                    </p>
+                    <p class="italic font-bold text-neutral-600 text-center">
+                        "Un corps en mouvement, une vie en évolution."
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="projet.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+                    Plus d'informations
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nos Équipements -->
+    <section id="equipements" class="section-padding bg-neutral-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Nos Équipements</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Huber 360 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
+                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-20 h-20 object-contain rounded-full">
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Huber 360</h3>
+                    <p class="text-neutral-600">Plateforme de rééducation de la posture, de l'équilibre, de la souplesse et de la mobilité</p>
+                </div>
+                
+                <!-- Méthode Allyane -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
+                    <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-20 h-20 object-contain rounded-full">
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Méthode Allyane</h3>
+                    <p class="text-neutral-600">Reprogrammation neuromusculaire par imagerie mentale et sons basse fréquence pour traiter les inhibitions motrices</p>
+                </div>
+                
+                <!-- Réalité Virtuelle Thérapeutique -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
+                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-20 h-20 object-contain rounded-full">
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Réalité virtuelle thérapeutique</h3>
+                    <p class="text-neutral-600">Rééducation musculaire ludique favorisant l'équilibre et lutte contre la kinésiophobie</p>
+                </div>
+                
+                <!-- Stendo -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
+                    <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-20 h-20 object-contain rounded-full">
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Stendo</h3>
+                    <p class="text-neutral-600">Pulsothérapie : mobilisation tissulaire cardio-synchronisée, stimulation endothéliale, amélioration de la circulation sanguine</p>
+                </div>
+                
+                <!-- Vibra Moov -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
+                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-20 h-20 object-contain rounded-full">
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Vibramoov</h3>
+                    <p class="text-neutral-600">Stimulateur proprioceptif par vibration, agit sur la mobilité, l'antalgie, la spasticité et la tonicité, accélère la récupération</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+            <div class="text-center -mt-4">
+                <a href="equipements.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+                    Plus d'informations
+                </a>
+            </div>
+
+
+    <!-- Notre Équipe -->
+    <section id="equipe" class="section-padding bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-primary">Notre Équipe</h2>
+                <div class="w-24 h-1 bg-primary mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all">
+                    <div class="h-56 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <i class="fas fa-user-md text-6xl text-primary"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold">Dr. Sophie Martin</h3>
+                        <p class="text-primary font-medium mb-4">Kinésithérapeute - Neurologue</p>
+                        <p class="text-neutral-600 mb-4">Spécialiste en rééducation neurologique avec 15 ans d'expérience</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all">
+                    <div class="h-56 bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center">
+                        <i class="fas fa-dumbbell text-6xl text-secondary"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold">Thomas Dubois</h3>
+                        <p class="text-secondary font-medium mb-4">Coach Sportif - Réathlétisation</p>
+                        <p class="text-neutral-600 mb-4">Expert en préparation physique post-blessure et performance</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all">
+                    <div class="h-56 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <i class="fas fa-running text-6xl text-primary"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold">Laura Petit</h3>
+                        <p class="text-primary font-medium mb-4">Kinésithérapeute du Sport</p>
+                        <p class="text-neutral-600 mb-4">Spécialiste en traumatologie sportive et analyse biomécanique</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-16">
+                <a href="equipe.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg">
+                    Plus d'informations
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- S'inscrire -->
+    <section id="inscription" class="section-padding bg-neutral-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">S'inscrire aux cours collectifs</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+                <p class="text-lg text-neutral-600 mt-4">Créez un compte, connectez-vous et réservez vos créneaux disponibles en quelques clics.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="md:flex">
+                    <!-- Auth Tabs -->
+                    <div class="md:w-1/3 bg-primary text-white p-8">
+                        <h3 class="text-2xl font-bold mb-6">Accès Espace Membre</h3>
+                        <div class="space-y-4" id="auth-tabs">
+                            <button id="login-tab" class="w-full text-left py-3 px-4 bg-white text-primary rounded-lg font-medium transition-colors">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                            </button>
+                            <button id="signup-tab" class="w-full text-left py-3 px-4 bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                            </button>
+                        </div>
+                        <div id="user-info" class="hidden">
+                            <div class="text-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span id="user-initials-large" class="text-2xl font-bold"></span>
+                                </div>
+                                <h4 id="user-name-display" class="font-bold mb-2"></h4>
+                                <p class="text-sm opacity-80">Espace membre actif</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auth Content -->
+                    <div class="md:w-2/3 p-8">
+                        <!-- Login Form -->
+                        <div id="login-form">
+                            <h3 class="text-2xl font-bold mb-6 text-neutral-800">Connectez-vous</h3>
+                            <form id="loginForm" class="space-y-6">
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Email</label>
+                                    <input type="email" name="email" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                </div>
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Mot de passe</label>
+                                    <input type="password" name="mot_de_passe" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                </div>
+                                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg font-medium transition-colors">
+                                    Se connecter
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Signup Form -->
+                        <div id="signup-form" class="hidden">
+                            <h3 class="text-2xl font-bold mb-6 text-neutral-800">Créer un compte</h3>
+                            <form id="signupForm" class="space-y-6">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-neutral-700 mb-2">Prénom</label>
+                                        <input type="text" name="prenom" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-neutral-700 mb-2">Nom</label>
+                                        <input type="text" name="nom" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Email</label>
+                                    <input type="email" name="email" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                </div>
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Téléphone</label>
+                                    <input type="tel" name="telephone" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Objectif principal</label>
+                                    <select name="objectif" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                        <option value="">Sélectionnez un objectif</option>
+                                        <option value="Rééducation">Rééducation</option>
+                                        <option value="Remise en forme">Remise en forme</option>
+                                        <option value="Performance">Performance</option>
+                                        <option value="Mobilité">Mobilité</option>
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-neutral-700 mb-2">Mot de passe</label>
+                                    <input type="password" name="mot_de_passe" class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                                </div>
+                                <div class="space-y-3">
+                                    <label class="flex items-start">
+                                        <input type="checkbox" name="consent_cgu" class="mt-1 mr-3" required>
+                                        <span class="text-sm">J'accepte les <a href="#" class="text-primary hover:underline">CGU</a></span>
+                                    </label>
+                                    <label class="flex items-start">
+                                        <input type="checkbox" name="consent_privacy" class="mt-1 mr-3" required>
+                                        <span class="text-sm">J'accepte la <a href="#" class="text-primary hover:underline">Politique de confidentialité (RGPD)</a></span>
+                                    </label>
+                                </div>
+                                <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg font-medium transition-colors">
+                                    S'inscrire
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Booking Interface -->
+                        <div id="booking-interface" class="hidden">
+                            <h3 class="text-2xl font-bold mb-6 text-neutral-800">Réservation de créneaux</h3>
+                            
+                            <div class="mb-6">
+                                <h4 class="text-lg font-semibold mb-3">Cours disponibles cette semaine</h4>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center p-4 bg-white border rounded-lg">
+                                        <div>
+                                            <h5 class="font-bold">Cours Mobilité</h5>
+                                            <p class="text-sm text-neutral-600">Lundi 10h-11h | 3 places disponibles</p>
+                                        </div>
+                                        <button class="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors" onclick="bookSlot('mobilite', 'Lundi 10h-11h')">
+                                            Réserver
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center p-4 bg-white border rounded-lg">
+                                        <div>
+                                            <h5 class="font-bold">Renforcement</h5>
+                                            <p class="text-sm text-neutral-600">Mercredi 18h-19h | Complet (liste d'attente)</p>
+                                        </div>
+                                        <button class="bg-secondary hover:bg-secondary/90 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors" onclick="addToWaitlist('renforcement', 'Mercredi 18h-19h')">
+                                            Liste d'attente
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center p-4 bg-white border rounded-lg">
+                                        <div>
+                                            <h5 class="font-bold">Cardio doux</h5>
+                                            <p class="text-sm text-neutral-600">Vendredi 9h-10h | 5 places disponibles</p>
+                                        </div>
+                                        <button class="bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors" onclick="bookSlot('cardio', 'Vendredi 9h-10h')">
+                                            Réserver
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-lg font-semibold mb-3">Vos réservations</h4>
+                                <div id="user-bookings" class="bg-neutral-50 rounded-lg p-4">
+                                    <p class="text-center text-neutral-600">Vous n'avez aucune réservation à venir</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6">
+                                <button onclick="logout()" class="bg-neutral-500 hover:bg-neutral-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors">
+                                    Se déconnecter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section-padding bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-primary">Nous Contacter</h2>
+                <div class="w-24 h-1 bg-primary mx-auto mb-8"></div>
+                <p class="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
+                    Vous avez des questions ? Besoin d'informations sur nos services ? 
+                    N'hésitez pas à nous contacter, nous vous répondrons rapidement.
+                </p>
+                <a href="contact.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg inline-block">
+                    <i class="fas fa-envelope mr-2"></i>Nous Contacter
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">R'<span class="text-primary">MouV</span></h3>
+                    <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
+                        <li><a href="#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#contact" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="#contact" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="#contact" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
+                        <li><a href="#contact" class="text-neutral-300 hover:text-white transition-colors">Réseaux sociaux</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating CTA -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <a href="#inscription" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full transition-all shadow-lg animate-pulse">
+            <i class="fas fa-calendar-plus mr-2"></i>Réserve un créneau
+        </a>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Manifesto text cycling
+        const manifestoTexts = [
+            "Reprends ton corps en main",
+            "Repousse tes limites",
+            "Retrouve tes sensations",
+            "Réactive ton mental",
+            "Rééduque tes membres",
+            "Remobilise toi",
+            "RELÈVES-TOI !"
+        ];
+        
+        let currentIndex = 0;
+        const manifestoElement = document.getElementById('manifesto');
+        
+        function updateManifesto() {
+            manifestoElement.textContent = manifestoTexts[currentIndex];
+            currentIndex = (currentIndex + 1) % manifestoTexts.length;
+        }
+        
+        setInterval(updateManifesto, 3000);
+        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existing = document.querySelector('.notification');
+            if (existing) {
+                existing.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            // Add styles
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-out;
+                max-width: 400px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            `;
+            
+            // Set background color based on type
+            const colors = {
+                success: '#2E7D32',
+                error: '#EF4444',
+                info: '#1976D2',
+                warning: '#F59E0B'
+            };
+            notification.style.backgroundColor = colors[type] || colors.info;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+        
+        // Global state for bookings
+        let availableSlots = {
+            'mobilite-lundi-10h': { type: 'Cours Mobilité', time: 'Lundi 10h-11h', capacity: 10, booked: 7 },
+            'renforcement-mercredi-18h': { type: 'Renforcement', time: 'Mercredi 18h-19h', capacity: 12, booked: 12 },
+            'cardio-vendredi-9h': { type: 'Cardio doux', time: 'Vendredi 9h-10h', capacity: 12, booked: 7 }
+        };
+        
+        // Auth tabs functionality
+        document.getElementById('login-tab').addEventListener('click', function() {
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('booking-interface').classList.add('hidden');
+            
+            // Update tab styles
+            this.classList.add('bg-white', 'text-primary');
+            this.classList.remove('bg-primary/20');
+            
+            document.getElementById('signup-tab').classList.remove('bg-white', 'text-primary');
+            document.getElementById('signup-tab').classList.add('bg-primary/20');
+        });
+        
+        document.getElementById('signup-tab').addEventListener('click', function() {
+            document.getElementById('signup-form').classList.remove('hidden');
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('booking-interface').classList.add('hidden');
+            
+            // Update tab styles
+            this.classList.add('bg-white', 'text-primary');
+            this.classList.remove('bg-primary/20');
+            
+            document.getElementById('login-tab').classList.remove('bg-white', 'text-primary');
+            document.getElementById('login-tab').classList.add('bg-primary/20');
+        });
+        
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const loginData = Object.fromEntries(formData);
+            
+            // Validate required fields
+            if (!loginData.email || !loginData.mot_de_passe) {
+                showNotification('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(loginData.email)) {
+                showNotification('Veuillez entrer une adresse email valide', 'error');
+                return;
+            }
+            
+            // Simulate authentication check
+            // In a real app, this would be a server call
+            const validCredentials = {
+                'test@rmouv.fr': 'password123',
+                'admin@rmouv.fr': 'admin123',
+                'demo@rmouv.fr': 'demo123'
+            };
+            
+            if (validCredentials[loginData.email] && validCredentials[loginData.email] === loginData.mot_de_passe) {
+                // Successful login
+                const user = {
+                    email: loginData.email,
+                    name: loginData.email === 'admin@rmouv.fr' ? 'Admin R\'MouV' : 
+                          loginData.email === 'demo@rmouv.fr' ? 'Utilisateur Démo' : 'Utilisateur Test',
+                    initials: loginData.email === 'admin@rmouv.fr' ? 'AR' : 
+                             loginData.email === 'demo@rmouv.fr' ? 'UD' : 'UT'
+                };
+                localStorage.setItem('rmouv_user', JSON.stringify(user));
+                
+                updateUserInterface(user);
+                showBookingInterface();
+                showNotification('Connexion réussie !', 'success');
+            } else {
+                showNotification('Email ou mot de passe incorrect', 'error');
+            }
+        });
+        
+        // Signup form submission
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const signupData = Object.fromEntries(formData);
+            
+            // Validate required fields
+            if (!signupData.prenom || !signupData.nom || !signupData.email || !signupData.mot_de_passe) {
+                showNotification('Veuillez remplir tous les champs obligatoires', 'error');
+                return;
+            }
+            
+            // Validate consents
+            if (!signupData.consent_cgu || !signupData.consent_privacy) {
+                showNotification('Veuillez accepter les CGU et la politique de confidentialité', 'error');
+                return;
+            }
+            
+            // Create user with initials
+            const initials = (signupData.prenom.charAt(0) + signupData.nom.charAt(0)).toUpperCase();
+            const user = {
+                email: signupData.email,
+                name: `${signupData.prenom} ${signupData.nom}`,
+                initials: initials,
+                phone: signupData.telephone,
+                objective: signupData.objectif
+            };
+            
+            localStorage.setItem('rmouv_user', JSON.stringify(user));
+            
+            updateUserInterface(user);
+            showBookingInterface();
+            showNotification('Inscription réussie ! Bienvenue chez R\'MouV !', 'success');
+        });
+        
+        
+        // User dropdown toggle
+        document.getElementById('user-dropdown-toggle').addEventListener('click', function() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('user-dropdown');
+            const toggle = document.getElementById('user-dropdown-toggle');
+            if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+        
+        // Booking functions
+        function bookSlot(type, time) {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (!user) {
+                showNotification('Veuillez vous connecter pour réserver', 'error');
+                return;
+            }
+            
+            // Check if already booked
+            const bookings = JSON.parse(localStorage.getItem('rmouv_bookings') || '[]');
+            const userBookings = bookings.filter(booking => booking.user === user.email);
+            const alreadyBooked = userBookings.some(booking => booking.type === type && booking.time === time);
+            
+            if (alreadyBooked) {
+                showNotification('Vous êtes déjà inscrit à ce créneau', 'error');
+                return;
+            }
+            
+            // Check availability
+            const slotKey = `${type.toLowerCase().replace(/\s+/g, '-')}-${time.toLowerCase().replace(/\s+/g, '-')}`;
+            const slot = availableSlots[slotKey];
+            
+            if (slot && slot.booked >= slot.capacity) {
+                showNotification('Ce créneau est complet', 'error');
+                return;
+            }
+            
+            const booking = {
+                id: Date.now(),
+                type: type,
+                time: time,
+                user: user.email
+            };
+            
+            bookings.push(booking);
+            localStorage.setItem('rmouv_bookings', JSON.stringify(bookings));
+            
+            // Update slot availability
+            if (slot) {
+                slot.booked++;
+                availableSlots[slotKey] = slot;
+            }
+            
+            updateBookingDisplay();
+            updateUserBookings();
+            showNotification('Créneau réservé avec succès !', 'success');
+        }
+        
+        function addToWaitlist(type, time) {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (!user) {
+                showNotification('Veuillez vous connecter pour vous inscrire en liste d\'attente', 'error');
+                return;
+            }
+            showNotification('Ajouté à la liste d\'attente !', 'info');
+        }
+        
+        function updateBookingDisplay() {
+            const bookingContainer = document.querySelector('#booking-interface .space-y-4');
+            if (!bookingContainer) return;
+            
+            bookingContainer.innerHTML = Object.values(availableSlots).map(slot => {
+                const available = slot.capacity - slot.booked;
+                const isFull = available <= 0;
+                
+                return `
+                    <div class="flex justify-between items-center p-4 bg-white border rounded-lg">
+                        <div>
+                            <h5 class="font-bold">${slot.type}</h5>
+                            <p class="text-sm text-neutral-600">${slot.time} | ${isFull ? 'Complet (liste d\'attente)' : `${available} places disponibles`}</p>
+                        </div>
+                        <button class="${isFull ? 'bg-secondary hover:bg-secondary/90' : 'bg-primary hover:bg-primary/90'} text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors" 
+                                onclick="${isFull ? `addToWaitlist('${slot.type}', '${slot.time}')` : `bookSlot('${slot.type}', '${slot.time}')`}">
+                            ${isFull ? 'Liste d\'attente' : 'Réserver'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateUserBookings() {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            const bookings = JSON.parse(localStorage.getItem('rmouv_bookings') || '[]');
+            const userBookings = bookings.filter(booking => booking.user === user?.email);
+            
+            const bookingsContainer = document.getElementById('user-bookings');
+            
+            if (userBookings.length === 0) {
+                bookingsContainer.innerHTML = '<p class="text-center text-neutral-600">Vous n\'avez aucune réservation à venir</p>';
+            } else {
+                bookingsContainer.innerHTML = userBookings.map(booking => `
+                    <div class="flex justify-between items-center p-3 bg-white rounded-lg border mb-2">
+                        <div>
+                            <h5 class="font-semibold">${booking.type}</h5>
+                            <p class="text-sm text-neutral-600">${booking.time}</p>
+                        </div>
+                        <button onclick="cancelBooking(${booking.id})" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition-colors">
+                            Annuler
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        function cancelBooking(bookingId) {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            let bookings = JSON.parse(localStorage.getItem('rmouv_bookings') || '[]');
+            const bookingToCancel = bookings.find(booking => booking.id === bookingId);
+            
+            if (bookingToCancel) {
+                // Update slot availability
+                const slotKey = `${bookingToCancel.type.toLowerCase().replace(/\s+/g, '-')}-${bookingToCancel.time.toLowerCase().replace(/\s+/g, '-')}`;
+                const slot = availableSlots[slotKey];
+                if (slot) {
+                    slot.booked--;
+                    availableSlots[slotKey] = slot;
+                }
+            }
+            
+            bookings = bookings.filter(booking => booking.id !== bookingId);
+            localStorage.setItem('rmouv_bookings', JSON.stringify(bookings));
+            
+            updateBookingDisplay();
+            updateUserBookings();
+            showNotification('Réservation annulée', 'info');
+        }
+        
+        function logout() {
+            localStorage.removeItem('rmouv_user');
+            document.getElementById('booking-interface').classList.add('hidden');
+            document.getElementById('login-form').classList.remove('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+            
+            // Hide user menu
+            document.getElementById('user-menu').classList.add('hidden');
+            document.getElementById('auth-tabs').classList.remove('hidden');
+            document.getElementById('user-info').classList.add('hidden');
+            
+            // Reset tab styles
+            document.getElementById('login-tab').classList.add('bg-white', 'text-primary');
+            document.getElementById('login-tab').classList.remove('bg-primary/20');
+            document.getElementById('signup-tab').classList.remove('bg-white', 'text-primary');
+            document.getElementById('signup-tab').classList.add('bg-primary/20');
+            
+            showNotification('Déconnexion réussie', 'info');
+        }
+        
+        function updateUserInterface(user) {
+            // Update navigation
+            document.getElementById('user-menu').classList.remove('hidden');
+            document.getElementById('user-initials').textContent = user.initials;
+            
+            // Update sidebar
+            document.getElementById('auth-tabs').classList.add('hidden');
+            document.getElementById('user-info').classList.remove('hidden');
+            document.getElementById('user-initials-large').textContent = user.initials;
+            document.getElementById('user-name-display').textContent = user.name;
+        }
+        
+        function showBookingInterface() {
+            document.getElementById('login-form').classList.add('hidden');
+            document.getElementById('signup-form').classList.add('hidden');
+            document.getElementById('booking-interface').classList.remove('hidden');
+            updateBookingDisplay();
+            updateUserBookings();
+        }
+        
+        // Check if user is already logged in
+        function checkAuthStatus() {
+            const savedUser = localStorage.getItem('rmouv_user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                updateUserInterface(user);
+                showBookingInterface();
+            }
+        }
+        
+        // Initialize
+        checkAuthStatus();
+    </script>
+</body>
+</html>

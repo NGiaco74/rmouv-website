@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rejoindre l'équipe R'MouV – Centre sport santé</title>
+    <meta name="description" content="Rejoignez l'équipe R'MouV en tant que professionnel de santé et participez à notre mission de rééducation et réathlétisation.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?v=2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                        colors: {
+                            primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                            secondary: "#FF8A3E", // Orange équilibré
+                            neutral: "#37474F"    // Gris ardoise
+                        },
+                            fontFamily: {
+                                sans: ['Now', 'sans-serif']
+                            }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FF8A3E !important;
+        }
+        
+        /* Gradient avec bleu accentué */
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(25, 118, 210, 0.2), rgba(255, 138, 62, 0.05)) !important;
+        }
+        
+        /* Styles pour le formulaire */
+        .form-input {
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        .sticky-nav #user-menu {
+            align-items: center !important;
+        }
+        .sticky-nav #user-dropdown-toggle {
+            align-items: center !important;
+            justify-content: center;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="index.html#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu (hidden by default) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                <a href="index.html#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 text-neutral-800">
+                Rejoindre l'équipe <span class="text-primary">R'</span><span class="text-secondary">MouV</span>
+            </h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+                Intégrez notre équipe pluridisciplinaire et participez à notre mission de rééducation et réathlétisation
+            </p>
+        </div>
+    </section>
+
+    <!-- Formulaire d'inscription -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4 max-w-2xl">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-center mb-8 text-neutral-800">
+                    Candidature pour rejoindre l'équipe
+                </h2>
+                
+                <form id="inscription-form" class="space-y-6">
+                    <!-- Informations personnelles -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="prenom" class="block text-sm font-medium text-gray-700 mb-2">
+                                Prénom *
+                            </label>
+                            <input type="text" id="prenom" name="prenom" required
+                                   class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="nom" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nom *
+                            </label>
+                            <input type="text" id="nom" name="nom" required
+                                   class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email *
+                            </label>
+                            <input type="email" id="email" name="email" required
+                                   class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="telephone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Téléphone
+                            </label>
+                            <input type="tel" id="telephone" name="telephone"
+                                   class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <!-- Spécialité -->
+                    <div>
+                        <label for="specialite" class="block text-sm font-medium text-gray-700 mb-2">
+                            Votre spécialité professionnelle *
+                        </label>
+                        <select id="specialite" name="specialite" required
+                                class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">Sélectionnez votre spécialité</option>
+                            <option value="kinesitherapeute">Kinésithérapeute</option>
+                            <option value="osteopathe">Ostéopathe</option>
+                            <option value="masseur">Masseur-kinésithérapeute</option>
+                            <option value="preparateur-physique">Préparateur physique</option>
+                            <option value="coach-sportif">Coach sportif</option>
+                            <option value="medecin-sport">Médecin du sport</option>
+                            <option value="psychologue">Psychologue du sport</option>
+                            <option value="nutritionniste">Nutritionniste</option>
+                            <option value="autre">Autre spécialité</option>
+                        </select>
+                    </div>
+
+                    <!-- Expérience -->
+                    <div>
+                        <label for="experience" class="block text-sm font-medium text-gray-700 mb-2">
+                            Années d'expérience *
+                        </label>
+                        <select id="experience" name="experience" required
+                                class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">Sélectionnez votre expérience</option>
+                            <option value="0-2">0-2 ans</option>
+                            <option value="3-5">3-5 ans</option>
+                            <option value="6-10">6-10 ans</option>
+                            <option value="11-15">11-15 ans</option>
+                            <option value="15+">Plus de 15 ans</option>
+                        </select>
+                    </div>
+
+                    <!-- Motivation -->
+                    <div>
+                        <label for="motivation" class="block text-sm font-medium text-gray-700 mb-2">
+                            Pourquoi souhaitez-vous rejoindre <span class="text-primary">R'</span><span class="text-secondary">MouV</span> ? *
+                        </label>
+                        <textarea id="motivation" name="motivation" rows="4" required
+                                  class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                  placeholder="Décrivez votre motivation, votre vision de la rééducation, vos valeurs..."></textarea>
+                    </div>
+
+                    <!-- Compétences spécifiques -->
+                    <div>
+                        <label for="competences" class="block text-sm font-medium text-gray-700 mb-2">
+                            Compétences spécifiques et certifications
+                        </label>
+                        <textarea id="competences" name="competences" rows="3"
+                                  class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                  placeholder="Mentionnez vos certifications, formations spécialisées, techniques maîtrisées..."></textarea>
+                    </div>
+
+                    <!-- Disponibilités -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Disponibilités de travail
+                        </label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="disponibilites" value="matin" class="mr-2">
+                                <span class="text-sm">Matin (8h-12h)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="disponibilites" value="midi" class="mr-2">
+                                <span class="text-sm">Midi (12h-14h)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="disponibilites" value="apres-midi" class="mr-2">
+                                <span class="text-sm">Après-midi (14h-18h)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" name="disponibilites" value="soir" class="mr-2">
+                                <span class="text-sm">Soir (18h-20h)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Type de contrat -->
+                    <div>
+                        <label for="contrat" class="block text-sm font-medium text-gray-700 mb-2">
+                            Type de contrat souhaité
+                        </label>
+                        <select id="contrat" name="contrat"
+                                class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="">Sélectionnez votre préférence</option>
+                            <option value="cdi">CDI</option>
+                            <option value="cdd">CDD</option>
+                            <option value="freelance">Freelance/Indépendant</option>
+                            <option value="stage">Stage</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+
+                    <!-- Bouton de soumission -->
+                    <div class="text-center pt-6">
+                        <button type="submit" 
+                                class="bg-secondary hover:bg-secondary/90 text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg transform hover:scale-105">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Envoyer ma candidature
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Informations supplémentaires -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Équipe pluridisciplinaire</h3>
+                    <p class="text-gray-600">Rejoignez une équipe de professionnels passionnés et complémentaires</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-secondary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-graduation-cap text-secondary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Formation continue</h3>
+                    <p class="text-gray-600">Développement professionnel et formation aux dernières techniques</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-heart text-primary text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Mission d'aide</h3>
+                    <p class="text-gray-600">Participez à la rééducation et au bien-être de nos patients</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <p class="text-gray-300">Centre pluridisciplinaire de sport-santé pour votre rééducation et réathlétisation.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Liens utiles</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="index.html" class="hover:text-white transition-colors">Accueil</a></li>
+                        <li><a href="equipements.html" class="hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="equipe.html" class="hover:text-white transition-colors">Notre Équipe</a></li>
+                        <li><a href="rejoindre.html" class="hover:text-white transition-colors">Nous rejoindre</a></li>
+                        <li><a href="contact.html" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Recrutement</h4>
+                    <p class="text-gray-300">Nous étudierons votre candidature et vous recontacterons dans les 48h.</p>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span>. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // User dropdown toggle
+        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        if (userDropdownToggle && userDropdown) {
+            userDropdownToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.add('hidden');
+            });
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Check if user is logged in and update interface
+        function checkUserLogin() {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (user) {
+                document.getElementById('user-menu').classList.remove('hidden');
+                document.getElementById('user-initials').textContent = user.initials;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserLogin();
+        });
+
+        // Gestion du formulaire
+        document.getElementById('inscription-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collecte des données du formulaire
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Simulation d'envoi (à remplacer par un vrai appel API)
+            console.log('Données du formulaire:', data);
+            
+            // Message de confirmation
+            alert('Votre candidature a été envoyée avec succès ! Nous étudierons votre profil et vous recontacterons dans les 48h.');
+            
+            // Optionnel : redirection vers la page d'accueil
+            // window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notre Équipe - R'MouV</title>
+    <meta name="description" content="Découvrez l'équipe pluridisciplinaire de R'MouV : kinésithérapeutes, coachs sportifs et professionnels de santé.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                        secondary: "#FFB347", // Orange doré punchy
+                        neutral: "#37474F"    // Gris ardoise
+                    },
+                        fontFamily: {
+                            sans: ['Now', 'sans-serif']
+                        }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FFB347 !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 179, 71, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FFB347 !important;
+        }
+        .border-secondary {
+            border-color: #FFB347 !important;
+        }
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(25, 118, 210, 0.2), rgba(255, 179, 71, 0.05)) !important;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        .sticky-nav #user-menu {
+            align-items: center !important;
+        }
+        .sticky-nav #user-dropdown-toggle {
+            align-items: center !important;
+            justify-content: center;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="index.html#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu (hidden by default) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                <a href="index.html#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 text-neutral-800">Notre Équipe</h1>
+            <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+                Une équipe pluridisciplinaire de professionnels dédiés à votre rééducation et votre bien-être
+            </p>
+        </div>
+    </section>
+
+    <!-- Présentation de l'équipe -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Une Approche Pluridisciplinaire</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+                <p class="text-neutral-600 mt-6 max-w-3xl mx-auto">
+                    Notre équipe réunit des kinésithérapeutes spécialisés et des coachs sportifs expérimentés, 
+                    tous formés aux dernières techniques de rééducation et de réathlétisation.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <div class="bg-white p-8 rounded-xl shadow-sm card-hover">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-user-md text-3xl text-primary"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2 text-primary">Kinésithérapeutes</h3>
+                    </div>
+                    <p class="text-neutral-600 mb-4">
+                        Nos kinésithérapeutes sont spécialisés dans la rééducation fonctionnelle et utilisent 
+                        les équipements de pointe pour optimiser votre récupération.
+                    </p>
+                    <ul class="space-y-2 text-neutral-600">
+                        <li><i class="fas fa-check text-secondary mr-2"></i>Rééducation post-traumatique</li>
+                        <li><i class="fas fa-check text-secondary mr-2"></i>Kinésithérapie préventive</li>
+                        <li><i class="fas fa-check text-secondary mr-2"></i>Techniques de pointe (Huber, Allyane, VR)</li>
+                        <li><i class="fas fa-check text-secondary mr-2"></i>Suivi personnalisé</li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-sm card-hover">
+                    <div class="text-center mb-6">
+                        <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-dumbbell text-3xl text-secondary"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-2 text-secondary">Coachs Sportifs</h3>
+                    </div>
+                    <p class="text-neutral-600 mb-4">
+                        Nos coachs sportifs vous accompagnent dans votre réathlétisation et votre retour 
+                        à l'activité physique en toute sécurité.
+                    </p>
+                    <ul class="space-y-2 text-neutral-600">
+                        <li><i class="fas fa-check text-primary mr-2"></i>Réathlétisation progressive</li>
+                        <li><i class="fas fa-check text-primary mr-2"></i>Préparation physique</li>
+                        <li><i class="fas fa-check text-primary mr-2"></i>Cours collectifs adaptés</li>
+                        <li><i class="fas fa-check text-primary mr-2"></i>Suivi des performances</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Membres de l'équipe -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Rencontrez Notre Équipe</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Kinésithérapeute 1 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <i class="fas fa-user-md text-6xl text-primary/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-primary">Dr. Marie Dubois</h3>
+                        <p class="text-secondary font-semibold mb-3">Kinésithérapeute</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Spécialisée en rééducation fonctionnelle et techniques de pointe. 
+                            15 ans d'expérience dans la rééducation post-traumatique.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>DE Kinésithérapie</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Spécialisation Huber 360</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Méthode Allyane</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Kinésithérapeute 2 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                        <i class="fas fa-user-md text-6xl text-primary/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-primary">Dr. Pierre Martin</h3>
+                        <p class="text-secondary font-semibold mb-3">Kinésithérapeute</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Expert en rééducation neurologique et réalité virtuelle thérapeutique. 
+                            Passionné par l'innovation en kinésithérapie.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>DE Kinésithérapie</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Spécialisation VR Thérapeutique</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Vibramoov</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Coach Sportif 1 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
+                        <i class="fas fa-dumbbell text-6xl text-secondary/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-secondary">Sophie Laurent</h3>
+                        <p class="text-primary font-semibold mb-3">Coach Sportif</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Spécialisée en réathlétisation et préparation physique. 
+                            Ancienne athlète de haut niveau reconvertie.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>BPJEPS Activités Physiques</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Spécialisation Réathlétisation</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Stendo</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Coach Sportif 2 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-secondary/20 to-secondary/5 flex items-center justify-center">
+                        <i class="fas fa-dumbbell text-6xl text-secondary/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-secondary">Thomas Moreau</h3>
+                        <p class="text-primary font-semibold mb-3">Coach Sportif</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Expert en cours collectifs et préparation physique adaptée. 
+                            Passionné par l'accompagnement personnalisé.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>BPJEPS Activités Physiques</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Spécialisation Cours Collectifs</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Mobilité</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Directeur -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-neutral/20 to-neutral/5 flex items-center justify-center">
+                        <i class="fas fa-user-tie text-6xl text-neutral/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-neutral-800">Dr. Jean-Claude R'MouV</h3>
+                        <p class="text-primary font-semibold mb-3">Directeur & Fondateur</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Kinésithérapeute avec 20 ans d'expérience, fondateur du centre R'MouV. 
+                            Visionnaire de l'approche pluridisciplinaire sport-santé.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>DE Kinésithérapie</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Master Management Santé</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Continue</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Secrétaire -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden card-hover">
+                    <div class="h-64 bg-gradient-to-br from-primary/20 to-secondary/5 flex items-center justify-center">
+                        <i class="fas fa-user text-6xl text-primary/60"></i>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2 text-primary">Claire Petit</h3>
+                        <p class="text-secondary font-semibold mb-3">Secrétaire Médicale</p>
+                        <p class="text-neutral-600 text-sm mb-4">
+                            Votre premier contact avec R'MouV. Gestion des rendez-vous et 
+                            accueil chaleureux pour vous accompagner dans votre parcours.
+                        </p>
+                        <div class="space-y-1 text-sm text-neutral-500">
+                            <p><i class="fas fa-graduation-cap mr-2"></i>BTS Secrétariat Médical</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Formation Accueil</p>
+                            <p><i class="fas fa-certificate mr-2"></i>Gestion Planning</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Valeurs de l'équipe -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Nos Valeurs</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-heart text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-primary">Bienveillance</h3>
+                    <p class="text-neutral-600">
+                        Chaque patient est unique. Nous adaptons nos soins à vos besoins spécifiques 
+                        avec empathie et respect.
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-star text-2xl text-secondary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-secondary">Excellence</h3>
+                    <p class="text-neutral-600">
+                        Formation continue et utilisation des dernières technologies pour 
+                        vous offrir les meilleurs soins possibles.
+                    </p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-primary">Collaboration</h3>
+                    <p class="text-neutral-600">
+                        Travail d'équipe entre kinésithérapeutes et coachs pour un suivi 
+                        cohérent et optimal de votre rééducation.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-primary">R'MouV</h3>
+                    <p class="text-neutral-300 mb-4">
+                        Centre sport-santé pluridisciplinaire pour reprendre ton corps en main et te révéler.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2 text-neutral-300">
+                        <li><a href="index.html" class="hover:text-primary transition-colors">Accueil</a></li>
+                        <li><a href="equipements.html" class="hover:text-primary transition-colors">Équipements</a></li>
+                        <li><a href="equipe.html" class="hover:text-primary transition-colors">Notre Équipe</a></li>
+                        <li><a href="rejoindre.html" class="hover:text-primary transition-colors">Nous rejoindre</a></li>
+                        <li><a href="contact.html" class="hover:text-primary transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <div class="space-y-2 text-neutral-300">
+                        <p><i class="fas fa-phone mr-2"></i> 01 23 45 67 89</p>
+                        <p><i class="fas fa-envelope mr-2"></i> contact@rmouv.fr</p>
+                        <p><i class="fas fa-map-marker-alt mr-2"></i> 123 Avenue de la Santé, 75000 Paris</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 R'MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // User dropdown toggle
+        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        if (userDropdownToggle && userDropdown) {
+            userDropdownToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.add('hidden');
+            });
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Check if user is logged in and update interface
+        function checkUserLogin() {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (user) {
+                document.getElementById('user-menu').classList.remove('hidden');
+                document.getElementById('user-initials').textContent = user.initials;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserLogin();
+        });
+    </script>
+</body>
+</html>

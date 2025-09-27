@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact - R'MouV</title>
+    <meta name="description" content="Contactez R'MouV - Centre sport-santé. Posez vos questions et obtenez des informations sur nos services de kinésithérapie et coaching sportif.">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                        secondary: "#FF8A3E", // Orange équilibré
+                        neutral: "#37474F"    // Gris ardoise
+                    },
+                        fontFamily: {
+                            sans: ['Now', 'sans-serif']
+                        }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FF8A3E !important;
+        }
+        .border-secondary {
+            border-color: #FF8A3E !important;
+        }
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(25, 118, 210, 0.2), rgba(255, 138, 62, 0.05)) !important;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        .sticky-nav #user-menu {
+            align-items: center !important;
+        }
+        .sticky-nav #user-dropdown-toggle {
+            align-items: center !important;
+            justify-content: center;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="index.html#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu (hidden by default) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                <a href="index.html#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-20">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 text-neutral-800">Contactez-nous</h1>
+            <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+                Contactez-nous pour toute question, information ou demande concernant nos services
+            </p>
+        </div>
+    </section>
+
+    <!-- Informations de contact -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Nos Coordonnées</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Adresse -->
+                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-map-marker-alt text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Adresse</h3>
+                    <p class="text-neutral-600">
+                        123 Avenue de la Santé<br>
+                        75000 Paris<br>
+                        France
+                    </p>
+                </div>
+                
+                <!-- Téléphone -->
+                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                    <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-phone text-2xl text-secondary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Téléphone</h3>
+                    <p class="text-neutral-600 mb-2">
+                        <a href="tel:+33123456789" class="hover:text-primary transition-colors">
+                            01 23 45 67 89
+                        </a>
+                    </p>
+                    <p class="text-sm text-neutral-500">
+                        Lun-Ven : 8h-20h<br>
+                        Sam : 9h-17h
+                    </p>
+                </div>
+                
+                <!-- Email -->
+                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-envelope text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-4">Email</h3>
+                    <p class="text-neutral-600 mb-2">
+                        <a href="mailto:contact@rmouv.fr" class="hover:text-primary transition-colors">
+                            contact@rmouv.fr
+                        </a>
+                    </p>
+                    <p class="text-sm text-neutral-500">
+                        Réponse sous 24h
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formulaire de contact -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Formulaire de Contact</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+                <p class="text-neutral-600 mt-4 max-w-2xl mx-auto">
+                    Remplissez ce formulaire et nous vous répondrons rapidement pour toute question ou information
+                </p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <form id="contact-form" class="bg-gray-50 p-8 rounded-xl shadow-sm">
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="nom" class="block text-sm font-medium text-neutral-700 mb-2">Nom *</label>
+                            <input type="text" id="nom" name="nom" required 
+                                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                        <div>
+                            <label for="prenom" class="block text-sm font-medium text-neutral-700 mb-2">Prénom *</label>
+                            <input type="text" id="prenom" name="prenom" required 
+                                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-neutral-700 mb-2">Email *</label>
+                            <input type="email" id="email" name="email" required 
+                                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                        <div>
+                            <label for="telephone" class="block text-sm font-medium text-neutral-700 mb-2">Téléphone *</label>
+                            <input type="tel" id="telephone" name="telephone" required 
+                                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="sujet" class="block text-sm font-medium text-neutral-700 mb-2">Sujet de votre message *</label>
+                        <select id="sujet" name="sujet" required 
+                                class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                            <option value="">Sélectionnez un sujet</option>
+                            <option value="information">Demande d'information</option>
+                            <option value="tarifs">Tarifs et prestations</option>
+                            <option value="equipements">Nos équipements</option>
+                            <option value="equipe">Notre équipe</option>
+                            <option value="partenariat">Partenariat</option>
+                            <option value="autre">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="message" class="block text-sm font-medium text-neutral-700 mb-2">Message</label>
+                        <textarea id="message" name="message" rows="5" 
+                                  placeholder="Décrivez votre demande, vos questions ou les informations que vous souhaitez obtenir..."
+                                  class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none"></textarea>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="bg-secondary text-white px-8 py-4 rounded-lg hover:bg-secondary/90 transition-colors font-semibold text-lg">
+                            <i class="fas fa-paper-plane mr-2"></i>Envoyer le message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Horaires -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Horaires d'Ouverture</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="grid md:grid-cols-2 gap-8 p-8">
+                        <div>
+                            <h3 class="text-xl font-bold mb-6 text-primary">Consultations</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span class="font-medium">Lundi - Vendredi</span>
+                                    <span class="text-neutral-600">8h00 - 20h00</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span class="font-medium">Samedi</span>
+                                    <span class="text-neutral-600">9h00 - 17h00</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="font-medium">Dimanche</span>
+                                    <span class="text-neutral-600">Fermé</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-xl font-bold mb-6 text-secondary">Cours Collectifs</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span class="font-medium">Matin</span>
+                                    <span class="text-neutral-600">7h00 - 9h00</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                                    <span class="font-medium">Midi</span>
+                                    <span class="text-neutral-600">12h00 - 14h00</span>
+                                </div>
+                                <div class="flex justify-between items-center py-2">
+                                    <span class="font-medium">Soir</span>
+                                    <span class="text-neutral-600">18h00 - 20h00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4 text-primary">R'MouV</h3>
+                    <p class="text-neutral-300 mb-4">
+                        Centre sport-santé pluridisciplinaire pour reprendre ton corps en main et te révéler.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2 text-neutral-300">
+                        <li><a href="index.html" class="hover:text-primary transition-colors">Accueil</a></li>
+                        <li><a href="equipements.html" class="hover:text-primary transition-colors">Équipements</a></li>
+                        <li><a href="equipe.html" class="hover:text-primary transition-colors">Notre Équipe</a></li>
+                        <li><a href="rejoindre.html" class="hover:text-primary transition-colors">Nous rejoindre</a></li>
+                        <li><a href="contact.html" class="hover:text-primary transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <div class="space-y-2 text-neutral-300">
+                        <p><i class="fas fa-phone mr-2"></i> 01 23 45 67 89</p>
+                        <p><i class="fas fa-envelope mr-2"></i> contact@rmouv.fr</p>
+                        <p><i class="fas fa-map-marker-alt mr-2"></i> 123 Avenue de la Santé, 75000 Paris</p>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 R'MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // User dropdown toggle
+        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
+        const userDropdown = document.getElementById('user-dropdown');
+        
+        if (userDropdownToggle && userDropdown) {
+            userDropdownToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                userDropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function() {
+                userDropdown.classList.add('hidden');
+            });
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Check if user is logged in and update interface
+        function checkUserLogin() {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (user) {
+                document.getElementById('user-menu').classList.remove('hidden');
+                document.getElementById('user-initials').textContent = user.initials;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserLogin();
+        });
+
+        // Formulaire de contact
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Simulation d'envoi du formulaire
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            // Affichage d'un message de confirmation
+            alert('Merci pour votre message ! Nous vous répondrons rapidement pour répondre à vos questions.');
+            
+            // Réinitialisation du formulaire
+            this.reset();
+        });
+    </script>
+</body>
+</html>

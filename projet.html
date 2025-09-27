@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notre Projet - R'MouV</title>
+    <meta name="description" content="Découvrez en détail le projet R'MouV : notre approche pluridisciplinaire alliant kinésithérapie et coaching sportif pour votre rééducation et réathlétisation.">
+    <meta name="keywords" content="projet R'MouV, kinésithérapie, coaching sportif, rééducation, réathlétisation, approche pluridisciplinaire">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Notre Projet - R'MouV">
+    <meta property="og:description" content="Découvrez notre approche pluridisciplinaire alliant kinésithérapie et coaching sportif.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="placeholder">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="placeholder">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                        colors: {
+                            primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                            secondary: "#FFB347", // Orange doré punchy
+                            neutral: "#37474F"    // Gris ardoise
+                        },
+                            fontFamily: {
+                                sans: ['Now', 'sans-serif']
+                            }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FFB347 !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 179, 71, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FFB347 !important;
+        }
+        .border-secondary {
+            border-color: #FFB347 !important;
+        }
+        .hero-gradient {
+            background: linear-gradient(to right, rgba(25, 118, 210, 0.2), rgba(255, 179, 71, 0.05)) !important;
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .equipment-detail {
+            display: none;
+        }
+        .equipment-detail.active {
+            display: block;
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        .sticky-nav #user-menu {
+            align-items: center !important;
+        }
+        .sticky-nav #user-dropdown-toggle {
+            align-items: center !important;
+            justify-content: center;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="index.html#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu (hidden by default) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                    <a href="index.html#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                    <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-gradient py-16 md:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-3xl md:text-5xl font-bold mb-6 text-neutral-800">
+                Notre <span class="text-primary">Projet</span>
+            </h1>
+            <p class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto">
+                Découvrez en détail notre approche pluridisciplinaire alliant kinésithérapie et coaching sportif
+            </p>
+        </div>
+    </section>
+
+    <!-- Contenu principal -->
+    <section class="section-padding bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- Introduction -->
+                <div class="mb-12">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-6 text-primary">Notre Vision</h2>
+                    <div class="bg-neutral-50 p-6 rounded-lg border-l-4 border-primary">
+                        <p class="text-lg text-neutral-700 mb-4">
+                            <span class="font-bold text-primary">R'</span><span class="font-bold text-secondary">MouV</span> est né d'une conviction forte : la rééducation et la réathlétisation nécessitent une approche globale et complémentaire.
+                        </p>
+                        <p class="text-neutral-700">
+                            Notre projet vise à créer un espace où kinésithérapeutes et coachs sportifs travaillent main dans la main pour vous accompagner dans votre parcours de récupération et d'optimisation de vos performances.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Placeholder pour le contenu détaillé -->
+                <div class="mb-12">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-6 text-secondary">Approche Pluridisciplinaire</h2>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border">
+                        <div class="text-center py-12">
+                            <i class="fas fa-file-alt text-4xl text-neutral-400 mb-4"></i>
+                            <h3 class="text-xl font-semibold text-neutral-600 mb-2">Contenu en cours de rédaction</h3>
+                            <p class="text-neutral-500">
+                                Le texte détaillé expliquant notre projet et le fonctionnement de la collaboration entre kinésithérapie et coaching sportif sera ajouté prochainement.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Collaboration des disciplines -->
+                <div class="mb-12">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-6 text-primary">Collaboration Kiné & Coaching</h2>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <div class="text-center">
+                                <i class="fas fa-user-md text-3xl text-primary mb-4"></i>
+                                <h3 class="text-xl font-bold mb-4 text-primary">Kinésithérapie</h3>
+                                <p class="text-neutral-600">
+                                    Placeholder pour le contenu détaillé sur l'approche kinésithérapique et son rôle dans la collaboration.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border">
+                            <div class="text-center">
+                                <i class="fas fa-dumbbell text-3xl text-secondary mb-4"></i>
+                                <h3 class="text-xl font-bold mb-4 text-secondary">Coaching Sportif</h3>
+                                <p class="text-neutral-600">
+                                    Placeholder pour le contenu détaillé sur l'approche coaching et son rôle dans la collaboration.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bénéfices de l'approche -->
+                <div class="mb-12">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-6 text-neutral-800">Les Bénéfices de Notre Approche</h2>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
+                            <i class="fas fa-sync-alt text-2xl text-primary mb-3"></i>
+                            <h4 class="font-semibold mb-2">Continuité des soins</h4>
+                            <p class="text-sm text-neutral-600">Transition fluide entre rééducation et réathlétisation</p>
+                        </div>
+                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
+                            <i class="fas fa-target text-2xl text-secondary mb-3"></i>
+                            <h4 class="font-semibold mb-2">Objectifs personnalisés</h4>
+                            <p class="text-sm text-neutral-600">Protocoles adaptés à votre situation spécifique</p>
+                        </div>
+                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
+                            <i class="fas fa-chart-line text-2xl text-primary mb-3"></i>
+                            <h4 class="font-semibold mb-2">Suivi optimisé</h4>
+                            <p class="text-sm text-neutral-600">Évaluation continue et ajustement des programmes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Call to action -->
+                <div class="text-center mt-12">
+                    <div class="bg-primary/10 p-8 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4 text-primary">Prêt à découvrir notre approche ?</h3>
+                        <p class="text-neutral-600 mb-6">
+                            Contactez-nous pour en savoir plus sur notre projet et comment nous pouvons vous accompagner.
+                        </p>
+                        <div class="space-x-4">
+                            <a href="contact.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+                                Nous contacter
+                            </a>
+                            <a href="rejoindre.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+                                Rejoindre l'équipe
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="md:col-span-2">
+                    <div class="flex items-center mb-4">
+                        <span class="text-2xl font-bold text-primary">R'</span><span class="text-2xl font-bold text-secondary">MouV</span>
+                        <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+                    </div>
+                    <p class="text-neutral-300 mb-4">
+                        Centre pluridisciplinaire de sport-santé réunissant kinésithérapeutes et coachs sportifs pour votre rééducation et réathlétisation.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Navigation</h4>
+                    <ul class="space-y-2 text-neutral-300">
+                        <li><a href="index.html#projet" class="hover:text-white transition-colors">Notre Projet</a></li>
+                        <li><a href="index.html#equipements" class="hover:text-white transition-colors">Nos Équipements</a></li>
+                        <li><a href="index.html#equipe" class="hover:text-white transition-colors">Notre Équipe</a></li>
+                        <li><a href="rejoindre.html" class="hover:text-white transition-colors">Rejoindre R'MouV</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <ul class="space-y-2 text-neutral-300">
+                        <li><a href="contact.html" class="hover:text-white transition-colors">Nous contacter</a></li>
+                        <li><a href="rejoindre.html" class="hover:text-white transition-colors">Candidatures</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 R'MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // User dropdown toggle
+        document.getElementById('user-dropdown-toggle').addEventListener('click', function() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('user-dropdown');
+            const toggle = document.getElementById('user-dropdown-toggle');
+            if (!toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // Check user login status
+        function checkUserLogin() {
+            const user = JSON.parse(localStorage.getItem('rmouv_user'));
+            if (user) {
+                document.getElementById('user-menu').classList.remove('hidden');
+                document.getElementById('user-initials').textContent = user.initials;
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserLogin();
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('rmouv_user');
+            checkUserLogin();
+            alert('Vous avez été déconnecté.');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R'MouV Admin - Gestion des réservations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                            primary: "#5A9FD4",
+                            secondary: "#FFB347",
+                        neutral: "#37474F"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span> Admin</h1>
+                    <span class="ml-3 px-2 py-1 bg-primary text-white text-xs rounded-full">ADMIN</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="admin-name" class="text-gray-700"></span>
+                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Utilisateurs</p>
+                        <p id="total-users" class="text-2xl font-semibold text-gray-900">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-calendar-check text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Réservations</p>
+                        <p id="total-bookings" class="text-2xl font-semibold text-gray-900">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                        <i class="fas fa-calendar-day text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Réservations Aujourd'hui</p>
+                        <p id="today-bookings" class="text-2xl font-semibold text-gray-900">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-dumbbell text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Cours Actifs</p>
+                        <p id="total-courses" class="text-2xl font-semibold text-gray-900">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtres</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                    <input type="date" id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
+                    <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">Tous les statuts</option>
+                        <option value="confirmed">Confirmé</option>
+                        <option value="cancelled">Annulé</option>
+                        <option value="completed">Terminé</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-search mr-2"></i>Filtrer
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings Table -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Réservations</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cours</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Bookings will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Export Button -->
+        <div class="mt-6 text-center">
+            <button onclick="exportBookings()" class="bg-secondary hover:bg-secondary/90 text-white px-6 py-3 rounded-lg transition-colors">
+                <i class="fas fa-download mr-2"></i>Exporter les réservations (CSV)
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <span class="text-gray-700">Chargement...</span>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('rmouv_admin_token');
+        let currentUser = null;
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authToken) {
+                window.location.href = '/admin-login.html';
+                return;
+            }
+            
+            // Verify token and load admin data
+            verifyAdminToken();
+        });
+
+        async function verifyAdminToken() {
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token invalide');
+                }
+
+                const user = await response.json();
+                if (user.role !== 'admin') {
+                    throw new Error('Accès administrateur requis');
+                }
+
+                currentUser = user;
+                document.getElementById('admin-name').textContent = `${user.prenom} ${user.nom}`;
+                
+                // Load dashboard data
+                loadDashboardStats();
+                loadBookings();
+                
+            } catch (error) {
+                console.error('Erreur d\'authentification:', error);
+                localStorage.removeItem('rmouv_admin_token');
+                window.location.href = '/admin-login.html';
+            }
+        }
+
+        async function loadDashboardStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors du chargement des statistiques');
+
+                const stats = await response.json();
+                
+                document.getElementById('total-users').textContent = stats.total_users;
+                document.getElementById('total-bookings').textContent = stats.total_bookings;
+                document.getElementById('today-bookings').textContent = stats.today_bookings;
+                document.getElementById('total-courses').textContent = stats.total_courses;
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors du chargement des statistiques', 'error');
+            }
+        }
+
+        async function loadBookings() {
+            showLoading(true);
+            
+            try {
+                const dateFilter = document.getElementById('date-filter').value;
+                const statusFilter = document.getElementById('status-filter').value;
+                
+                let url = '/api/admin/bookings?';
+                const params = new URLSearchParams();
+                
+                if (dateFilter) params.append('date', dateFilter);
+                if (statusFilter) params.append('status', statusFilter);
+                
+                url += params.toString();
+
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors du chargement des réservations');
+
+                const bookings = await response.json();
+                displayBookings(bookings);
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors du chargement des réservations', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayBookings(bookings) {
+            const tbody = document.getElementById('bookings-table-body');
+            
+            if (bookings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            Aucune réservation trouvée
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = bookings.map(booking => `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${booking.prenom} ${booking.nom}</div>
+                            <div class="text-sm text-gray-500">${booking.email}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${booking.course_name}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${new Date(booking.booking_date).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${booking.start_time} - ${booking.end_time}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                            booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                        }">
+                            ${booking.status === 'confirmed' ? 'Confirmé' :
+                              booking.status === 'cancelled' ? 'Annulé' : 'Terminé'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            ${booking.status === 'confirmed' ? `
+                                <button onclick="cancelBooking(${booking.id})" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                            ` : ''}
+                            <button onclick="viewBookingDetails(${booking.id})" class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-eye"></i> Détails
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function applyFilters() {
+            loadBookings();
+        }
+
+        async function cancelBooking(bookingId) {
+            if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur lors de l\'annulation');
+
+                showNotification('Réservation annulée avec succès', 'success');
+                loadBookings();
+                loadDashboardStats();
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors de l\'annulation', 'error');
+            }
+        }
+
+        function viewBookingDetails(bookingId) {
+            // Implementation for booking details modal
+            alert(`Détails de la réservation ${bookingId}`);
+        }
+
+        function exportBookings() {
+            // Implementation for CSV export
+            alert('Export CSV en cours de développement');
+        }
+
+        function logout() {
+            localStorage.removeItem('rmouv_admin_token');
+            window.location.href = '/admin-login.html';
+        }
+
+        function showLoading(show) {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.toggle('hidden', !show);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Remove existing notifications
+            const existing = document.querySelector('.notification');
+            if (existing) {
+                existing.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 0.5rem;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                transform: translateX(100%);
+                transition: transform 0.3s ease-out;
+                max-width: 400px;
+                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            `;
+
+            const colors = {
+                success: '#2E7D32',
+                error: '#EF4444',
+                info: '#1976D2',
+                warning: '#F59E0B'
+            };
+            notification.style.backgroundColor = colors[type] || colors.info;
+
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Set today's date as default filter
+        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+    </script>
+</body>
+</html>
