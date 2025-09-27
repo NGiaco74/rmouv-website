@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://rmouv-rehabtonmouv.netlify.app/sitemap.xml
+
+# Disallow admin pages
+Disallow: /admin.html
+Disallow: /admin-login.html
+Disallow: /test.html

@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>R'MouV – Centre sport santé (kiné & coaching)</title>
-    <meta name="description" content="Centre pluridisciplinaire de sport-santé : kinésithérapeutes et coachs, protocoles personnalisés, cours collectifs, rééducation et réathlétisation.">
-    <meta name="keywords" content="sport santé, kinésithérapeute, rééducation, réathlétisation, cours collectifs, coaching">
+    <meta name="description" content="R'MouV - Centre de rééducation et sport-santé. Kinésithérapeutes spécialisés, coachs sportifs, réathlétisation, cours collectifs. Rééducation neurologique et traumatologie sportive.">
+    <meta name="keywords" content="rmouv, rééducation, kinésithérapeute, coach sportif, réathlétisation, cours collectifs, rééducation neurologique, traumatologie sportive, centre sport santé, rééducation post-blessure">
     
     <!-- Open Graph -->
     <meta property="og:title" content="R'MouV – Rehab ton MouV">
@@ -15,6 +15,45 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="placeholder">
+    
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "MedicalBusiness",
+        "name": "R'MouV",
+        "description": "Centre de rééducation et sport-santé pluridisciplinaire",
+        "url": "https://rmouv-rehabtonmouv.netlify.app",
+        "telephone": "+33-XX-XX-XX-XX",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Votre ville",
+            "addressRegion": "Votre région",
+            "addressCountry": "FR"
+        },
+        "medicalSpecialty": ["Physical Therapy", "Sports Medicine", "Neurological Rehabilitation"],
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Services de rééducation",
+            "itemListElement": [
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Kinésithérapie"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Coaching sportif"
+                    }
+                }
+            ]
+        }
+    }
+    </script>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
