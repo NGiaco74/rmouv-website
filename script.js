@@ -11,8 +11,8 @@ const appState = {
 // DOM Elements
 const elements = {
     header: document.getElementById('header'),
-    navbarToggle: document.getElementById('navbar-toggle'),
-    navbarMenu: document.getElementById('navbar-menu'),
+    navbarToggle: document.getElementById('mobile-menu-toggle'),
+    navbarMenu: document.getElementById('mobile-menu'),
     contactForm: document.getElementById('contactForm')
 };
 
@@ -44,7 +44,7 @@ function initializeNavigation() {
                 });
                 
                 // Close mobile menu if open
-                if (elements.navbarMenu.classList.contains('active')) {
+                if (!elements.navbarMenu.classList.contains('hidden')) {
                     toggleMobileMenu();
                 }
             }
@@ -56,7 +56,7 @@ function initializeNavigation() {
 }
 
 function toggleMobileMenu() {
-    elements.navbarMenu.classList.toggle('active');
+    elements.navbarMenu.classList.toggle('hidden');
     elements.navbarToggle.classList.toggle('active');
 }
 
