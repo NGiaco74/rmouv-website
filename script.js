@@ -1,5 +1,6 @@
 // R'MouV Website JavaScript
-import { auth, bookings } from './supabase-client.js';
+// Crée le client Supabase directement
+const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 
 // Global state
 const appState = {
@@ -144,49 +145,32 @@ function initializeAnimations() {
 }
 
 // Authentication
-function initializeAuth() {
+async function initializeAuth() {
     console.log('🔐 Initialisation de l\'authentification...');
     
-    // Check if user is already logged in
-    checkAuthStatus();
-    
-    // Listen for auth state changes
-    auth.onAuthStateChange((event, session) => {
-        console.log('🔄 Changement d\'état auth:', event, session);
-        if (event === 'SIGNED_IN') {
-            appState.currentUser = session.user;
-            appState.isAuthenticated = true;
-            console.log('✅ Utilisateur connecté:', session.user.email);
-            updateUI();
-        } else if (event === 'SIGNED_OUT') {
-            appState.currentUser = null;
-            appState.isAuthenticated = false;
-            console.log('❌ Utilisateur déconnecté');
-            updateUI();
-        }
-    });
-}
-
-async function checkAuthStatus() {
-    console.log('🔍 Vérification du statut d\'authentification...');
     try {
-        const { session } = await auth.getSession();
+        // 1) Lire la session au chargement
+        const { data: { session } } = await supabase.auth.getSession();
         console.log('📋 Session actuelle:', session);
-        if (session) {
-            appState.currentUser = session.user;
-            appState.isAuthenticated = true;
-            console.log('✅ Session trouvée, utilisateur connecté:', session.user.email);
-            updateUI();
-        } else {
-            console.log('❌ Aucune session trouvée');
-        }
+        updateUI(!!session, session?.user);
+        
+        // 2) Écouter les changements (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log('🔄 Changement d\'état auth:', event, session);
+            updateUI(!!session, session?.user);
+        });
+        
     } catch (error) {
-        console.error('❌ Erreur lors de la vérification de session:', error);
+        console.error('❌ Erreur lors de l\'initialisation auth:', error);
     }
 }
 
-function updateUI() {
-    console.log('🎨 Mise à jour de l\'UI - État auth:', appState.isAuthenticated, 'Utilisateur:', appState.currentUser);
+function updateUI(isLoggedIn, user) {
+    console.log('🎨 Mise à jour de l\'UI - Connecté:', isLoggedIn, 'Utilisateur:', user);
+    
+    // Update app state
+    appState.isAuthenticated = isLoggedIn;
+    appState.currentUser = user;
     
     const authButtons = document.getElementById('auth-buttons');
     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
@@ -204,7 +188,7 @@ function updateUI() {
         userInitialsMobile: !!userInitialsMobile
     });
     
-    if (appState.isAuthenticated && appState.currentUser) {
+    if (isLoggedIn && user) {
         console.log('✅ Affichage du menu utilisateur');
         // User is logged in - show user menu
         if (authButtons) authButtons.classList.add('hidden');
@@ -213,7 +197,7 @@ function updateUI() {
         if (userMenuMobile) userMenuMobile.classList.remove('hidden');
         
         // Set user initials
-        const email = appState.currentUser.email;
+        const email = user.email;
         const initials = email.charAt(0).toUpperCase() + (email.split('@')[0].charAt(1) || '').toUpperCase();
         console.log('👤 Initiales calculées:', initials, 'pour email:', email);
         if (userInitials) userInitials.textContent = initials;
@@ -253,7 +237,13 @@ function initializeUserDropdown() {
 // Auth functions
 async function signUp(email, password, userData = {}) {
     try {
-        const { data, error } = await auth.signUp(email, password, userData);
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: userData
+            }
+        });
         if (error) {
             showNotification('Erreur lors de l\'inscription: ' + error.message, 'error');
             return { success: false, error };
@@ -269,7 +259,10 @@ async function signUp(email, password, userData = {}) {
 
 async function signIn(email, password) {
     try {
-        const { data, error } = await auth.signIn(email, password);
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
         if (error) {
             showNotification('Erreur de connexion: ' + error.message, 'error');
             return { success: false, error };
@@ -285,18 +278,11 @@ async function signIn(email, password) {
 
 async function logout() {
     try {
-        const { error } = await auth.signOut();
+        const { error } = await supabase.auth.signOut();
         if (error) {
             showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
             return;
         }
-        
-        // Update app state
-        appState.currentUser = null;
-        appState.isAuthenticated = false;
-        
-        // Update UI
-        updateUI();
         
         showNotification('Déconnexion réussie', 'info');
     } catch (error) {
