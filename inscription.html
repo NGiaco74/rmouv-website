@@ -213,6 +213,20 @@
 
     <!-- Scripts -->
     <script type="module">
+        // Attendre que Supabase soit chargé
+        await new Promise(resolve => {
+            if (typeof supabase !== 'undefined') {
+                resolve();
+            } else {
+                const checkSupabase = setInterval(() => {
+                    if (typeof supabase !== 'undefined') {
+                        clearInterval(checkSupabase);
+                        resolve();
+                    }
+                }, 100);
+            }
+        });
+        
         import { auth } from './supabase-client.js';
         
         console.log('Script chargé');

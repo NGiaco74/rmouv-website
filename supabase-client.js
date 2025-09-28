@@ -1,5 +1,9 @@
 // Client Supabase pour R'MouV
-// Import via CDN
+// Vérification que Supabase est chargé
+if (typeof supabase === 'undefined') {
+  throw new Error('Supabase CDN must be loaded before this script');
+}
+
 const { createClient } = supabase
 
 // Utilisation des variables d'environnement Netlify (côté client)
