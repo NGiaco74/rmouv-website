@@ -10,7 +10,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="footer.css" rel="stylesheet">
     
     <!-- Supabase CDN -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -214,20 +213,24 @@
     <!-- Scripts -->
     <script type="module">
         // Attendre que Supabase soit chargé
-        await new Promise(resolve => {
-            if (typeof supabase !== 'undefined') {
-                resolve();
-            } else {
-                const checkSupabase = setInterval(() => {
-                    if (typeof supabase !== 'undefined') {
-                        clearInterval(checkSupabase);
-                        resolve();
-                    }
-                }, 100);
-            }
-        });
+        function waitForSupabase() {
+            return new Promise(resolve => {
+                if (typeof supabase !== 'undefined') {
+                    resolve();
+                } else {
+                    const checkSupabase = setInterval(() => {
+                        if (typeof supabase !== 'undefined') {
+                            clearInterval(checkSupabase);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
         
-        import { auth } from './supabase-client.js';
+        // Attendre Supabase puis importer
+        await waitForSupabase();
+        const { auth } = await import('./supabase-client.js');
         
         console.log('Script chargé');
         console.log('Supabase importé avec succès:', auth);
