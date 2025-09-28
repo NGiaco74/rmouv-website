@@ -145,33 +145,49 @@ function initializeAnimations() {
 
 // Authentication
 function initializeAuth() {
+    console.log('🔐 Initialisation de l\'authentification...');
+    
     // Check if user is already logged in
     checkAuthStatus();
     
     // Listen for auth state changes
     auth.onAuthStateChange((event, session) => {
+        console.log('🔄 Changement d\'état auth:', event, session);
         if (event === 'SIGNED_IN') {
             appState.currentUser = session.user;
             appState.isAuthenticated = true;
+            console.log('✅ Utilisateur connecté:', session.user.email);
             updateUI();
         } else if (event === 'SIGNED_OUT') {
             appState.currentUser = null;
             appState.isAuthenticated = false;
+            console.log('❌ Utilisateur déconnecté');
             updateUI();
         }
     });
 }
 
 async function checkAuthStatus() {
-    const { session } = await auth.getSession();
-    if (session) {
-        appState.currentUser = session.user;
-        appState.isAuthenticated = true;
-        updateUI();
+    console.log('🔍 Vérification du statut d\'authentification...');
+    try {
+        const { session } = await auth.getSession();
+        console.log('📋 Session actuelle:', session);
+        if (session) {
+            appState.currentUser = session.user;
+            appState.isAuthenticated = true;
+            console.log('✅ Session trouvée, utilisateur connecté:', session.user.email);
+            updateUI();
+        } else {
+            console.log('❌ Aucune session trouvée');
+        }
+    } catch (error) {
+        console.error('❌ Erreur lors de la vérification de session:', error);
     }
 }
 
 function updateUI() {
+    console.log('🎨 Mise à jour de l\'UI - État auth:', appState.isAuthenticated, 'Utilisateur:', appState.currentUser);
+    
     const authButtons = document.getElementById('auth-buttons');
     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
     const userMenu = document.getElementById('user-menu');
@@ -179,7 +195,17 @@ function updateUI() {
     const userInitials = document.getElementById('user-initials');
     const userInitialsMobile = document.getElementById('user-initials-mobile');
     
+    console.log('🔍 Éléments trouvés:', {
+        authButtons: !!authButtons,
+        authButtonsMobile: !!authButtonsMobile,
+        userMenu: !!userMenu,
+        userMenuMobile: !!userMenuMobile,
+        userInitials: !!userInitials,
+        userInitialsMobile: !!userInitialsMobile
+    });
+    
     if (appState.isAuthenticated && appState.currentUser) {
+        console.log('✅ Affichage du menu utilisateur');
         // User is logged in - show user menu
         if (authButtons) authButtons.classList.add('hidden');
         if (authButtonsMobile) authButtonsMobile.classList.add('hidden');
@@ -189,12 +215,14 @@ function updateUI() {
         // Set user initials
         const email = appState.currentUser.email;
         const initials = email.charAt(0).toUpperCase() + (email.split('@')[0].charAt(1) || '').toUpperCase();
+        console.log('👤 Initiales calculées:', initials, 'pour email:', email);
         if (userInitials) userInitials.textContent = initials;
         if (userInitialsMobile) userInitialsMobile.textContent = initials;
         
         // Initialize dropdown functionality
         initializeUserDropdown();
     } else {
+        console.log('❌ Affichage des boutons d\'authentification');
         // User is not logged in - show auth buttons
         if (authButtons) authButtons.classList.remove('hidden');
         if (authButtonsMobile) authButtonsMobile.classList.remove('hidden');
