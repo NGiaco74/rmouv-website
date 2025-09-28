@@ -5,6 +5,12 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# Configuration pour l'extension Supabase
+# Les variables d'environnement sont automatiquement injectées par l'extension
+# SUPABASE_DATABASE_URL
+# SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

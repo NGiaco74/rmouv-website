@@ -17,9 +17,10 @@
     
     <!-- Variables d'environnement Netlify -->
     <script>
-        // Variables d'environnement Netlify (injectées automatiquement)
-        window.SUPABASE_DATABASE_URL = 'https://unhenqckskgfeytpkpia.supabase.co';
-        window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw';
+        // Variables d'environnement Netlify (injectées automatiquement par l'extension Supabase)
+        // Ces valeurs sont des fallbacks pour le développement local
+        window.SUPABASE_DATABASE_URL = window.SUPABASE_DATABASE_URL || 'https://unhenqckskgfeytpkpia.supabase.co';
+        window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw';
     </script>
     
     <script>
@@ -256,14 +257,17 @@
             signupLoading.classList.remove('hidden');
             
             try {
-                // Données utilisateur
-                const userData = {};
+                // Données utilisateur avec métadonnées
+                const userData = {
+                    created_at: new Date().toISOString(),
+                    source: 'rmouv-website'
+                };
                 if (firstName) userData.first_name = firstName;
                 if (lastName) userData.last_name = lastName;
                 
                 console.log('Tentative d\'inscription avec:', { email, userData });
                 
-                // Inscription avec Supabase
+                // Inscription avec Supabase selon les bonnes pratiques
                 const { data, error } = await auth.signUp(email, password, userData);
                 
                 console.log('Résultat Supabase:', { data, error });
