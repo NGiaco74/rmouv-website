@@ -229,13 +229,21 @@ function updateUI(isLoggedIn, user) {
     }
 }
 
+// Variable pour éviter les doublons d'écouteurs
+let dropdownInitialized = false;
+
 function initializeUserDropdown() {
+    if (dropdownInitialized) return; // Éviter les doublons
+    
     const dropdownToggle = document.getElementById('user-dropdown-toggle');
     const dropdown = document.getElementById('user-dropdown');
     
     if (dropdownToggle && dropdown) {
+        console.log('🔧 Initialisation du dropdown utilisateur');
+        
         dropdownToggle.addEventListener('click', (e) => {
             e.stopPropagation();
+            console.log('🖱️ Clic sur le dropdown toggle');
             dropdown.classList.toggle('hidden');
         });
         
@@ -245,6 +253,8 @@ function initializeUserDropdown() {
                 dropdown.classList.add('hidden');
             }
         });
+        
+        dropdownInitialized = true;
     }
 }
 
