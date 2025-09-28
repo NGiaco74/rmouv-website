@@ -16,7 +16,5 @@
   to = "/index.html"
   status = 200
 
-[dev]
-  command = "python -m http.server 8000"
-  port = 8000
-  publish = "."
+# [dev] - Bloc supprimé pour éviter l'erreur "Cannot read properties of undefined (reading 'name')"
+# netlify dev gère automatiquement les sites statiques
