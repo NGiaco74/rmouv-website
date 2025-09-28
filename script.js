@@ -172,87 +172,53 @@ async function checkAuthStatus() {
 }
 
 function updateUI() {
-    const createAccountBtn = document.querySelector('a[href="rejoindre.html"]');
-    if (createAccountBtn) {
-        if (appState.isAuthenticated) {
-            // User is logged in - show user menu
-            createAccountBtn.style.display = 'none';
-            showUserMenu();
-        } else {
-            // User is not logged in - show create account button
-            createAccountBtn.style.display = 'block';
-            hideUserMenu();
-        }
+    const authButtons = document.getElementById('auth-buttons');
+    const authButtonsMobile = document.getElementById('auth-buttons-mobile');
+    const userMenu = document.getElementById('user-menu');
+    const userMenuMobile = document.getElementById('user-menu-mobile');
+    const userInitials = document.getElementById('user-initials');
+    const userInitialsMobile = document.getElementById('user-initials-mobile');
+    
+    if (appState.isAuthenticated && appState.currentUser) {
+        // User is logged in - show user menu
+        if (authButtons) authButtons.classList.add('hidden');
+        if (authButtonsMobile) authButtonsMobile.classList.add('hidden');
+        if (userMenu) userMenu.classList.remove('hidden');
+        if (userMenuMobile) userMenuMobile.classList.remove('hidden');
+        
+        // Set user initials
+        const email = appState.currentUser.email;
+        const initials = email.charAt(0).toUpperCase() + (email.split('@')[0].charAt(1) || '').toUpperCase();
+        if (userInitials) userInitials.textContent = initials;
+        if (userInitialsMobile) userInitialsMobile.textContent = initials;
+        
+        // Initialize dropdown functionality
+        initializeUserDropdown();
+    } else {
+        // User is not logged in - show auth buttons
+        if (authButtons) authButtons.classList.remove('hidden');
+        if (authButtonsMobile) authButtonsMobile.classList.remove('hidden');
+        if (userMenu) userMenu.classList.add('hidden');
+        if (userMenuMobile) userMenuMobile.classList.add('hidden');
     }
 }
 
-function showUserMenu() {
-    // Create user menu if it doesn't exist
-    let userMenu = document.getElementById('user-menu');
-    if (!userMenu) {
-        userMenu = document.createElement('div');
-        userMenu.id = 'user-menu';
-        userMenu.className = 'flex items-center space-x-4';
-        userMenu.innerHTML = `
-            <div class="relative">
-                <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
-                    <span id="user-initials" class="font-bold"></span>
-                    <i class="fas fa-chevron-down text-sm"></i>
-                </button>
-                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
-                    <div class="py-3 px-2">
-                        <div class="px-4 py-2 text-sm text-gray-600 border-b">
-                            <span id="user-email"></span>
-                        </div>
-                        <a href="#" onclick="showBookingSystem()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <i class="fas fa-calendar mr-2"></i>Mes réservations
-                        </a>
-                        <button onclick="logout()" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Insert after the navigation links
-        const nav = document.querySelector('.hidden.md\\:flex.items-center.space-x-8');
-        if (nav) {
-            nav.appendChild(userMenu);
-        }
-        
-        // Add event listeners
-        document.getElementById('user-dropdown-toggle').addEventListener('click', function() {
-            const dropdown = document.getElementById('user-dropdown');
+function initializeUserDropdown() {
+    const dropdownToggle = document.getElementById('user-dropdown-toggle');
+    const dropdown = document.getElementById('user-dropdown');
+    
+    if (dropdownToggle && dropdown) {
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
             dropdown.classList.toggle('hidden');
         });
         
         // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('user-dropdown');
-            const toggle = document.getElementById('user-dropdown-toggle');
-            if (toggle && dropdown && !toggle.contains(e.target) && !dropdown.contains(e.target)) {
+        document.addEventListener('click', (e) => {
+            if (!dropdownToggle.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.add('hidden');
             }
         });
-    }
-    
-    // Update user info
-    if (appState.currentUser) {
-        const email = appState.currentUser.email;
-        const initials = email.substring(0, 2).toUpperCase();
-        
-        document.getElementById('user-initials').textContent = initials;
-        document.getElementById('user-email').textContent = email;
-    }
-    
-    userMenu.style.display = 'flex';
-}
-
-function hideUserMenu() {
-    const userMenu = document.getElementById('user-menu');
-    if (userMenu) {
-        userMenu.style.display = 'none';
     }
 }
 
@@ -297,6 +263,13 @@ async function logout() {
             return;
         }
         
+        // Update app state
+        appState.currentUser = null;
+        appState.isAuthenticated = false;
+        
+        // Update UI
+        updateUI();
+        
         showNotification('Déconnexion réussie', 'info');
     } catch (error) {
         showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
@@ -306,6 +279,9 @@ async function logout() {
 function showBookingSystem() {
     showNotification('Système de réservation en cours de développement...', 'info');
 }
+
+// Make logout function globally available
+window.logout = logout;
 
 
 function showNotification(message, type = 'info') {
