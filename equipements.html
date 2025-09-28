@@ -136,14 +136,24 @@
                 <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
             </div>
             
-            <div class="hidden md:flex space-x-8">
+            <div class="hidden md:flex items-center space-x-8">
                 <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
-                    <a href="index.html#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
-                    <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
                 <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
                 
-                <!-- User menu (hidden by default) -->
+                <!-- Boutons d'authentification (masqués quand connecté) -->
+                <div id="auth-buttons" class="flex items-center space-x-4">
+                    <a href="connexion.html" class="text-primary hover:text-primary/80 font-medium transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <!-- User menu (masqué par défaut) -->
                 <div id="user-menu" class="hidden flex items-center space-x-4">
                     <div class="relative">
                         <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
@@ -173,10 +183,34 @@
         <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
             <div class="container mx-auto px-4 py-4 space-y-4">
                 <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
-                    <a href="index.html#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
-                    <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
                 <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+                
+                <!-- Boutons d'authentification mobile (masqués quand connecté) -->
+                <div id="auth-buttons-mobile" class="space-y-2">
+                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors text-center py-2">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors text-center">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <!-- User menu mobile (masqué par défaut) -->
+                <div id="user-menu-mobile" class="hidden space-y-2">
+                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full">
+                        <span id="user-initials-mobile" class="font-bold"></span>
+                        <span class="text-sm">Connecté</span>
+                    </div>
+                    <a href="#inscription" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-calendar mr-2"></i>Mes réservations
+                    </a>
+                    <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -649,5 +683,18 @@
             document.getElementById('equipements-overview').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Exposez les valeurs côté client (Project URL + anon key) -->
+    <script>
+        // ⚠️ Clé "anon" ou "publishable" uniquement (jamais la service_role)
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+    </script>
+    
+    <!-- Script Supabase -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>

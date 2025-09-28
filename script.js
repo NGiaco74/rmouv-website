@@ -198,8 +198,22 @@ function updateUI(isLoggedIn, user) {
         
         // Set user initials
         const email = user.email;
-        const initials = email.charAt(0).toUpperCase() + (email.split('@')[0].charAt(1) || '').toUpperCase();
-        console.log('👤 Initiales calculées:', initials, 'pour email:', email);
+        let initials = '';
+        
+        // Try to get initials from user metadata first
+        if (user.user_metadata && user.user_metadata.first_name && user.user_metadata.last_name) {
+            initials = user.user_metadata.first_name.charAt(0).toUpperCase() + user.user_metadata.last_name.charAt(0).toUpperCase();
+        } else {
+            // Fallback to email-based initials
+            const emailParts = email.split('@')[0].split('.');
+            if (emailParts.length >= 2) {
+                initials = emailParts[0].charAt(0).toUpperCase() + emailParts[1].charAt(0).toUpperCase();
+            } else {
+                initials = email.charAt(0).toUpperCase() + (email.split('@')[0].charAt(1) || '').toUpperCase();
+            }
+        }
+        
+        console.log('👤 Initiales calculées:', initials, 'pour email:', email, 'métadonnées:', user.user_metadata);
         if (userInitials) userInitials.textContent = initials;
         if (userInitialsMobile) userInitialsMobile.textContent = initials;
         
