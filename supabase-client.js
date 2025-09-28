@@ -2,9 +2,9 @@
 // Import via CDN
 const { createClient } = supabase
 
-// Utilisation des variables d'environnement Netlify
-const supabaseUrl = process.env.SUPABASE_DATABASE_URL || 'https://unhenqckskgfeytpkpia.supabase.co'
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw'
+// Utilisation des variables d'environnement Netlify (côté client)
+const supabaseUrl = window.SUPABASE_DATABASE_URL || 'https://unhenqckskgfeytpkpia.supabase.co'
+const supabaseKey = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw'
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
 
