@@ -217,8 +217,10 @@ function updateUI(isLoggedIn, user) {
         if (userInitials) userInitials.textContent = initials;
         if (userInitialsMobile) userInitialsMobile.textContent = initials;
         
-        // Initialize dropdown functionality
-        initializeUserDropdown();
+        // Initialize dropdown functionality after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            initializeUserDropdown();
+        }, 100);
     } else {
         console.log('❌ Affichage des boutons d\'authentification');
         // User is not logged in - show auth buttons
@@ -238,10 +240,20 @@ function initializeUserDropdown() {
     const dropdownToggle = document.getElementById('user-dropdown-toggle');
     const dropdown = document.getElementById('user-dropdown');
     
+    console.log('🔧 Tentative d\'initialisation du dropdown:', {
+        dropdownToggle: !!dropdownToggle,
+        dropdown: !!dropdown,
+        dropdownInitialized
+    });
+    
     if (dropdownToggle && dropdown) {
         console.log('🔧 Initialisation du dropdown utilisateur');
         
-        dropdownToggle.addEventListener('click', (e) => {
+        // Remove any existing event listeners by cloning the element
+        const newToggle = dropdownToggle.cloneNode(true);
+        dropdownToggle.parentNode.replaceChild(newToggle, dropdownToggle);
+        
+        newToggle.addEventListener('click', (e) => {
             e.stopPropagation();
             console.log('🖱️ Clic sur le dropdown toggle');
             dropdown.classList.toggle('hidden');
@@ -249,12 +261,15 @@ function initializeUserDropdown() {
         
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            if (!dropdownToggle.contains(e.target) && !dropdown.contains(e.target)) {
+            if (!newToggle.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.add('hidden');
             }
         });
         
         dropdownInitialized = true;
+        console.log('✅ Dropdown initialisé avec succès');
+    } else {
+        console.log('❌ Éléments dropdown non trouvés');
     }
 }
 
