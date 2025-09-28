@@ -1,0 +1,86 @@
+/* Footer Styles for R'MouV */
+
+footer {
+    background-color: #1f2937 !important; /* neutral-800 */
+    color: white !important;
+    padding: 3rem 0 !important;
+    margin-top: auto !important;
+}
+
+footer .container {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 0 1rem !important;
+}
+
+footer .grid {
+    display: grid !important;
+    grid-template-columns: repeat(1, 1fr) !important;
+    gap: 2rem !important;
+}
+
+@media (min-width: 768px) {
+    footer .grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+
+footer h3,
+footer h4 {
+    color: white !important;
+    margin-bottom: 1rem !important;
+}
+
+footer h3 {
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+}
+
+footer h4 {
+    font-size: 1rem !important;
+    font-weight: bold !important;
+}
+
+footer p {
+    color: #d1d5db !important; /* neutral-300 */
+    margin-bottom: 1rem !important;
+}
+
+footer ul {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+footer li {
+    margin-bottom: 0.5rem !important;
+}
+
+footer a {
+    color: #d1d5db !important; /* neutral-300 */
+    text-decoration: none !important;
+    transition: color 0.3s ease !important;
+}
+
+footer a:hover {
+    color: white !important;
+}
+
+footer .border-t {
+    border-top: 1px solid #374151 !important; /* neutral-700 */
+    margin-top: 3rem !important;
+    padding-top: 2rem !important;
+    text-align: center !important;
+}
+
+footer .text-neutral-400 {
+    color: #9ca3af !important; /* neutral-400 */
+}
+
+footer .text-primary {
+    color: #3b82f6 !important; /* blue-500 */
+}
+
+footer .text-secondary {
+    color: #ff8a3e !important; /* orange */
+}

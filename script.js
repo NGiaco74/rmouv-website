@@ -1,15 +1,10 @@
 // R'MouV Website JavaScript
+import { auth, bookings } from './supabase-client.js';
 
 // Global state
 const appState = {
     currentUser: null,
-    bookings: [],
-    currentWeek: new Date(),
-    classTypes: {
-        mobilite: { name: 'Cours Collectif – Mobilité', capacity: 10 },
-        renforcement: { name: 'Cours Collectif – Renforcement', capacity: 12 },
-        cardio: { name: 'Cours Collectif – Cardio doux', capacity: 12 }
-    }
+    isAuthenticated: false
 };
 
 // DOM Elements
@@ -17,27 +12,16 @@ const elements = {
     header: document.getElementById('header'),
     navbarToggle: document.getElementById('navbar-toggle'),
     navbarMenu: document.getElementById('navbar-menu'),
-    loginForm: document.getElementById('login-form'),
-    signupForm: document.getElementById('signup-form'),
-    bookingSystem: document.getElementById('booking-system'),
-    userDashboard: document.getElementById('user-dashboard'),
-    calendarGrid: document.getElementById('calendar-grid'),
-    currentWeek: document.getElementById('current-week'),
-    bookingsList: document.getElementById('bookings-list'),
     contactForm: document.getElementById('contactForm')
 };
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
-    initializeAuth();
-    initializeBookingSystem();
     initializeContactForm();
     initializeScrollEffects();
     initializeAnimations();
-    
-    // Check if user is already logged in
-    checkAuthStatus();
+    initializeAuth();
 });
 
 // Navigation
@@ -83,260 +67,8 @@ function handleHeaderScroll() {
     }
 }
 
-// Authentication
-function initializeAuth() {
-    // Tab switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const tab = this.dataset.tab;
-            switchAuthTab(tab);
-        });
-    });
 
-    // Form submissions
-    if (elements.loginForm) {
-        elements.loginForm.addEventListener('submit', handleLogin);
-    }
 
-    if (elements.signupForm) {
-        elements.signupForm.addEventListener('submit', handleSignup);
-    }
-}
-
-function switchAuthTab(tab) {
-    // Update tab buttons
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-
-    // Show/hide forms
-    elements.loginForm.classList.toggle('hidden', tab !== 'login');
-    elements.signupForm.classList.toggle('hidden', tab !== 'signup');
-}
-
-function handleLogin(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const loginData = Object.fromEntries(formData);
-
-    // Simulate login (replace with real API call)
-    if (loginData.email && loginData.mot_de_passe) {
-        appState.currentUser = {
-            email: loginData.email,
-            name: 'Utilisateur Test' // In real app, get from server
-        };
-        
-        localStorage.setItem('rmouv_user', JSON.stringify(appState.currentUser));
-        showBookingSystem();
-        showNotification('Connexion réussie !', 'success');
-    } else {
-        showNotification('Veuillez remplir tous les champs', 'error');
-    }
-}
-
-function handleSignup(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const signupData = Object.fromEntries(formData);
-
-    // Validate required fields
-    if (!signupData.prenom || !signupData.nom || !signupData.email || !signupData.mot_de_passe) {
-        showNotification('Veuillez remplir tous les champs obligatoires', 'error');
-        return;
-    }
-
-    // Validate consents
-    if (!signupData.consent_cgu || !signupData.consent_privacy) {
-        showNotification('Veuillez accepter les CGU et la politique de confidentialité', 'error');
-        return;
-    }
-
-    // Simulate signup (replace with real API call)
-    appState.currentUser = {
-        email: signupData.email,
-        name: `${signupData.prenom} ${signupData.nom}`,
-        phone: signupData.telephone,
-        objective: signupData.objectif
-    };
-    
-    localStorage.setItem('rmouv_user', JSON.stringify(appState.currentUser));
-    showBookingSystem();
-    showNotification('Inscription réussie ! Bienvenue chez R\'MouV !', 'success');
-}
-
-function checkAuthStatus() {
-    const savedUser = localStorage.getItem('rmouv_user');
-    if (savedUser) {
-        appState.currentUser = JSON.parse(savedUser);
-        showBookingSystem();
-    }
-}
-
-function logout() {
-    appState.currentUser = null;
-    localStorage.removeItem('rmouv_user');
-    elements.bookingSystem.classList.add('hidden');
-    elements.userDashboard.classList.add('hidden');
-    switchAuthTab('login');
-    showNotification('Déconnexion réussie', 'info');
-}
-
-// Booking System
-function initializeBookingSystem() {
-    // Calendar navigation
-    document.getElementById('prev-week')?.addEventListener('click', () => {
-        appState.currentWeek.setDate(appState.currentWeek.getDate() - 7);
-        renderCalendar();
-    });
-
-    document.getElementById('next-week')?.addEventListener('click', () => {
-        appState.currentWeek.setDate(appState.currentWeek.getDate() + 7);
-        renderCalendar();
-    });
-
-    // Filters
-    document.getElementById('class-type-filter')?.addEventListener('change', renderCalendar);
-    document.getElementById('level-filter')?.addEventListener('change', renderCalendar);
-}
-
-function showBookingSystem() {
-    elements.bookingSystem.classList.remove('hidden');
-    elements.userDashboard.classList.remove('hidden');
-    renderCalendar();
-    renderUserBookings();
-}
-
-function renderCalendar() {
-    if (!elements.calendarGrid) return;
-
-    const startOfWeek = getStartOfWeek(appState.currentWeek);
-    const endOfWeek = getEndOfWeek(appState.currentWeek);
-    
-    // Update week display
-    elements.currentWeek.textContent = 
-        `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
-
-    // Generate calendar slots
-    elements.calendarGrid.innerHTML = '';
-    
-    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-    const times = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-    
-    // Add day headers
-    days.forEach(day => {
-        const dayHeader = document.createElement('div');
-        dayHeader.className = 'calendar-day-header';
-        dayHeader.textContent = day;
-        elements.calendarGrid.appendChild(dayHeader);
-    });
-
-    // Generate time slots for each day
-    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-        const currentDay = new Date(startOfWeek);
-        currentDay.setDate(startOfWeek.getDate() + dayOffset);
-        
-        times.forEach(time => {
-            const slot = createCalendarSlot(currentDay, time);
-            elements.calendarGrid.appendChild(slot);
-        });
-    }
-}
-
-function createCalendarSlot(date, time) {
-    const slot = document.createElement('div');
-    slot.className = 'calendar-slot';
-    
-    const dateStr = formatDate(date);
-    const isPast = date < new Date();
-    const isBooked = isSlotBooked(dateStr, time);
-    const isFull = Math.random() > 0.7; // Simulate random availability
-    
-    if (isPast) {
-        slot.classList.add('past');
-        slot.textContent = `${time}\nPassé`;
-    } else if (isBooked) {
-        slot.classList.add('booked');
-        slot.textContent = `${time}\nRéservé`;
-    } else if (isFull) {
-        slot.classList.add('full');
-        slot.textContent = `${time}\nComplet`;
-        slot.addEventListener('click', () => {
-            showNotification('Ce créneau est complet. Ajout à la liste d\'attente ?', 'info');
-        });
-    } else {
-        slot.classList.add('available');
-        slot.textContent = `${time}\nDisponible`;
-        slot.addEventListener('click', () => {
-            bookSlot(dateStr, time);
-        });
-    }
-    
-    return slot;
-}
-
-function bookSlot(date, time) {
-    if (!appState.currentUser) {
-        showNotification('Veuillez vous connecter pour réserver', 'error');
-        return;
-    }
-
-    const booking = {
-        id: Date.now(),
-        date: date,
-        time: time,
-        type: 'Cours Collectif – Mobilité', // Default, should be selected
-        user: appState.currentUser.email
-    };
-
-    appState.bookings.push(booking);
-    localStorage.setItem('rmouv_bookings', JSON.stringify(appState.bookings));
-    
-    renderCalendar();
-    renderUserBookings();
-    showNotification('Créneau réservé avec succès !', 'success');
-}
-
-function isSlotBooked(date, time) {
-    return appState.bookings.some(booking => 
-        booking.date === date && booking.time === time
-    );
-}
-
-function renderUserBookings() {
-    if (!elements.bookingsList) return;
-
-    const userBookings = appState.bookings.filter(booking => 
-        booking.user === appState.currentUser?.email
-    );
-
-    if (userBookings.length === 0) {
-        elements.bookingsList.innerHTML = '<p>Aucune réservation pour le moment.</p>';
-        return;
-    }
-
-    elements.bookingsList.innerHTML = userBookings.map(booking => `
-        <div class="booking-item">
-            <div class="booking-info">
-                <h4>${booking.type}</h4>
-                <p>${booking.date} à ${booking.time}</p>
-            </div>
-            <div class="booking-actions">
-                <button class="btn btn-secondary btn-small" onclick="cancelBooking(${booking.id})">
-                    Annuler
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function cancelBooking(bookingId) {
-    appState.bookings = appState.bookings.filter(booking => booking.id !== bookingId);
-    localStorage.setItem('rmouv_bookings', JSON.stringify(appState.bookings));
-    renderCalendar();
-    renderUserBookings();
-    showNotification('Réservation annulée', 'info');
-}
 
 // Contact Form
 function initializeContactForm() {
@@ -411,27 +143,170 @@ function initializeAnimations() {
     document.head.appendChild(style);
 }
 
-// Utility Functions
-function getStartOfWeek(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    return new Date(d.setDate(diff));
-}
-
-function getEndOfWeek(date) {
-    const start = getStartOfWeek(date);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    return end;
-}
-
-function formatDate(date) {
-    return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit'
+// Authentication
+function initializeAuth() {
+    // Check if user is already logged in
+    checkAuthStatus();
+    
+    // Listen for auth state changes
+    auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN') {
+            appState.currentUser = session.user;
+            appState.isAuthenticated = true;
+            updateUI();
+        } else if (event === 'SIGNED_OUT') {
+            appState.currentUser = null;
+            appState.isAuthenticated = false;
+            updateUI();
+        }
     });
 }
+
+async function checkAuthStatus() {
+    const { session } = await auth.getSession();
+    if (session) {
+        appState.currentUser = session.user;
+        appState.isAuthenticated = true;
+        updateUI();
+    }
+}
+
+function updateUI() {
+    const createAccountBtn = document.querySelector('a[href="rejoindre.html"]');
+    if (createAccountBtn) {
+        if (appState.isAuthenticated) {
+            // User is logged in - show user menu
+            createAccountBtn.style.display = 'none';
+            showUserMenu();
+        } else {
+            // User is not logged in - show create account button
+            createAccountBtn.style.display = 'block';
+            hideUserMenu();
+        }
+    }
+}
+
+function showUserMenu() {
+    // Create user menu if it doesn't exist
+    let userMenu = document.getElementById('user-menu');
+    if (!userMenu) {
+        userMenu = document.createElement('div');
+        userMenu.id = 'user-menu';
+        userMenu.className = 'flex items-center space-x-4';
+        userMenu.innerHTML = `
+            <div class="relative">
+                <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                    <span id="user-initials" class="font-bold"></span>
+                    <i class="fas fa-chevron-down text-sm"></i>
+                </button>
+                <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                    <div class="py-3 px-2">
+                        <div class="px-4 py-2 text-sm text-gray-600 border-b">
+                            <span id="user-email"></span>
+                        </div>
+                        <a href="#" onclick="showBookingSystem()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-calendar mr-2"></i>Mes réservations
+                        </a>
+                        <button onclick="logout()" class="w-full text-left block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insert after the navigation links
+        const nav = document.querySelector('.hidden.md\\:flex.items-center.space-x-8');
+        if (nav) {
+            nav.appendChild(userMenu);
+        }
+        
+        // Add event listeners
+        document.getElementById('user-dropdown-toggle').addEventListener('click', function() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('user-dropdown');
+            const toggle = document.getElementById('user-dropdown-toggle');
+            if (toggle && dropdown && !toggle.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Update user info
+    if (appState.currentUser) {
+        const email = appState.currentUser.email;
+        const initials = email.substring(0, 2).toUpperCase();
+        
+        document.getElementById('user-initials').textContent = initials;
+        document.getElementById('user-email').textContent = email;
+    }
+    
+    userMenu.style.display = 'flex';
+}
+
+function hideUserMenu() {
+    const userMenu = document.getElementById('user-menu');
+    if (userMenu) {
+        userMenu.style.display = 'none';
+    }
+}
+
+// Auth functions
+async function signUp(email, password, userData = {}) {
+    try {
+        const { data, error } = await auth.signUp(email, password, userData);
+        if (error) {
+            showNotification('Erreur lors de l\'inscription: ' + error.message, 'error');
+            return { success: false, error };
+        }
+        
+        showNotification('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.', 'success');
+        return { success: true, data };
+    } catch (error) {
+        showNotification('Erreur lors de l\'inscription: ' + error.message, 'error');
+        return { success: false, error };
+    }
+}
+
+async function signIn(email, password) {
+    try {
+        const { data, error } = await auth.signIn(email, password);
+        if (error) {
+            showNotification('Erreur de connexion: ' + error.message, 'error');
+            return { success: false, error };
+        }
+        
+        showNotification('Connexion réussie !', 'success');
+        return { success: true, data };
+    } catch (error) {
+        showNotification('Erreur de connexion: ' + error.message, 'error');
+        return { success: false, error };
+    }
+}
+
+async function logout() {
+    try {
+        const { error } = await auth.signOut();
+        if (error) {
+            showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
+            return;
+        }
+        
+        showNotification('Déconnexion réussie', 'info');
+    } catch (error) {
+        showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
+    }
+}
+
+function showBookingSystem() {
+    showNotification('Système de réservation en cours de développement...', 'info');
+}
+
 
 function showNotification(message, type = 'info') {
     // Remove existing notifications
@@ -487,17 +362,3 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-// Load saved bookings
-function loadBookings() {
-    const savedBookings = localStorage.getItem('rmouv_bookings');
-    if (savedBookings) {
-        appState.bookings = JSON.parse(savedBookings);
-    }
-}
-
-// Initialize saved data
-loadBookings();
-
-// Export functions for global access
-window.logout = logout;
-window.cancelBooking = cancelBooking;
