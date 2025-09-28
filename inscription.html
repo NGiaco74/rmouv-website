@@ -12,14 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Supabase CDN -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
     
-    <!-- Variables d'environnement Netlify -->
+    <!-- Exposez les valeurs côté client (Project URL + anon key) -->
     <script>
-        // Variables d'environnement Netlify (injectées automatiquement par l'extension Supabase)
-        // Ces valeurs sont des fallbacks pour le développement local
-        window.SUPABASE_DATABASE_URL = window.SUPABASE_DATABASE_URL || 'https://unhenqckskgfeytpkpia.supabase.co';
-        window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw';
+        // ⚠️ Clé "anon" ou "publishable" uniquement (jamais la service_role)
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
     </script>
     
     <script>
@@ -212,25 +211,7 @@
 
     <!-- Scripts -->
     <script type="module">
-        // Attendre que Supabase soit chargé
-        function waitForSupabase() {
-            return new Promise(resolve => {
-                if (typeof supabase !== 'undefined') {
-                    resolve();
-                } else {
-                    const checkSupabase = setInterval(() => {
-                        if (typeof supabase !== 'undefined') {
-                            clearInterval(checkSupabase);
-                            resolve();
-                        }
-                    }, 100);
-                }
-            });
-        }
-        
-        // Attendre Supabase puis importer
-        await waitForSupabase();
-        const { auth } = await import('./supabase-client.js');
+        import { auth } from './supabase-client.js';
         
         console.log('Script chargé');
         console.log('Supabase importé avec succès:', auth);
