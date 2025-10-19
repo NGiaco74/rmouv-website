@@ -1,11 +1,33 @@
 // R'MouV Website JavaScript
 // Crée le client Supabase directement
-const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+let supabase = null;
+
+// Initialiser Supabase quand il est disponible
+function initializeSupabase() {
+    if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+        supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase initialisé dans script.js');
+        return true;
+    }
+    return false;
+}
+
+// Essayer d'initialiser immédiatement
+if (!initializeSupabase()) {
+    // Si pas encore disponible, attendre que le DOM soit chargé
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!initializeSupabase()) {
+            console.error('❌ Impossible d\'initialiser Supabase');
+        }
+    });
+}
 
 // Global state
 const appState = {
     currentUser: null,
-    isAuthenticated: false
+    isAuthenticated: false,
+    userRole: null,
+    isAdmin: false
 };
 
 // DOM Elements
@@ -18,10 +40,16 @@ const elements = {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+    // 1) Afficher immédiatement l'état caché (évite le flash)
+    displayCachedAuthState();
+    
+    // 2) Initialiser les autres composants
     initializeNavigation();
     initializeContactForm();
     initializeScrollEffects();
     initializeAnimations();
+    
+    // 3) Vérifier l'authentification en arrière-plan
     initializeAuth();
 });
 
@@ -44,7 +72,7 @@ function initializeNavigation() {
                 });
                 
                 // Close mobile menu if open
-                if (!elements.navbarMenu.classList.contains('hidden')) {
+                if (elements.navbarMenu && !elements.navbarMenu.classList.contains('hidden')) {
                     toggleMobileMenu();
                 }
             }
@@ -56,11 +84,15 @@ function initializeNavigation() {
 }
 
 function toggleMobileMenu() {
+    if (!elements.navbarMenu || !elements.navbarToggle) return; // Vérifier que les éléments existent
+    
     elements.navbarMenu.classList.toggle('hidden');
     elements.navbarToggle.classList.toggle('active');
 }
 
 function handleHeaderScroll() {
+    if (!elements.header) return; // Vérifier que l'élément existe
+    
     if (window.scrollY > 100) {
         elements.header.classList.add('scrolled');
     } else {
@@ -145,23 +177,210 @@ function initializeAnimations() {
 }
 
 // Authentication
+// Charger le rôle de l'utilisateur
+async function loadUserRole(userId) {
+    if (!supabase) {
+        console.error('❌ Supabase non initialisé');
+        return 'user';
+    }
+    
+    try {
+        console.log('🔍 Chargement du rôle pour l\'utilisateur:', userId);
+        
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
+        
+        if (error) {
+            console.error('❌ Erreur chargement rôle:', error);
+            console.log('📝 Table profiles probablement inexistante, rôle par défaut: user');
+            return 'user'; // Rôle par défaut
+        }
+        
+        const role = data?.role || 'user';
+        console.log('✅ Rôle chargé:', role);
+        return role;
+    } catch (error) {
+        console.error('❌ Erreur chargement rôle:', error);
+        console.log('📝 Erreur de connexion, rôle par défaut: user');
+        return 'user';
+    }
+}
+
+// Afficher immédiatement l'état d'authentification caché
+function displayCachedAuthState() {
+    console.log('⚡ Affichage immédiat de l\'état caché...');
+    
+    try {
+        // Récupérer l'état caché
+        const cachedAuth = localStorage.getItem('rmouv_auth_cache');
+        const cachedUser = localStorage.getItem('rmouv_user_cache');
+        const cachedRole = localStorage.getItem('rmouv_role_cache');
+        
+        if (cachedAuth === 'true' && cachedUser && cachedRole) {
+            console.log('📦 État caché trouvé - Utilisateur connecté');
+            
+            // Afficher immédiatement l'interface connectée
+            const authButtons = document.getElementById('auth-buttons');
+            const authButtonsMobile = document.getElementById('auth-buttons-mobile');
+            const userMenu = document.getElementById('user-menu');
+            const userMenuMobile = document.getElementById('user-menu-mobile');
+            
+            // Masquer les boutons d'authentification
+            if (authButtons) authButtons.style.display = 'none';
+            if (authButtonsMobile) authButtonsMobile.style.display = 'none';
+            
+            // Afficher le menu utilisateur
+            if (userMenu) {
+                userMenu.classList.remove('hidden');
+                userMenu.style.display = 'flex';
+            }
+            if (userMenuMobile) {
+                userMenuMobile.classList.remove('hidden');
+                userMenuMobile.style.display = 'block';
+            }
+            
+            // Afficher les initiales
+            const userData = JSON.parse(cachedUser);
+            const initials = userData.initials || 'U';
+            const initialsElement = document.getElementById('user-initials');
+            const initialsMobileElement = document.getElementById('user-initials-mobile');
+            
+            if (initialsElement) initialsElement.textContent = initials;
+            if (initialsMobileElement) initialsMobileElement.textContent = initials;
+            
+            // Gérer le bouton admin
+            if (cachedRole === 'admin') {
+                const adminButtonDesktop = document.getElementById('admin-button-desktop');
+                const adminButtonMobile = document.getElementById('admin-button-mobile');
+                
+                if (adminButtonDesktop) {
+                    adminButtonDesktop.classList.remove('hidden');
+                    adminButtonDesktop.style.display = 'block';
+                }
+                if (adminButtonMobile) {
+                    adminButtonMobile.classList.remove('hidden');
+                    adminButtonMobile.style.display = 'block';
+                }
+            }
+            
+            console.log('✅ Interface connectée affichée immédiatement');
+        } else {
+            console.log('📦 Aucun état caché - Utilisateur non connecté');
+            
+            // Afficher immédiatement l'interface non connectée
+            const authButtons = document.getElementById('auth-buttons');
+            const authButtonsMobile = document.getElementById('auth-buttons-mobile');
+            const userMenu = document.getElementById('user-menu');
+            const userMenuMobile = document.getElementById('user-menu-mobile');
+            
+            // Afficher les boutons d'authentification
+            if (authButtons) authButtons.style.display = 'flex';
+            if (authButtonsMobile) authButtonsMobile.style.display = 'block';
+            
+            // Masquer le menu utilisateur
+            if (userMenu) {
+                userMenu.classList.add('hidden');
+                userMenu.style.display = 'none';
+            }
+            if (userMenuMobile) {
+                userMenuMobile.classList.add('hidden');
+                userMenuMobile.style.display = 'none';
+            }
+            
+            console.log('✅ Interface non connectée affichée immédiatement');
+        }
+        
+        // Marquer que l'authentification est chargée (pour le CSS)
+        document.body.classList.add('auth-loaded');
+    } catch (error) {
+        console.error('❌ Erreur affichage état caché:', error);
+    }
+}
+
 async function initializeAuth() {
     console.log('🔐 Initialisation de l\'authentification...');
+    
+    if (!supabase) {
+        console.error('❌ Supabase non initialisé');
+        return;
+    }
     
     try {
         // 1) Lire la session au chargement
         const { data: { session } } = await supabase.auth.getSession();
         console.log('📋 Session actuelle:', session);
+        
+        if (session) {
+            // Charger le rôle de l'utilisateur
+            appState.userRole = await loadUserRole(session.user.id);
+            appState.isAdmin = appState.userRole === 'admin';
+            console.log('👤 Rôle utilisateur:', appState.userRole, 'Admin:', appState.isAdmin);
+        }
+        
         updateUI(!!session, session?.user);
         
         // 2) Écouter les changements (SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED, etc.)
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('🔄 Changement d\'état auth:', event, session);
+            
+            if (session) {
+                // Charger le rôle de l'utilisateur
+                appState.userRole = await loadUserRole(session.user.id);
+                appState.isAdmin = appState.userRole === 'admin';
+                console.log('👤 Rôle utilisateur:', appState.userRole, 'Admin:', appState.isAdmin);
+            } else {
+                appState.userRole = null;
+                appState.isAdmin = false;
+            }
+            
             updateUI(!!session, session?.user);
         });
         
     } catch (error) {
         console.error('❌ Erreur lors de l\'initialisation auth:', error);
+    }
+}
+
+// Mettre à jour le cache d'authentification
+function updateAuthCache(isLoggedIn, user) {
+    try {
+        if (isLoggedIn && user) {
+            // Calculer les initiales
+            let initials = 'U';
+            if (user.user_metadata?.first_name && user.user_metadata?.last_name) {
+                initials = (user.user_metadata.first_name.charAt(0) + user.user_metadata.last_name.charAt(0)).toUpperCase();
+            } else if (user.email) {
+                initials = user.email.charAt(0).toUpperCase();
+            }
+            
+            // Créer l'objet utilisateur pour le cache
+            const userData = {
+                id: user.id,
+                email: user.email,
+                initials: initials,
+                first_name: user.user_metadata?.first_name || '',
+                last_name: user.user_metadata?.last_name || ''
+            };
+            
+            // Sauvegarder dans le cache
+            localStorage.setItem('rmouv_auth_cache', 'true');
+            localStorage.setItem('rmouv_user_cache', JSON.stringify(userData));
+            localStorage.setItem('rmouv_role_cache', appState.userRole || 'user');
+            
+            console.log('💾 Cache mis à jour - Utilisateur connecté:', userData);
+        } else {
+            // Nettoyer le cache
+            localStorage.removeItem('rmouv_auth_cache');
+            localStorage.removeItem('rmouv_user_cache');
+            localStorage.removeItem('rmouv_role_cache');
+            
+            console.log('🗑️ Cache nettoyé - Utilisateur déconnecté');
+        }
+    } catch (error) {
+        console.error('❌ Erreur mise à jour cache:', error);
     }
 }
 
@@ -171,6 +390,9 @@ function updateUI(isLoggedIn, user) {
     // Update app state
     appState.isAuthenticated = isLoggedIn;
     appState.currentUser = user;
+    
+    // Mettre à jour le cache localStorage
+    updateAuthCache(isLoggedIn, user);
     
     const authButtons = document.getElementById('auth-buttons');
     const authButtonsMobile = document.getElementById('auth-buttons-mobile');
@@ -217,6 +439,9 @@ function updateUI(isLoggedIn, user) {
         if (userInitials) userInitials.textContent = initials;
         if (userInitialsMobile) userInitialsMobile.textContent = initials;
         
+        // Gérer l'affichage du bouton d'administration
+        updateAdminButtonVisibility();
+        
         // Initialize dropdown functionality after a short delay to ensure DOM is ready
         setTimeout(() => {
             initializeUserDropdown();
@@ -228,6 +453,47 @@ function updateUI(isLoggedIn, user) {
         if (authButtonsMobile) authButtonsMobile.classList.remove('hidden');
         if (userMenu) userMenu.classList.add('hidden');
         if (userMenuMobile) userMenuMobile.classList.add('hidden');
+        
+        // S'assurer que les boutons admin sont masqués quand déconnecté
+        updateAdminButtonVisibility();
+    }
+}
+
+// Gérer la visibilité du bouton d'administration
+function updateAdminButtonVisibility() {
+    const adminButtonDesktop = document.getElementById('admin-button-desktop');
+    const adminButtonMobile = document.getElementById('admin-button-mobile');
+    
+    console.log('🔧 Mise à jour visibilité bouton admin:', {
+        isAdmin: appState.isAdmin,
+        userRole: appState.userRole,
+        adminButtonDesktop: !!adminButtonDesktop,
+        adminButtonMobile: !!adminButtonMobile
+    });
+    
+    // Par défaut, masquer les boutons (sécurité) avec CSS inline
+    if (adminButtonDesktop) {
+        adminButtonDesktop.classList.add('hidden');
+        adminButtonDesktop.style.display = 'none';
+    }
+    if (adminButtonMobile) {
+        adminButtonMobile.classList.add('hidden');
+        adminButtonMobile.style.display = 'none';
+    }
+    
+    // Seulement afficher si l'utilisateur est vraiment admin
+    if (appState.isAdmin === true && appState.userRole === 'admin') {
+        if (adminButtonDesktop) {
+            adminButtonDesktop.classList.remove('hidden');
+            adminButtonDesktop.style.display = 'block';
+        }
+        if (adminButtonMobile) {
+            adminButtonMobile.classList.remove('hidden');
+            adminButtonMobile.style.display = 'block';
+        }
+        console.log('✅ Boutons d\'administration affichés');
+    } else {
+        console.log('❌ Boutons d\'administration masqués - Rôle:', appState.userRole, 'IsAdmin:', appState.isAdmin);
     }
 }
 
@@ -275,6 +541,11 @@ function initializeUserDropdown() {
 
 // Auth functions
 async function signUp(email, password, userData = {}) {
+    if (!supabase) {
+        console.error('❌ Supabase non initialisé');
+        return { error: { message: 'Supabase non initialisé' } };
+    }
+    
     try {
         const { data, error } = await supabase.auth.signUp({
             email,
@@ -297,6 +568,11 @@ async function signUp(email, password, userData = {}) {
 }
 
 async function signIn(email, password) {
+    if (!supabase) {
+        console.error('❌ Supabase non initialisé');
+        return { error: { message: 'Supabase non initialisé' } };
+    }
+    
     try {
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
@@ -316,6 +592,11 @@ async function signIn(email, password) {
 }
 
 async function logout() {
+    if (!supabase) {
+        console.error('❌ Supabase non initialisé');
+        return;
+    }
+    
     try {
         const { error } = await supabase.auth.signOut();
         if (error) {

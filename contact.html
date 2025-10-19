@@ -110,7 +110,39 @@
             top: 0;
             z-index: 50;
         }
+        
+        /* Éviter le flash des boutons d'authentification */
+        #auth-buttons, #auth-buttons-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #user-menu, #user-menu-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* Une fois que JavaScript a chargé, afficher les éléments */
+        .auth-loaded #auth-buttons,
+        .auth-loaded #auth-buttons-mobile,
+        .auth-loaded #user-menu,
+        .auth-loaded #user-menu-mobile {
+            opacity: 1;
+        }
     </style>
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Configuration Supabase -->
+    <script>
+        // Configuration Supabase - Les variables sont injectées par Netlify
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+        
+        // Créer le client Supabase
+        const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    </script>
 </head>
 <body class="font-sans bg-white text-neutral-700">
     <!-- Navigation -->
@@ -128,7 +160,17 @@
                 <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
                 
-                <!-- User menu (hidden by default) -->
+                <!-- Boutons d'authentification (masqués quand connecté) -->
+                <div id="auth-buttons" class="flex items-center space-x-4">
+                    <a href="connexion.html" class="text-primary hover:text-primary/80 font-medium transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <!-- User menu (masqué par défaut) -->
                 <div id="user-menu" class="hidden flex items-center space-x-4">
                     <div class="relative">
                         <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
@@ -137,8 +179,14 @@
                         </button>
                         <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
                             <div class="py-3 px-2">
-                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
                                 <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
@@ -162,6 +210,36 @@
                 <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
                 <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+                
+                <!-- Boutons d'authentification mobile (masqués quand connecté) -->
+                <div id="auth-buttons-mobile" class="space-y-2">
+                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors text-center py-2">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors text-center">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <!-- User menu mobile (masqué par défaut) -->
+                <div id="user-menu-mobile" class="hidden space-y-2">
+                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full">
+                        <span id="user-initials-mobile" class="font-bold"></span>
+                        <span class="text-sm">Connecté</span>
+                    </div>
+                    <a href="reservation.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                    </a>
+                    <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-calendar mr-2"></i>Mes réservations
+                    </a>
+                    <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-cog mr-2"></i>Administration
+                    </a>
+                    <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                    </a>
+                </div>
             </div>
         </div>
     </header>
@@ -451,5 +529,8 @@
             this.reset();
         });
     </script>
+    
+    <!-- Script d'authentification -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>

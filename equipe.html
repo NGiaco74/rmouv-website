@@ -110,7 +110,39 @@
             top: 0;
             z-index: 50;
         }
+        
+        /* Éviter le flash des boutons d'authentification */
+        #auth-buttons, #auth-buttons-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #user-menu, #user-menu-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* Une fois que JavaScript a chargé, afficher les éléments */
+        .auth-loaded #auth-buttons,
+        .auth-loaded #auth-buttons-mobile,
+        .auth-loaded #user-menu,
+        .auth-loaded #user-menu-mobile {
+            opacity: 1;
+        }
     </style>
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Configuration Supabase -->
+    <script>
+        // Configuration Supabase - Les variables sont injectées par Netlify
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+        
+        // Créer le client Supabase
+        const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    </script>
 </head>
 <body class="font-sans bg-white text-neutral-700">
     <!-- Navigation -->
@@ -137,8 +169,14 @@
                         </button>
                         <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
                             <div class="py-3 px-2">
-                                <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
                                 <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
@@ -487,5 +525,8 @@
             checkUserLogin();
         });
     </script>
+    
+    <!-- Script d'authentification -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Réservation - R'MouV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                        colors: {
+                            primary: "#5A9FD4",  // Bleu acier plus clair unifié
+                            secondary: "#FF8A3E", // Orange équilibré
+                            neutral: "#37474F"    // Gris ardoise
+                        },
+                    fontFamily: {
+                                sans: ['Now', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Force la couleur secondaire personnalisée */
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .to-secondary\/10 {
+            --tw-gradient-to: rgba(255, 138, 62, 0.1) !important;
+        }
+        .from-primary\/10 {
+            --tw-gradient-from: rgba(25, 118, 210, 0.3) !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        
+        /* Alignement spécifique du logo et du texte */
+        .sticky-nav .flex.items-center:first-child {
+            align-items: baseline !important;
+        }
+        .sticky-nav .text-2xl.font-bold {
+            line-height: 1.2 !important;
+        }
+        .sticky-nav .ml-2.text-sm {
+            margin-top: 0.25rem !important;
+        }
+        
+        /* Alignement mobile */
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+            .sticky-nav .flex.items-center:first-child {
+                align-items: center !important;
+            }
+            .sticky-nav .text-2xl.font-bold {
+                font-size: 1.5rem !important;
+            }
+            .sticky-nav .ml-2.text-sm {
+                display: none !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        /* Amélioration de l'alignement de la navigation */
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        
+        .slot-card {
+            transition: all 0.3s ease;
+        }
+        .slot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .slot-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .slot-card.selected {
+            border-color: #FF8A3E;
+            background-color: #FFF7F0;
+        }
+        
+        .slot-card.user-reserved {
+            border-color: #5A9FD4;
+            background-color: #F0F8FF;
+        }
+        
+        /* Styles pour les vues de réservation */
+        .reservation-view-toggle.active {
+            background-color: #5A9FD4 !important;
+            color: white !important;
+            border-color: #5A9FD4 !important;
+        }
+        .reservation-view-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Calendrier mensuel */
+        .calendar-day {
+            min-height: 120px;
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .calendar-day:hover {
+            background-color: #f9fafb;
+        }
+        .calendar-day.has-slots {
+            background-color: #f0f9ff;
+            border-color: #5A9FD4;
+        }
+        .calendar-day.selected {
+            background-color: #FFF7F0;
+            border-color: #FF8A3E;
+        }
+        .calendar-day.other-month {
+            background-color: #f9fafb;
+            color: #9ca3af;
+        }
+        .calendar-day.today {
+            background-color: #fef3c7;
+            border-color: #f59e0b;
+        }
+        
+        /* Codes couleur pour les types de créneaux */
+        .calendar-day.has-individuel {
+            background-color: #EFF6FF;
+            border-color: #5A9FD4;
+        }
+        .calendar-day.has-groupe {
+            background-color: #FFF7F0;
+            border-color: #FF8A3E;
+        }
+        .calendar-day.has-both {
+            background: linear-gradient(135deg, #EFF6FF 50%, #FFF7F0 50%);
+            border-color: #5A9FD4;
+        }
+        
+        /* Indicateurs de type dans le calendrier */
+        .slot-type-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        .slot-type-indicator.individuel {
+            background-color: #5A9FD4;
+        }
+        .slot-type-indicator.groupe {
+            background-color: #FF8A3E;
+        }
+        
+        /* Améliorer l'affichage des créneaux dans le calendrier */
+        .calendar-day .text-xs {
+            line-height: 1.2;
+        }
+        .calendar-day .font-medium {
+            font-weight: 600;
+        }
+        
+        /* Liste des créneaux */
+        .slot-list-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+        .slot-list-item:hover {
+            border-color: #5A9FD4;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .slot-list-item.selected {
+            border-color: #FF8A3E;
+            background-color: #FFF7F0;
+        }
+        .slot-list-item.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="equipe.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                        <!-- Boutons d'authentification (masqués quand connecté) -->
+                        <div id="auth-buttons" class="flex items-center space-x-4">
+                            <a href="connexion.html" class="text-primary hover:text-primary/80 font-medium transition-colors">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                            </a>
+                            <a href="inscription.html" class="bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors">
+                                <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                            </a>
+                        </div>
+                        
+                        <!-- User menu (masqué par défaut) -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                                <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                                    <div class="py-3 px-2">
+                                        <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                        <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                        <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-cog mr-2"></i>Administration
+                                </a>
+                                        <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Mobile Menu -->
+        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
+                <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="equipe.html" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+                
+                    <!-- Boutons d'authentification mobile (masqués quand connecté) -->
+                    <div id="auth-buttons-mobile" class="space-y-2">
+                        <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors text-center py-2">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                        </a>
+                        <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors text-center">
+                            <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                        </a>
+                    </div>
+                    
+                    <!-- User menu mobile (masqué par défaut) -->
+                    <div id="user-menu-mobile" class="hidden space-y-2">
+                        <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full">
+                            <span id="user-initials-mobile" class="font-bold"></span>
+                            <span class="text-sm">Connecté</span>
+                        </div>
+                        <a href="reservation.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                        </a>
+                        <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-calendar mr-2"></i>Mes réservations
+                        </a>
+                        <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-cog mr-2"></i>Administration
+                        </a>
+                        <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                        </a>
+                    </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative bg-gradient-to-r from-primary/10 to-secondary/10" id="hero">
+        <div class="container mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6 text-neutral-800">
+                <span class="text-primary">Réservez</span> votre créneau
+            </h1>
+            <div class="text-xl md:text-2xl h-10 text-primary mb-8">
+                <span>Choisissez votre type de coaching et réservez votre séance</span>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mb-12">
+                <a href="#calendar-section" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg">
+                    Voir les créneaux
+                </a>
+                <a href="index.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg">
+                    Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendrier des créneaux -->
+    <section id="calendar-section" class="py-12 bg-gray-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Sélectionnez votre créneau</h2>
+                <p id="selected-service-info" class="text-lg text-gray-600"></p>
+            </div>
+
+            <!-- Sélecteur de vue -->
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button id="view-calendar" onclick="switchReservationView('calendar')" class="reservation-view-toggle active bg-white text-primary border-2 border-primary px-4 py-2 rounded-lg font-medium transition-all hover:bg-primary hover:text-white">
+                    <i class="fas fa-calendar-alt mr-2"></i>Calendrier mensuel
+                </button>
+                <button id="view-week" onclick="switchReservationView('week')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-calendar-week mr-2"></i>Vue semaine
+                </button>
+                <button id="view-list" onclick="switchReservationView('list')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-list mr-2"></i>Liste des créneaux
+                </button>
+                <button id="view-my-bookings" onclick="switchReservationView('my-bookings')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-calendar-check mr-2"></i>Mes réservations
+                </button>
+            </div>
+
+            <!-- Vue Calendrier mensuel -->
+            <div id="calendar-view" class="reservation-view">
+                <!-- Navigation du calendrier -->
+                <div class="flex justify-between items-center mb-8">
+                    <button id="prev-month" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-chevron-left mr-2"></i>Mois précédent
+                    </button>
+                    <h3 id="current-month" class="text-xl font-semibold text-gray-800"></h3>
+                    <button id="next-month" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                        Mois suivant<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Grille du calendrier mensuel -->
+                <div id="monthly-calendar" class="bg-white rounded-lg shadow-sm border p-6">
+                    <!-- Le calendrier sera généré dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Vue Semaine -->
+            <div id="week-view" class="reservation-view hidden">
+                <!-- Navigation de la semaine -->
+                <div class="flex justify-between items-center mb-8">
+                    <button id="prev-week" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-chevron-left mr-2"></i>Semaine précédente
+                    </button>
+                    <h3 id="current-week" class="text-xl font-semibold text-gray-800"></h3>
+                    <button id="next-week" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                        Semaine suivante<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+                </div>
+
+                <!-- Grille des créneaux de la semaine -->
+                <div id="slots-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Les créneaux seront générés dynamiquement -->
+                </div>
+            </div>
+
+            <!-- Vue Liste -->
+            <div id="list-view" class="reservation-view hidden">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Tous les créneaux disponibles</h3>
+                    <div id="slots-list" class="space-y-3">
+                        <!-- Les créneaux seront générés dynamiquement -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Mes réservations -->
+            <div id="my-bookings-view" class="reservation-view hidden">
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Mes réservations</h3>
+                    <div id="my-bookings-list" class="space-y-3">
+                        <!-- Les réservations seront générées dynamiquement -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bouton de réservation -->
+            <div class="text-center mt-8">
+                <button id="book-slot" class="bg-secondary hover:bg-secondary/90 text-white px-8 py-3 rounded-full font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-calendar-check mr-2"></i>Réserver ce créneau
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Exposez les valeurs côté client (Project URL + anon key) -->
+    <script>
+        // ⚠️ Clé "anon" ou "publishable" uniquement (jamais la service_role)
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+    </script>
+    
+    <!-- Script Supabase -->
+    <script type="module" src="script.js"></script>
+    
+    <!-- Script de réservation -->
+    <script src="reservation.js"></script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">
+                        <span class="text-primary">R</span><span class="text-secondary">'MouV</span>
+                    </h3>
+                    <p class="text-gray-300 mb-4">
+                        Votre espace innovant dédié à la santé et au sport. 
+                        Notre objectif : Redonner du mouvement à votre corps, 
+                        quelque soit le point de départ !
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Liens utiles</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-300 hover:text-white transition-colors">Accueil</a></li>
+                        <li><a href="projet.html" class="text-gray-300 hover:text-white transition-colors">Notre Projet</a></li>
+                        <li><a href="equipements.html" class="text-gray-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="equipe.html" class="text-gray-300 hover:text-white transition-colors">Équipe</a></li>
+                        <li><a href="contact.html" class="text-gray-300 hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
+                    <div class="space-y-2 text-gray-300">
+                        <p><i class="fas fa-map-marker-alt mr-2"></i>Adresse du centre</p>
+                        <p><i class="fas fa-phone mr-2"></i>01 23 45 67 89</p>
+                        <p><i class="fas fa-envelope mr-2"></i>contact@rmouv.fr</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
+                <p>&copy; 2024 R'MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

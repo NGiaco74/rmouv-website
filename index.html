@@ -170,6 +170,25 @@
                 padding: 3rem 1rem;
             }
         }
+        
+        /* Éviter le flash des boutons d'authentification */
+        #auth-buttons, #auth-buttons-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #user-menu, #user-menu-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        /* Une fois que JavaScript a chargé, afficher les éléments */
+        .auth-loaded #auth-buttons,
+        .auth-loaded #auth-buttons-mobile,
+        .auth-loaded #user-menu,
+        .auth-loaded #user-menu-mobile {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="font-sans bg-white text-neutral-700">
@@ -207,8 +226,14 @@
                         </button>
                         <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
                                     <div class="py-3 px-2">
-                                        <a href="#inscription" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                        <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                        <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                        <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
                                         <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
@@ -249,8 +274,14 @@
                             <span id="user-initials-mobile" class="font-bold"></span>
                             <span class="text-sm">Connecté</span>
                         </div>
-                        <a href="#inscription" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <a href="reservation.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                        </a>
+                        <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                             <i class="fas fa-calendar mr-2"></i>Mes réservations
+                        </a>
+                        <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-cog mr-2"></i>Administration
                         </a>
                         <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                             <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
@@ -564,7 +595,7 @@
 
     <!-- Floating CTA -->
     <div class="fixed bottom-6 right-6 z-50">
-        <a href="#inscription" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full transition-all shadow-lg animate-pulse">
+        <a href="reservation.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full transition-all shadow-lg animate-pulse">
             <i class="fas fa-calendar-plus mr-2"></i>Réserve un créneau
         </a>
     </div>

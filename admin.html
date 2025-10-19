@@ -1,423 +1,689 @@
 <!DOCTYPE html>
-<html lang="fr-FR">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>R'MouV Admin - Gestion des réservations</title>
+    <title>Administration - R'MouV</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                            primary: "#5A9FD4",
-                            secondary: "#FFB347",
+                        primary: "#5A9FD4",
+                        secondary: "#FF8A3E",
                         neutral: "#37474F"
+                    },
+                    fontFamily: {
+                        sans: ['Now', 'sans-serif']
                     }
                 }
             }
         }
+
+        // Gérer l'affichage des options de récurrence
+        document.addEventListener('DOMContentLoaded', function() {
+            const recurringCheckbox = document.getElementById('recurring-slot');
+            const recurringOptions = document.getElementById('recurring-options');
+            
+            if (recurringCheckbox && recurringOptions) {
+                // S'assurer que les options sont masquées par défaut
+                recurringOptions.classList.add('hidden');
+                
+                recurringCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        recurringOptions.classList.remove('hidden');
+                    } else {
+                        recurringOptions.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Gestion du type de création (créneau unique vs plage d'horaires)
+            const timeTypeRadios = document.querySelectorAll('input[name="time-type"]');
+            const singleTimeField = document.getElementById('single-time-field');
+            const rangeTimeFields = document.getElementById('range-time-fields');
+            
+            if (timeTypeRadios.length > 0 && singleTimeField && rangeTimeFields) {
+                timeTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        if (this.value === 'single') {
+                            singleTimeField.classList.remove('hidden');
+                            rangeTimeFields.classList.add('hidden');
+                        } else if (this.value === 'range') {
+                            singleTimeField.classList.add('hidden');
+                            rangeTimeFields.classList.remove('hidden');
+                        }
+                    });
+                });
+            }
+        });
     </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .to-secondary\/10 {
+            --tw-gradient-to: rgba(255, 138, 62, 0.1) !important;
+        }
+        .from-primary\/10 {
+            --tw-gradient-from: rgba(25, 118, 210, 0.3) !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        
+        .calendar-day {
+            min-height: 120px;
+            transition: all 0.2s ease;
+        }
+        
+        .calendar-day:hover {
+            background-color: #f8fafc;
+        }
+        
+        .calendar-day.today {
+            background-color: #e0f2fe;
+            border: 2px solid #5A9FD4;
+        }
+        
+        .calendar-day.has-slots {
+            background-color: #f0f9ff;
+        }
+        
+        .slot-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        
+        .slot-individuel {
+            background-color: #10b981;
+        }
+        
+        .slot-groupe {
+            background-color: #f59e0b;
+        }
+        
+        .slot-booked {
+            background-color: #ef4444;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Z-index spécifique pour éviter les conflits */
+        #day-details-modal {
+            z-index: 1001;
+        }
+        
+        #add-slot-modal {
+            z-index: 1002;
+        }
+        
+        /* Styles pour les checkboxes */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #5A9FD4;
+        }
+        
+        /* Validation des champs */
+        .form-field.error input,
+        .form-field.error select {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .form-field.error label {
+            color: #ef4444;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .booking-item {
+            background-color: #f8fafc;
+            border-left: 4px solid #5A9FD4;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .booking-individuel {
+            border-left-color: #10b981;
+        }
+        
+        .booking-groupe {
+            border-left-color: #f59e0b;
+        }
+        
+        .time-slot {
+            background-color: #e0f2fe;
+            border: 1px solid #5A9FD4;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .time-slot:hover {
+            background-color: #bae6fd;
+        }
+        
+        .time-slot.booked {
+            background-color: #fecaca;
+            border-color: #ef4444;
+        }
+        
+        .time-slot.selected {
+            background-color: #5A9FD4;
+            color: white;
+        }
+        
+        /* Styles pour les boutons de sélection de vue */
+        .view-toggle.active {
+            background-color: #5A9FD4 !important;
+            color: white !important;
+            border-color: #5A9FD4 !important;
+        }
+        
+        .view-toggle:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Styles pour les cartes de statistiques */
+        .stat-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
+<body class="font-sans bg-gray-50 text-neutral-700">
+    <!-- Navigation -->
+    <header id="header" class="bg-white shadow-md sticky top-0 z-40">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
                 <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span> Admin</h1>
-                    <span class="ml-3 px-2 py-1 bg-primary text-white text-xs rounded-full">ADMIN</span>
+                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
+                <span class="ml-2 text-sm font-medium">Administration</span>
                 </div>
+            
                 <div class="flex items-center space-x-4">
-                    <span id="admin-name" class="text-gray-700"></span>
-                    <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors">
+                <a href="index.html" class="text-primary hover:text-primary/80 font-medium transition-colors">
+                    <i class="fas fa-home mr-2"></i>Retour au site
+                </a>
+                <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-medium transition-colors">
                         <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
                     </button>
                 </div>
-            </div>
-        </div>
+        </nav>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                        <i class="fas fa-users text-xl"></i>
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-r from-primary/10 to-secondary/10 py-12">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-neutral-800">
+                <span class="text-primary">Administration</span> des créneaux
+            </h1>
+            <p class="text-xl text-neutral-600 mb-8">Gérez les créneaux et visualisez les réservations</p>
+            
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button onclick="showAddSlotModal()" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-6 rounded-full transition-all shadow-lg">
+                    <i class="fas fa-plus mr-2"></i>Ajouter un créneau
+                </button>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Utilisateurs</p>
-                        <p id="total-users" class="text-2xl font-semibold text-gray-900">-</p>
+            
+            <!-- Sélecteur de mode de visualisation -->
+            <div class="flex flex-wrap justify-center gap-2 mb-6">
+                <button id="view-calendar" onclick="switchView('calendar')" class="view-toggle active bg-white text-primary border-2 border-primary px-4 py-2 rounded-lg font-medium transition-all hover:bg-primary hover:text-white">
+                    <i class="fas fa-calendar-alt mr-2"></i>Calendrier
+                </button>
+                <button id="view-list" onclick="switchView('list')" class="view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-list mr-2"></i>Liste des créneaux
+                </button>
+                <button id="view-bookings" onclick="switchView('bookings')" class="view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-calendar-check mr-2"></i>Réservations
+                </button>
+                <button id="view-stats" onclick="switchView('stats')" class="view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-chart-bar mr-2"></i>Statistiques
+                </button>
+                <button id="view-users" onclick="switchView('users')" class="view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
+                    <i class="fas fa-users mr-2"></i>Utilisateurs
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contrôles du calendrier -->
+    <section id="calendar-view" class="py-6 bg-white border-b">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <button onclick="previousMonth()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        <i class="fas fa-chevron-left mr-2"></i>Mois précédent
+                    </button>
+                    <h2 id="current-month" class="text-2xl font-bold text-gray-800">Janvier 2024</h2>
+                    <button onclick="nextMonth()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition-colors">
+                        Mois suivant<i class="fas fa-chevron-right ml-2"></i>
+                    </button>
+            </div>
+            
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <div class="slot-indicator slot-individuel"></div>
+                        <span class="text-sm text-gray-600">Individuel</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="slot-indicator slot-groupe"></div>
+                        <span class="text-sm text-gray-600">Groupe</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="slot-indicator slot-booked"></div>
+                        <span class="text-sm text-gray-600">Réservé</span>
+                    </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 text-green-600">
-                        <i class="fas fa-calendar-check text-xl"></i>
+    </section>
+
+    <!-- Calendrier -->
+    <section id="calendar-grid-section" class="py-8">
+        <div class="container mx-auto px-4">
+            <!-- En-têtes des jours -->
+            <div class="grid grid-cols-7 gap-1 mb-4">
+                <div class="text-center font-semibold text-gray-600 py-2">Lun</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Mar</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Mer</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Jeu</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Ven</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Sam</div>
+                <div class="text-center font-semibold text-gray-600 py-2">Dim</div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Réservations</p>
-                        <p id="total-bookings" class="text-2xl font-semibold text-gray-900">-</p>
+            
+            <!-- Grille du calendrier -->
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 bg-white rounded-lg shadow-sm border">
+                <!-- Les jours seront générés par JavaScript -->
+                    </div>
+                </div>
+    </section>
+
+    <!-- Vue Liste des créneaux -->
+    <section id="list-view" class="hidden py-8 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Liste des créneaux</h2>
+                    <div class="flex gap-2">
+                        <select id="list-filter-type" class="px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Tous les types</option>
+                            <option value="coaching_individuel">Individuel</option>
+                            <option value="coaching_groupe">Groupe</option>
+                        </select>
+                        <select id="list-filter-status" class="px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Tous les statuts</option>
+                            <option value="available">Disponibles</option>
+                            <option value="full">Complets</option>
+                        </select>
+            </div>
+                    </div>
+                <div id="slots-list" class="space-y-3">
+                    <!-- Les créneaux seront générés par JavaScript -->
                     </div>
                 </div>
             </div>
-            
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                        <i class="fas fa-calendar-day text-xl"></i>
+    </section>
+
+    <!-- Vue Réservations -->
+    <section id="bookings-view" class="hidden py-8 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Réservations</h2>
+                    <div class="flex gap-2">
+                        <select id="bookings-filter-status" class="px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="">Tous les statuts</option>
+                            <option value="confirmed">Confirmées</option>
+                            <option value="cancelled">Annulées</option>
+                            <option value="completed">Terminées</option>
+                    </select>
+                        <input type="date" id="bookings-filter-date" class="px-3 py-2 border border-gray-300 rounded-md">
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Réservations Aujourd'hui</p>
-                        <p id="today-bookings" class="text-2xl font-semibold text-gray-900">-</p>
+                    </div>
+                <div id="bookings-list" class="space-y-3">
+                    <!-- Les réservations seront générées par JavaScript -->
                     </div>
                 </div>
             </div>
+    </section>
+
+    <!-- Vue Statistiques -->
+    <section id="stats-view" class="hidden py-8 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Cartes de statistiques -->
+                <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                    <div class="text-3xl font-bold text-primary mb-2" id="total-slots">0</div>
+                    <div class="text-sm text-gray-600">Créneaux créés</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2" id="total-bookings">0</div>
+                    <div class="text-sm text-gray-600">Réservations</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm border p-6 text-center">
+                    <div class="text-3xl font-bold text-orange-600 mb-2" id="occupancy-rate">0%</div>
+                    <div class="text-sm text-gray-600">Taux d'occupation</div>
+                </div>
+            </div>
             
-            <div class="bg-white rounded-lg shadow p-6">
-                <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                        <i class="fas fa-dumbbell text-xl"></i>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Graphique des réservations par jour -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Réservations par jour de la semaine</h3>
+                    <div id="bookings-by-day-chart" class="h-64">
+                        <!-- Graphique sera généré par JavaScript -->
+        </div>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Cours Actifs</p>
-                        <p id="total-courses" class="text-2xl font-semibold text-gray-900">-</p>
+
+                <!-- Graphique des types de cours -->
+                <div class="bg-white rounded-lg shadow-sm border p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Répartition par type de cours</h3>
+                    <div id="course-types-chart" class="h-64">
+                        <!-- Graphique sera généré par JavaScript -->
                     </div>
                 </div>
             </div>
         </div>
+    </section>
 
-        <!-- Filters -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Filtres</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                    <input type="date" id="date-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Statut</label>
-                    <select id="status-filter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+    <!-- Vue Utilisateurs -->
+    <section id="users-view" class="hidden py-8 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="bg-white rounded-lg shadow-sm border p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Gestion des utilisateurs</h2>
+                    <div class="flex gap-2">
+                        <select id="users-filter-role" class="px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Tous les rôles</option>
+                            <option value="user">Utilisateurs</option>
+                            <option value="admin">Administrateurs</option>
+                        </select>
+                        <select id="users-filter-status" class="px-3 py-2 border border-gray-300 rounded-md">
                         <option value="">Tous les statuts</option>
-                        <option value="confirmed">Confirmé</option>
-                        <option value="cancelled">Annulé</option>
-                        <option value="completed">Terminé</option>
+                            <option value="active">Actifs</option>
+                            <option value="inactive">Inactifs</option>
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button onclick="applyFilters()" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-lg transition-colors">
-                        <i class="fas fa-search mr-2"></i>Filtrer
-                    </button>
                 </div>
+                
+                <!-- Statistiques utilisateurs -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-blue-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="total-users">0</div>
+                        <div class="text-sm text-blue-600">Total utilisateurs</div>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-green-600" id="active-users">0</div>
+                        <div class="text-sm text-green-600">Utilisateurs actifs</div>
+                    </div>
+                    <div class="bg-orange-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-orange-600" id="admin-users">0</div>
+                        <div class="text-sm text-orange-600">Administrateurs</div>
+                </div>
+                    <div class="bg-purple-50 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="users-with-bookings">0</div>
+                        <div class="text-sm text-purple-600">Avec réservations</div>
             </div>
         </div>
 
-        <!-- Bookings Table -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-900">Réservations</h2>
+                <div id="users-list" class="space-y-3">
+                    <!-- Les utilisateurs seront générés par JavaScript -->
             </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilisateur</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cours</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Heure</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="bookings-table-body" class="bg-white divide-y divide-gray-200">
-                        <!-- Bookings will be loaded here -->
-                    </tbody>
-                </table>
             </div>
         </div>
+    </section>
 
-        <!-- Export Button -->
-        <div class="mt-6 text-center">
-            <button onclick="exportBookings()" class="bg-secondary hover:bg-secondary/90 text-white px-6 py-3 rounded-lg transition-colors">
-                <i class="fas fa-download mr-2"></i>Exporter les réservations (CSV)
+    <!-- Modal pour ajouter un créneau -->
+    <div id="add-slot-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Ajouter un créneau</h3>
+                <button onclick="closeAddSlotModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
             </button>
         </div>
+            
+            <form id="add-slot-form">
+                <div class="space-y-4">
+                    <div class="form-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" id="slot-date" name="slot-date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                    
+                    <div class="form-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Type de création <span class="text-red-500">*</span>
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="time-type" value="single" checked class="mr-2">
+                                <span class="text-sm">Créneau unique</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="time-type" value="range" class="mr-2">
+                                <span class="text-sm">Plage d'horaires</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Créneau unique -->
+                    <div id="single-time-field" class="form-field">
+                        <label for="slot-time" class="block text-sm font-medium text-gray-700 mb-2">
+                            Heure <span class="text-red-500">*</span>
+                        </label>
+                        <select id="slot-time" name="slot-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Sélectionner une heure</option>
+                            <option value="07:00">07:00</option>
+                            <option value="08:00">08:00</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                            <option value="12:00">12:00</option>
+                            <option value="13:00">13:00</option>
+                            <option value="14:00">14:00</option>
+                            <option value="15:00">15:00</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                            <option value="19:00">19:00</option>
+                            <option value="20:00">20:00</option>
+                            <option value="21:00">21:00</option>
+                            <option value="22:00">22:00</option>
+                        </select>
+                    </div>
+
+                    <!-- Plage d'horaires -->
+                    <div id="range-time-fields" class="form-field hidden">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="start-time" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Heure de début <span class="text-red-500">*</span>
+                                </label>
+                                <input type="time" id="start-time" name="start-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" step="3600">
+                            </div>
+                            <div>
+                                <label for="end-time" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Heure de fin <span class="text-red-500">*</span>
+                                </label>
+                                <input type="time" id="end-time" name="end-time" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" step="3600">
+                            </div>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Les créneaux seront créés automatiquement toutes les heures (ex: 11h→12h, 12h→13h, etc.)
+                        </div>
+                    </div>
+                    
+                    <div class="form-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Types de cours <span class="text-red-500">*</span>
+                        </label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" id="slot-type-individuel" name="slot-types" value="coaching_individuel" class="mr-2">
+                                <span>Coaching Individuel (1 place)</span>
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="slot-type-groupe" name="slot-types" value="coaching_groupe" class="mr-2">
+                                <span>Coaching Groupe</span>
+                                <input type="number" id="group-capacity" name="group-capacity" value="3" min="1" max="20" class="w-16 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="3">
+                                <span class="text-sm text-gray-600">places</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-1">Vous pouvez sélectionner les deux types pour le même créneau</p>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg p-6 flex items-center space-x-4">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <span class="text-gray-700">Chargement...</span>
+                    <div class="form-field">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="recurring-slot" name="recurring-slot" class="mr-2">
+                            <span class="text-sm font-medium text-gray-700">Créer ce créneau de façon récurrente</span>
+                        </label>
+                        <div id="recurring-options" class="mt-3 ml-6 space-y-2 hidden">
+                            <div class="text-sm text-gray-600 mb-2">Répéter ce créneau :</div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="monday" class="mr-2">
+                                    <span class="text-sm">Lundi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="tuesday" class="mr-2">
+                                    <span class="text-sm">Mardi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="wednesday" class="mr-2">
+                                    <span class="text-sm">Mercredi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="thursday" class="mr-2">
+                                    <span class="text-sm">Jeudi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="friday" class="mr-2">
+                                    <span class="text-sm">Vendredi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="saturday" class="mr-2">
+                                    <span class="text-sm">Samedi</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="recurring-days" value="sunday" class="mr-2">
+                                    <span class="text-sm">Dimanche</span>
+                                </label>
+                            </div>
+                            <div class="mt-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Nombre de semaines <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" id="recurring-weeks" name="recurring-weeks" value="4" min="1" max="52" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="4">
+                                <span class="text-sm text-gray-600 ml-2">semaines</span>
+                            </div>
         </div>
     </div>
 
-    <script>
-        let authToken = localStorage.getItem('rmouv_admin_token');
-        let currentUser = null;
+                    <div class="form-field">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Notes (optionnel)</label>
+                        <textarea id="slot-notes" name="slot-notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Notes pour ce créneau..."></textarea>
+        </div>
+    </div>
 
-        // Check authentication on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!authToken) {
-                window.location.href = '/admin-login.html';
-                return;
-            }
-            
-            // Verify token and load admin data
-            verifyAdminToken();
-        });
-
-        async function verifyAdminToken() {
-            try {
-                const response = await fetch('/api/profile', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Token invalide');
-                }
-
-                const user = await response.json();
-                if (user.role !== 'admin') {
-                    throw new Error('Accès administrateur requis');
-                }
-
-                currentUser = user;
-                document.getElementById('admin-name').textContent = `${user.prenom} ${user.nom}`;
-                
-                // Load dashboard data
-                loadDashboardStats();
-                loadBookings();
-                
-            } catch (error) {
-                console.error('Erreur d\'authentification:', error);
-                localStorage.removeItem('rmouv_admin_token');
-                window.location.href = '/admin-login.html';
-            }
-        }
-
-        async function loadDashboardStats() {
-            try {
-                const response = await fetch('/api/admin/stats', {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Erreur lors du chargement des statistiques');
-
-                const stats = await response.json();
-                
-                document.getElementById('total-users').textContent = stats.total_users;
-                document.getElementById('total-bookings').textContent = stats.total_bookings;
-                document.getElementById('today-bookings').textContent = stats.today_bookings;
-                document.getElementById('total-courses').textContent = stats.total_courses;
-                
-            } catch (error) {
-                console.error('Erreur:', error);
-                showNotification('Erreur lors du chargement des statistiques', 'error');
-            }
-        }
-
-        async function loadBookings() {
-            showLoading(true);
-            
-            try {
-                const dateFilter = document.getElementById('date-filter').value;
-                const statusFilter = document.getElementById('status-filter').value;
-                
-                let url = '/api/admin/bookings?';
-                const params = new URLSearchParams();
-                
-                if (dateFilter) params.append('date', dateFilter);
-                if (statusFilter) params.append('status', statusFilter);
-                
-                url += params.toString();
-
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Erreur lors du chargement des réservations');
-
-                const bookings = await response.json();
-                displayBookings(bookings);
-                
-            } catch (error) {
-                console.error('Erreur:', error);
-                showNotification('Erreur lors du chargement des réservations', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
-
-        function displayBookings(bookings) {
-            const tbody = document.getElementById('bookings-table-body');
-            
-            if (bookings.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
-                            Aucune réservation trouvée
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            tbody.innerHTML = bookings.map(booking => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div>
-                            <div class="text-sm font-medium text-gray-900">${booking.prenom} ${booking.nom}</div>
-                            <div class="text-sm text-gray-500">${booking.email}</div>
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${booking.course_name}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${new Date(booking.booking_date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${booking.start_time} - ${booking.end_time}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${
-                            booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                            booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                        }">
-                            ${booking.status === 'confirmed' ? 'Confirmé' :
-                              booking.status === 'cancelled' ? 'Annulé' : 'Terminé'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex space-x-2">
-                            ${booking.status === 'confirmed' ? `
-                                <button onclick="cancelBooking(${booking.id})" class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-times"></i> Annuler
+                <div class="flex justify-end gap-4 mt-6">
+                    <button type="button" onclick="closeAddSlotModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                        Annuler
                                 </button>
-                            ` : ''}
-                            <button onclick="viewBookingDetails(${booking.id})" class="text-blue-600 hover:text-blue-900">
-                                <i class="fas fa-eye"></i> Détails
+                    <button type="submit" class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md font-medium transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Ajouter le créneau
                             </button>
                         </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
+            </form>
+        </div>
+    </div>
 
-        function applyFilters() {
-            loadBookings();
-        }
+    <!-- Modal pour voir les détails d'un jour -->
+    <div id="day-details-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="day-details-title" class="text-2xl font-bold text-gray-800">Détails du jour</h3>
+                <button onclick="closeDayDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="day-details-content">
+                <!-- Le contenu sera généré par JavaScript -->
+            </div>
+            
+            <div class="flex justify-end gap-4 mt-6">
+                <button onclick="closeDayDetailsModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
 
-        async function cancelBooking(bookingId) {
-            if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/admin/bookings/${bookingId}/cancel`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) throw new Error('Erreur lors de l\'annulation');
-
-                showNotification('Réservation annulée avec succès', 'success');
-                loadBookings();
-                loadDashboardStats();
-                
-            } catch (error) {
-                console.error('Erreur:', error);
-                showNotification('Erreur lors de l\'annulation', 'error');
-            }
-        }
-
-        function viewBookingDetails(bookingId) {
-            // Implementation for booking details modal
-            alert(`Détails de la réservation ${bookingId}`);
-        }
-
-        function exportBookings() {
-            // Implementation for CSV export
-            alert('Export CSV en cours de développement');
-        }
-
-        function logout() {
-            localStorage.removeItem('rmouv_admin_token');
-            window.location.href = '/admin-login.html';
-        }
-
-        function showLoading(show) {
-            const overlay = document.getElementById('loading-overlay');
-            overlay.classList.toggle('hidden', !show);
-        }
-
-        function showNotification(message, type = 'info') {
-            // Remove existing notifications
-            const existing = document.querySelector('.notification');
-            if (existing) {
-                existing.remove();
-            }
-
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.textContent = message;
-
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 1rem 1.5rem;
-                border-radius: 0.5rem;
-                color: white;
-                font-weight: 500;
-                z-index: 10000;
-                transform: translateX(100%);
-                transition: transform 0.3s ease-out;
-                max-width: 400px;
-                box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            `;
-
-            const colors = {
-                success: '#2E7D32',
-                error: '#EF4444',
-                info: '#1976D2',
-                warning: '#F59E0B'
-            };
-            notification.style.backgroundColor = colors[type] || colors.info;
-
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.style.transform = 'translateX(0)';
-            }, 100);
-
-            setTimeout(() => {
-                notification.style.transform = 'translateX(100%)';
-                setTimeout(() => {
-                    if (notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
-            }, 4000);
-        }
-
-        // Set today's date as default filter
-        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
+    
+    <!-- Exposez les valeurs côté client -->
+    <script>
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
     </script>
+    
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script type="module" src="admin.js"></script>
 </body>
 </html>
