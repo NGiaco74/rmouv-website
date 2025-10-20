@@ -1098,6 +1098,7 @@ async function displayUsers() {
         }
         
         console.log('👥 Profils récupérés:', profiles);
+        console.log('👥 Rôles des utilisateurs:', profiles.map(p => ({ email: p.email, role: p.role })));
         
         if (!profiles || profiles.length === 0) {
             console.log('👥 Aucun utilisateur trouvé');
@@ -1223,18 +1224,36 @@ async function toggleUserRole(userId, currentRole) {
     }
     
     try {
+        console.log('🔄 Tentative de changement de rôle:', { userId, currentRole, newRole });
+        
         const { error } = await adminState.supabase
             .from('profiles')
             .update({ role: newRole })
             .eq('id', userId);
         
         if (error) {
-            console.error('Erreur changement rôle:', error);
-            alert('Erreur lors du changement de rôle.');
+            console.error('❌ Erreur Supabase:', error);
+            alert(`Erreur lors du changement de rôle: ${error.message}`);
             return;
         }
         
         console.log('✅ Rôle changé:', userId, 'vers', newRole);
+        
+        // Vérifier que la mise à jour a bien été effectuée
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1 seconde
+        
+        const { data: updatedProfile, error: checkError } = await adminState.supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', userId)
+            .single();
+            
+        if (checkError) {
+            console.error('❌ Erreur vérification:', checkError);
+        } else {
+            console.log('🔍 Rôle vérifié en base:', updatedProfile.role);
+        }
+        
         alert(`Rôle changé en "${newRole}" avec succès !`);
         
         // Recharger la liste des utilisateurs
