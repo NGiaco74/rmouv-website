@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Formulaire Netlify</title>
+</head>
+<body>
+    <h1>Formulaire de test Netlify</h1>
+    <form name="test-form" netlify data-netlify="true" netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="test-form">
+        <p style="display: none;">
+            <label>Ne remplissez pas ce champ: <input name="bot-field"></label>
+        </p>
+        <p>
+            <label>Nom: <input type="text" name="nom" required></label>
+        </p>
+        <p>
+            <label>Email: <input type="email" name="email" required></label>
+        </p>
+        <p>
+            <button type="submit">Envoyer</button>
+        </p>
+    </form>
+</body>
+</html>
+

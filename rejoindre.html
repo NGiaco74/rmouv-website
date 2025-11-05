@@ -229,7 +229,12 @@
                     Candidature pour rejoindre l'équipe
                 </h2>
                 
-                <form id="inscription-form" name="candidature-rmouv" netlify class="space-y-6">
+                <form id="inscription-form" name="candidature-rmouv" netlify data-netlify="true" netlify-honeypot="bot-field" class="space-y-6">
+                    <!-- Champ anti-spam caché -->
+                    <input type="hidden" name="form-name" value="candidature-rmouv">
+                    <p style="display: none;">
+                        <label>Ne remplissez pas ce champ si vous êtes humain: <input name="bot-field"></label>
+                    </p>
                     <!-- Informations personnelles -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -328,19 +333,19 @@
                         </label>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <label class="flex items-center">
-                                <input type="checkbox" name="disponibilites" value="matin" class="mr-2">
+                                <input type="checkbox" name="disponibilite-matin" value="oui" class="mr-2">
                                 <span class="text-sm">Matin (8h-12h)</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="disponibilites" value="midi" class="mr-2">
+                                <input type="checkbox" name="disponibilite-midi" value="oui" class="mr-2">
                                 <span class="text-sm">Midi (12h-14h)</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="disponibilites" value="apres-midi" class="mr-2">
+                                <input type="checkbox" name="disponibilite-apres-midi" value="oui" class="mr-2">
                                 <span class="text-sm">Après-midi (14h-18h)</span>
                             </label>
                             <label class="flex items-center">
-                                <input type="checkbox" name="disponibilites" value="soir" class="mr-2">
+                                <input type="checkbox" name="disponibilite-soir" value="oui" class="mr-2">
                                 <span class="text-sm">Soir (18h-20h)</span>
                             </label>
                         </div>
