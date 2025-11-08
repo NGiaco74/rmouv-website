@@ -19,6 +19,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
@@ -169,6 +170,9 @@
                                 <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
                                 </a>
+                                <a href="profil.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
                                 <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
@@ -216,6 +220,9 @@
                     </a>
                     <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                         <i class="fas fa-calendar mr-2"></i>Mes réservations
+                    </a>
+                    <a href="profil.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <i class="fas fa-user mr-2"></i>Mon profil
                     </a>
                     <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                         <i class="fas fa-cog mr-2"></i>Administration
@@ -319,6 +326,60 @@
                     </div>
                 </div>
 
+                <!-- Tarifs et formules -->
+                <div id="tarifs" class="mb-12">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-6 text-secondary">Tarifs coaching sportif</h2>
+                    <p class="text-neutral-600 mb-6">
+                        Les tarifs ci-dessous concernent uniquement les cours de coaching sportif encadrés par nos coachs.
+                        Pour toute prise en charge kinésithérapique, contactez directement Jeromine Paso via son
+                        <a href="https://www.doctolib.fr/masseur-kinesitherapeute/brignais/jeromine-paso" class="text-primary font-semibold underline hover:text-primary/80" target="_blank" rel="noopener">profil Doctolib</a>,
+                        par SMS au <a href="tel:+33660352236" class="text-primary font-semibold hover:text-primary/80">06&nbsp;60&nbsp;35&nbsp;22&nbsp;36</a>
+                        ou par e-mail à <a href="mailto:pjmkde@outlook.fr" class="text-primary font-semibold hover:text-primary/80">pjmkde@outlook.fr</a>.
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-primary/20">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-semibold text-neutral-800">Coaching individuel</h3>
+                                <span class="px-3 py-1 rounded-full text-xs uppercase bg-secondary/10 text-secondary font-semibold">à la séance</span>
+                            </div>
+                            <ul class="space-y-3 text-sm text-neutral-600">
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-secondary text-xs mt-1.5 mr-2"></i>
+                                    <span>Séance privée d’une heure centrée sur vos objectifs (force, mobilité, reprise post-blessure, performance…).</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-secondary text-xs mt-1.5 mr-2"></i>
+                                    <span>Bilan oral début/fin de séance et conseils pour prolonger le travail en autonomie.</span>
+                                </li>
+                            </ul>
+                            <p class="text-3xl font-bold text-neutral-800 mt-4">60 €</p>
+                            <p class="text-xs uppercase tracking-wide text-neutral-400">par séance d’une heure</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-lg shadow-sm border border-primary/20">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xl font-semibold text-neutral-800">Coaching de groupe</h3>
+                                <span class="px-3 py-1 rounded-full text-xs uppercase bg-primary/10 text-primary font-semibold">abonnement</span>
+                            </div>
+                            <ul class="space-y-3 text-sm text-neutral-600">
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-primary text-xs mt-1.5 mr-2"></i>
+                                    <span>1 séance d’une heure par semaine dans nos cours collectifs R'MouV.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-circle text-primary text-xs mt-1.5 mr-2"></i>
+                                    <span>Séance d’essai gratuite pour découvrir la dynamique du groupe avant de s’engager.</span>
+                                </li>
+                            </ul>
+                            <p class="text-3xl font-bold text-neutral-800 mt-4">70 €</p>
+                            <p class="text-xs uppercase tracking-wide text-neutral-400">par mois</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center space-y-3 text-sm text-neutral-500">
+                        <p>Réservation des créneaux de coaching via notre calendrier en ligne. Paiement sur place.</p>
+                        <p>Demandes spécifiques (entreprises, suivi sur mesure) : <a href="contact.html" class="text-primary font-semibold underline hover:text-primary/80">contactez-nous</a>.</p>
+                    </div>
+                </div>
+
                 <!-- Call to action -->
                 <div class="text-center mt-12">
                     <div class="bg-primary/10 p-8 rounded-lg">
@@ -344,31 +405,37 @@
     <footer class="bg-neutral-800 text-white py-12">
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
-                <div class="md:col-span-2">
-                    <div class="flex items-center mb-4">
-                        <span class="text-2xl font-bold text-primary">R'</span><span class="text-2xl font-bold text-secondary">MouV</span>
-                        <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
-                    </div>
-                    <p class="text-neutral-300 mb-4">
-                        Centre pluridisciplinaire de sport-santé réunissant kinésithérapeutes et coachs sportifs pour votre rééducation et réathlétisation.
-                    </p>
+                <div>
+                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
                 
                 <div>
-                    <h4 class="font-semibold mb-4">Navigation</h4>
-                    <ul class="space-y-2 text-neutral-300">
-                        <li><a href="index.html#projet" class="hover:text-white transition-colors">Notre Projet</a></li>
-                        <li><a href="index.html#equipements" class="hover:text-white transition-colors">Nos Équipements</a></li>
-                        <li><a href="index.html#equipe" class="hover:text-white transition-colors">Notre Équipe</a></li>
-                        <li><a href="rejoindre.html" class="hover:text-white transition-colors">Rejoindre R'MouV</a></li>
+                    <h4 class="font-bold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h4 class="font-semibold mb-4">Contact</h4>
-                    <ul class="space-y-2 text-neutral-300">
-                        <li><a href="contact.html" class="hover:text-white transition-colors">Nous contacter</a></li>
-                        <li><a href="rejoindre.html" class="hover:text-white transition-colors">Candidatures</a></li>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Réseaux sociaux</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
                     </ul>
                 </div>
             </div>

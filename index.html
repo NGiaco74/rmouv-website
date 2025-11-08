@@ -203,6 +203,7 @@
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="#tarifs" class="font-medium text-neutral-600 hover:text-primary transition-colors">Tarifs</a>
                 <a href="#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
                 <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
@@ -232,6 +233,9 @@
                                         <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
                                 </a>
+                                        <a href="profil.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
                                         <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
@@ -254,6 +258,7 @@
             <div class="container mx-auto px-4 py-4 space-y-4">
                 <a href="#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
                 <a href="#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="#tarifs" class="block font-medium hover:text-primary transition-colors">Tarifs</a>
                 <a href="#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
                 <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
                 <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
@@ -279,6 +284,9 @@
                         </a>
                         <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                             <i class="fas fa-calendar mr-2"></i>Mes réservations
+                        </a>
+                        <a href="profil.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                            <i class="fas fa-user mr-2"></i>Mon profil
                         </a>
                         <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                             <i class="fas fa-cog mr-2"></i>Administration
@@ -472,11 +480,76 @@
         </div>
     </section>
 
-            <div class="text-center -mt-4">
-                <a href="equipements.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
-                    Plus d'informations
-                </a>
+    <div class="text-center -mt-4">
+        <a href="equipements.html" class="bg-secondary hover:bg-secondary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+            Plus d'informations
+        </a>
+    </div>
+
+    <!-- Tarifs -->
+    <section id="tarifs" class="section-padding bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-neutral-800">Tarifs coaching sportif</h2>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+                <p class="text-neutral-600 mt-4 max-w-3xl mx-auto">
+                    Ces tarifs concernent exclusivement les séances de coaching sportif. Pour la kinésithérapie, contactez directement Jeromine Paso :
+                    <a href="https://www.doctolib.fr/masseur-kinesitherapeute/brignais/jeromine-paso" class="text-primary font-semibold underline hover:text-primary/80" target="_blank" rel="noopener">profil Doctolib</a>,
+                    SMS au <a href="tel:+33660352236" class="text-primary font-semibold hover:text-primary/80">06&nbsp;60&nbsp;35&nbsp;22&nbsp;36</a> ou e-mail à
+                    <a href="mailto:pjmkde@outlook.fr" class="text-primary font-semibold hover:text-primary/80">pjmkde@outlook.fr</a>.
+                </p>
             </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                <!-- Coaching individuel -->
+                <div class="bg-neutral-50 border border-neutral-100 rounded-2xl shadow-sm p-8 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-2xl font-semibold text-neutral-800">Coaching individuel</h3>
+                        <span class="px-3 py-1 rounded-full text-sm bg-secondary/10 text-secondary">à la séance</span>
+                    </div>
+                    <p class="text-neutral-600 mb-4">
+                        Séance personnalisée d’1h pour travailler un objectif précis avec un coach R'MouV.
+                    </p>
+                    <div class="bg-white border border-neutral-200 rounded-xl p-5">
+                        <p class="text-sm text-neutral-600 mb-2">
+                            - Analyse rapide des besoins<br>
+                            - Séance sur-mesure (force, mobilité, reprise post-blessure, etc.)<br>
+                            - Bilan oral en fin de session
+                        </p>
+                        <p class="text-3xl font-bold text-neutral-800">60 €</p>
+                        <p class="text-xs uppercase tracking-wide text-neutral-400">par séance d’une heure</p>
+                    </div>
+                    <a href="reservation.html" class="mt-8 inline-flex items-center justify-center px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-full font-semibold transition-colors">
+                        Réserver une séance
+                    </a>
+                </div>
+                
+                <!-- Coaching de groupe -->
+                <div class="bg-neutral-50 border border-neutral-100 rounded-2xl shadow-sm p-8 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-2xl font-semibold text-neutral-800">Coaching de groupe</h3>
+                        <span class="px-3 py-1 rounded-full text-sm bg-primary/10 text-primary">abonnement</span>
+                    </div>
+                    <p class="text-neutral-600 mb-4">
+                        Idéal pour progresser ensemble : motivation collective, exercices variés encadrés par nos coachs.
+                    </p>
+                    <div class="bg-white border border-neutral-200 rounded-xl p-5 space-y-2">
+                        <p class="text-sm text-neutral-600">
+                            - 1 séance d’1h par semaine<br>
+                            - Accès aux cours collectifs (planning R'MouV)<br>
+                            - <strong>Séance d’essai gratuite</strong>
+                        </p>
+                        <p class="text-3xl font-bold text-neutral-800">70 €</p>
+                        <p class="text-xs uppercase tracking-wide text-neutral-400">par mois</p>
+                    </div>
+                    <a href="reservation.html" class="mt-8 inline-flex items-center justify-center px-6 py-3 border border-neutral-300 text-neutral-700 hover:bg-neutral-100 rounded-full font-semibold transition-colors">
+                        Choisir un créneau collectif
+                    </a>
+                </div>
+            </div>
+            <p class="text-xs text-neutral-400 text-center mt-6">Paiement sur place – forfaits entreprise et suivi personnalisé disponibles sur demande.</p>
+        </div>
+    </section>
 
 
     <!-- Notre Équipe -->
