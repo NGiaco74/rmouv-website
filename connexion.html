@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - R'MouV</title>
     <meta name="description" content="Connectez-vous à votre compte R'MouV pour accéder à nos services de rééducation et réathlétisation.">
+    <meta property="og:image" content="Images/Logo.png">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Supabase CDN -->
@@ -82,13 +85,12 @@
     <!-- Header -->
     <header id="header" class="bg-white shadow-md py-4 sticky top-0 z-50">
         <div class="container mx-auto px-4 flex justify-between items-center">
-            <a href="index.html" class="flex items-center space-x-2">
-                <span class="text-2xl font-bold text-primary">R'</span><span class="text-2xl font-bold text-secondary">MouV</span>
-                <span class="ml-2 text-sm font-medium text-neutral-600 hidden md:block">Rehab ton MouV</span>
+            <a href="index.html" class="flex items-center group">
+                <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
             </a>
             
             <!-- Navigation Desktop -->
-            <nav class="hidden md:flex items-center space-x-8">
+            <nav class="hidden xl:flex items-center space-x-8">
                 <a href="index.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Accueil</a>
                 <a href="projet.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Équipements</a>
@@ -103,13 +105,13 @@
             </nav>
             
             <!-- Mobile Menu Toggle -->
-            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+            <button class="xl:hidden text-neutral-700" id="mobile-menu-toggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </div>
         
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg mt-2 py-4 px-4 space-y-2">
+        <div id="mobile-menu" class="xl:hidden hidden bg-white shadow-lg mt-2 py-4 px-4 space-y-2">
             <a href="index.html" class="block font-medium hover:text-primary transition-colors">Accueil</a>
             <a href="projet.html" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
             <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Équipements</a>
@@ -128,6 +130,9 @@
         <section class="py-16 bg-gray-50">
             <div class="container mx-auto px-4 max-w-md">
                 <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <div class="flex justify-center mb-6">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-auto object-contain">
+                    </div>
                     <h2 class="text-3xl font-bold text-center mb-4 text-neutral-800">Connexion</h2>
                     <p class="text-neutral-600 text-center mb-8">Accédez à votre compte R'MouV</p>
                     
@@ -181,7 +186,13 @@
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <div>
+                            <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                            <p class="text-sm text-neutral-400">Rehab ton MouV</p>
+                        </div>
+                    </div>
                     <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
                 
@@ -189,32 +200,36 @@
                     <h4 class="font-bold mb-4">Liens rapides</h4>
                     <ul class="space-y-2">
                         <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
-                        <li><a href="equipements.html" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
-                        <li><a href="equipe.html" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
-                        <li><a href="rejoindre.html" class="text-neutral-300 hover:text-white transition-colors">Rejoindre R'MouV</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
                     </ul>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Contact</h4>
                     <ul class="space-y-2">
-                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Nous contacter</a></li>
-                        <li><a href="rejoindre.html" class="text-neutral-300 hover:text-white transition-colors">Candidatures</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
                     </ul>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Légal</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
-                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+                <p class="flex items-center justify-center gap-3">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                </p>
             </div>
         </div>
     </footer>

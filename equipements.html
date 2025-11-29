@@ -19,6 +19,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <script>
@@ -93,30 +94,10 @@
             justify-content: center;
         }
         
-        /* Alignement spécifique du logo et du texte */
-        .sticky-nav .flex.items-center:first-child {
-            align-items: baseline !important;
-        }
-        .sticky-nav .text-2xl.font-bold {
-            line-height: 1.2 !important;
-        }
-        .sticky-nav .ml-2.text-sm {
-            margin-top: 0.25rem !important;
-        }
-        
         /* Alignement mobile */
         @media (max-width: 768px) {
             .sticky-nav nav {
                 padding: 1rem !important;
-            }
-            .sticky-nav .flex.items-center:first-child {
-                align-items: center !important;
-            }
-            .sticky-nav .text-2xl.font-bold {
-                font-size: 1.5rem !important;
-            }
-            .sticky-nav .ml-2.text-sm {
-                display: none !important;
             }
         }
         
@@ -132,11 +113,12 @@
     <header class="sticky-nav bg-white shadow-md">
         <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
-                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+                <a href="index.html" class="flex items-center group">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
+                </a>
             </div>
             
-            <div class="hidden md:flex items-center space-x-8">
+            <div class="hidden xl:flex items-center items-center space-x-8">
                 <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
                 <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
@@ -168,10 +150,13 @@
                                 <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-calendar mr-2"></i>Mes réservations
                                 </a>
+                                <a href="profil.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
                                 <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
-                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                                 </a>
                             </div>
@@ -180,46 +165,49 @@
                 </div>
             </div>
             
-            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+            <button class="xl:hidden text-neutral-700" id="mobile-menu-toggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </nav>
         
         <!-- Mobile Menu -->
-        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+        <div class="xl:hidden hidden bg-white border-t" id="mobile-menu">
             <div class="container mx-auto px-4 py-4 space-y-4">
-                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
-                <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
-                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
-                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
-                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+                <a href="index.html#projet" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Notre Projet</a>
+                <a href="index.html#equipements" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Contact</a>
                 
                 <!-- Boutons d'authentification mobile (masqués quand connecté) -->
-                <div id="auth-buttons-mobile" class="space-y-2">
-                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors text-center py-2">
+                <div id="auth-buttons-mobile" class="pt-2 space-y-3">
+                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors py-2">
                         <i class="fas fa-sign-in-alt mr-2"></i>Connexion
                     </a>
-                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors text-center">
+                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-full font-medium transition-colors text-center">
                         <i class="fas fa-user-plus mr-2"></i>Créer un compte
                     </a>
                 </div>
                 
                 <!-- User menu mobile (masqué par défaut) -->
-                <div id="user-menu-mobile" class="hidden space-y-2">
-                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full">
+                <div id="user-menu-mobile" class="hidden pt-2 space-y-2">
+                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full mb-2">
                         <span id="user-initials-mobile" class="font-bold"></span>
                         <span class="text-sm">Connecté</span>
                     </div>
-                    <a href="reservation.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="reservation.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
                     </a>
-                    <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="mes-reservations.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-calendar mr-2"></i>Mes réservations
                     </a>
-                    <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="profil.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
+                        <i class="fas fa-user mr-2"></i>Mon profil
+                    </a>
+                    <a href="admin.html" id="admin-button-mobile" class="hidden block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-cog mr-2"></i>Administration
                     </a>
-                    <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="#" onclick="logout()" class="block w-full py-2 text-red-600 hover:bg-red-50 rounded-md px-2">
                         <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                     </a>
                 </div>
@@ -307,46 +295,49 @@
     <!-- Footer -->
     <footer class="bg-neutral-800 text-white py-12">
         <div class="container mx-auto px-4">
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-2xl font-bold mb-4 text-primary">R'MouV</h3>
-                    <p class="text-neutral-300 mb-4">
-                        Centre sport-santé pluridisciplinaire pour reprendre ton corps en main et te révéler.
-                    </p>
+                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
+                
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Liens rapides</h4>
-                    <ul class="space-y-2 text-neutral-300">
-                        <li><a href="index.html" class="hover:text-primary transition-colors">Accueil</a></li>
-                        <li><a href="equipements.html" class="hover:text-primary transition-colors">Équipements</a></li>
-                        <li><a href="equipe.html" class="hover:text-primary transition-colors">Notre Équipe</a></li>
-                        <li><a href="rejoindre.html" class="hover:text-primary transition-colors">Nous rejoindre</a></li>
-                        <li><a href="contact.html" class="hover:text-primary transition-colors">Contact</a></li>
+                    <h4 class="font-bold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
                     </ul>
                 </div>
+                
                 <div>
-                    <h4 class="text-lg font-semibold mb-4">Contact</h4>
-                    <div class="space-y-2 text-neutral-300">
-                        <p><i class="fas fa-phone mr-2"></i> 01 23 45 67 89</p>
-                        <p><i class="fas fa-envelope mr-2"></i> contact@rmouv.fr</p>
-                        <p><i class="fas fa-map-marker-alt mr-2"></i> 123 Avenue de la Santé, 75000 Paris</p>
-                    </div>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-400">
-                <p>&copy; 2024 R'MouV. Tous droits réservés.</p>
+            
+            <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
             </div>
         </div>
     </footer>
 
     <!-- Scripts -->
     <script>
-        // Mobile menu toggle
-        document.getElementById('mobile-menu-toggle').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            mobileMenu.classList.toggle('hidden');
-        });
-
         // User dropdown toggle
         const userDropdownToggle = document.getElementById('user-dropdown-toggle');
         const userDropdown = document.getElementById('user-dropdown');

@@ -5,10 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - R'MouV</title>
     <meta name="description" content="Créez votre compte R'MouV pour accéder à nos services de rééducation et réathlétisation.">
+    <meta property="og:image" content="Images/Logo.png">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Supabase CDN -->
@@ -60,12 +63,12 @@
         <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <a href="index.html" class="text-2xl font-bold">
-                        <span class="text-primary">R'</span><span class="text-secondary">MouV</span>
+                    <a href="index.html" class="flex items-center group">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
                     </a>
                 </div>
                 
-                <nav class="hidden md:flex items-center space-x-8">
+                <nav class="hidden xl:flex items-center space-x-8">
                     <a href="index.html" class="text-gray-700 hover:text-primary transition-colors">Accueil</a>
                     <a href="index.html#projet" class="text-gray-700 hover:text-primary transition-colors">Notre Projet</a>
                     <a href="equipements.html" class="text-gray-700 hover:text-primary transition-colors">Équipements</a>
@@ -86,6 +89,9 @@
     <main class="py-16">
         <div class="container mx-auto px-4 max-w-md">
             <div class="bg-white rounded-2xl shadow-xl p-8">
+                <div class="flex justify-center mb-6">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-auto object-contain">
+                </div>
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">Créer un compte</h1>
                     <p class="text-gray-600">Rejoignez R'MouV et accédez à nos services</p>
@@ -138,11 +144,86 @@
                                placeholder="Votre nom">
                     </div>
                     
+                    <!-- Section Informations Patients (optionnelles) -->
+                    <div class="border-t pt-6 mt-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Informations médicales (optionnel)</h3>
+                        <p class="text-sm text-gray-600 mb-4">Ces informations faciliteront votre prise en charge.</p>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Téléphone
+                                </label>
+                                <input type="tel" id="phone" name="phone"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                       placeholder="06 12 34 56 78">
+                            </div>
+                            
+                            <div>
+                                <label for="date-of-birth" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Date de naissance
+                                </label>
+                                <input type="date" id="date-of-birth" name="date-of-birth"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Genre
+                                </label>
+                                <select id="gender" name="gender"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors">
+                                    <option value="">Sélectionnez...</option>
+                                    <option value="Homme">Homme</option>
+                                    <option value="Femme">Femme</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label for="pathologies" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Pathologies (séparées par des virgules)
+                                </label>
+                                <input type="text" id="pathologies" name="pathologies"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                       placeholder="Ex: lombalgie, tendinite épaule">
+                                <p class="text-xs text-gray-500 mt-1">Vous pourrez modifier ces informations plus tard</p>
+                            </div>
+                            
+                            <div>
+                                <label for="contraindications" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Contre-indications
+                                </label>
+                                <textarea id="contraindications" name="contraindications" rows="3"
+                                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                          placeholder="Précisez vos contre-indications si nécessaire"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label for="emergency-contact-name" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Contact d'urgence - Nom
+                                </label>
+                                <input type="text" id="emergency-contact-name" name="emergency-contact-name"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                       placeholder="Nom du contact">
+                            </div>
+                            
+                            <div>
+                                <label for="emergency-contact-phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Contact d'urgence - Téléphone
+                                </label>
+                                <input type="tel" id="emergency-contact-phone" name="emergency-contact-phone"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors"
+                                       placeholder="06 12 34 56 78">
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="flex items-start">
                         <input type="checkbox" id="terms" name="terms" required
                                class="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
                         <label for="terms" class="ml-2 text-sm text-gray-600">
-                            J'accepte les <a href="#" class="text-primary hover:underline">conditions d'utilisation</a> et la <a href="#" class="text-primary hover:underline">politique de confidentialité</a>
+                            J'accepte les <a href="cgu.html" class="text-primary hover:underline">conditions d'utilisation</a> et la <a href="politique-confidentialite.html" class="text-primary hover:underline">politique de confidentialité</a>
                         </label>
                     </div>
                     
@@ -170,7 +251,13 @@
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <div>
+                            <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                            <p class="text-sm text-neutral-400">Rehab ton MouV</p>
+                        </div>
+                    </div>
                     <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
                 
@@ -178,9 +265,9 @@
                     <h4 class="font-bold mb-4">Liens rapides</h4>
                     <ul class="space-y-2">
                         <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
-                        <li><a href="equipements.html" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
                         <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
-                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Contact</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
                     </ul>
                 </div>
                 
@@ -196,15 +283,18 @@
                 <div>
                     <h4 class="font-bold mb-4">Légal</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
-                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+                <p class="flex items-center justify-center gap-3">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                </p>
             </div>
         </div>
     </footer>
@@ -212,6 +302,26 @@
     <!-- Scripts -->
     <script type="module">
         import { auth } from './supabase-client.js';
+        
+        // Créer un client Supabase pour les opérations sur les tables
+        let supabase = null;
+        
+        // Attendre que Supabase soit chargé
+        function waitForSupabase() {
+            return new Promise((resolve) => {
+                if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+                    supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                    resolve();
+                } else {
+                    setTimeout(() => waitForSupabase().then(resolve), 100);
+                }
+            });
+        }
+        
+        // Initialiser Supabase
+        waitForSupabase().then(() => {
+            console.log('✅ Client Supabase créé pour inscription.html');
+        });
         
         console.log('Script chargé');
         console.log('Supabase importé avec succès:', auth);
@@ -273,6 +383,42 @@
                 if (error) {
                     showNotification('Erreur lors de l\'inscription: ' + error.message, 'error');
                 } else {
+                    // Récupérer les données patients du formulaire
+                    const phone = document.getElementById('phone').value;
+                    const dateOfBirth = document.getElementById('date-of-birth').value;
+                    const gender = document.getElementById('gender').value;
+                    const pathologiesText = document.getElementById('pathologies').value;
+                    const contraindications = document.getElementById('contraindications').value;
+                    const emergencyContactName = document.getElementById('emergency-contact-name').value;
+                    const emergencyContactPhone = document.getElementById('emergency-contact-phone').value;
+                    
+                    // Convertir les pathologies en tableau
+                    const pathologies = pathologiesText ? pathologiesText.split(',').map(p => p.trim()).filter(p => p) : null;
+                    
+                    // Attendre que supabase soit initialisé
+                    await waitForSupabase();
+                    
+                    // Mettre à jour le profil avec les informations patients si disponibles
+                    if (data.user && supabase) {
+                        const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update({
+                                phone: phone || null,
+                                date_of_birth: dateOfBirth || null,
+                                gender: gender || null,
+                                pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
+                                contraindications: contraindications || null,
+                                emergency_contact_name: emergencyContactName || null,
+                                emergency_contact_phone: emergencyContactPhone || null,
+                                patient_status: (phone || dateOfBirth || pathologies?.length > 0) ? 'active' : null
+                            })
+                            .eq('id', data.user.id);
+                        
+                        if (updateError) {
+                            console.error('Erreur mise à jour profil:', updateError);
+                        }
+                    }
+                    
                     showNotification('Inscription réussie ! Vérifiez votre email pour confirmer votre compte.', 'success');
                     signupForm.reset();
                 }

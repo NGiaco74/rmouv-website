@@ -55,9 +55,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Navigation
 function initializeNavigation() {
+    // Récupérer les éléments après le chargement du DOM
+    const navbarToggle = document.getElementById('mobile-menu-toggle');
+    const navbarMenu = document.getElementById('mobile-menu');
+    
     // Mobile menu toggle
-    if (elements.navbarToggle) {
-        elements.navbarToggle.addEventListener('click', toggleMobileMenu);
+    if (navbarToggle && navbarMenu) {
+        navbarToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            navbarMenu.classList.toggle('hidden');
+            navbarToggle.classList.toggle('active');
+        });
+        
+        // Fermer le menu si on clique en dehors
+        document.addEventListener('click', function(e) {
+            if (!navbarToggle.contains(e.target) && !navbarMenu.contains(e.target)) {
+                navbarMenu.classList.add('hidden');
+                navbarToggle.classList.remove('active');
+            }
+        });
     }
 
     // Smooth scrolling for anchor links
@@ -72,8 +89,9 @@ function initializeNavigation() {
                 });
                 
                 // Close mobile menu if open
-                if (elements.navbarMenu && !elements.navbarMenu.classList.contains('hidden')) {
-                    toggleMobileMenu();
+                if (navbarMenu && !navbarMenu.classList.contains('hidden')) {
+                    navbarMenu.classList.add('hidden');
+                    if (navbarToggle) navbarToggle.classList.remove('active');
                 }
             }
         });
@@ -84,10 +102,13 @@ function initializeNavigation() {
 }
 
 function toggleMobileMenu() {
-    if (!elements.navbarMenu || !elements.navbarToggle) return; // Vérifier que les éléments existent
+    const navbarMenu = document.getElementById('mobile-menu');
+    const navbarToggle = document.getElementById('mobile-menu-toggle');
     
-    elements.navbarMenu.classList.toggle('hidden');
-    elements.navbarToggle.classList.toggle('active');
+    if (!navbarMenu || !navbarToggle) return;
+    
+    navbarMenu.classList.toggle('hidden');
+    navbarToggle.classList.toggle('active');
 }
 
 function handleHeaderScroll() {

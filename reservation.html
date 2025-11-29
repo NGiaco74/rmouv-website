@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réservation - R'MouV</title>
+    <meta property="og:image" content="Images/Logo.png">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -43,30 +45,10 @@
             background-color: rgba(255, 138, 62, 0.9) !important;
         }
         
-        /* Alignement spécifique du logo et du texte */
-        .sticky-nav .flex.items-center:first-child {
-            align-items: baseline !important;
-        }
-        .sticky-nav .text-2xl.font-bold {
-            line-height: 1.2 !important;
-        }
-        .sticky-nav .ml-2.text-sm {
-            margin-top: 0.25rem !important;
-        }
-        
         /* Alignement mobile */
         @media (max-width: 768px) {
             .sticky-nav nav {
                 padding: 1rem !important;
-            }
-            .sticky-nav .flex.items-center:first-child {
-                align-items: center !important;
-            }
-            .sticky-nav .text-2xl.font-bold {
-                font-size: 1.5rem !important;
-            }
-            .sticky-nav .ml-2.text-sm {
-                display: none !important;
             }
         }
         
@@ -213,11 +195,12 @@
     <header class="sticky-nav bg-white shadow-md">
         <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
-                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+                <a href="index.html" class="flex items-center group">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
+                </a>
             </div>
             
-            <div class="hidden md:flex items-center space-x-8">
+            <div class="hidden xl:flex items-center space-x-8">
                 <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
                 <a href="equipe.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
@@ -255,7 +238,7 @@
                                         <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
-                                        <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                        <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                                 </a>
                             </div>
@@ -264,13 +247,13 @@
                 </div>
             </div>
             
-            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+            <button class="xl:hidden text-neutral-600 hover:text-primary transition-colors" id="mobile-menu-toggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </nav>
         
         <!-- Mobile Menu -->
-        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+        <div class="xl:hidden hidden bg-white border-t" id="mobile-menu">
             <div class="container mx-auto px-4 py-4 space-y-4">
                 <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
                 <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
@@ -306,7 +289,7 @@
                         <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
                             <i class="fas fa-cog mr-2"></i>Administration
                         </a>
-                        <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                        <a href="#" onclick="logout()" class="block w-full py-2 text-red-600 hover:bg-red-50 rounded-md px-2">
                             <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                         </a>
                     </div>
@@ -317,6 +300,7 @@
     <!-- Hero Section -->
     <section class="relative bg-gradient-to-r from-primary/10 to-secondary/10" id="hero">
         <div class="container mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center">
+            <img src="Images/Logo.png" alt="Logo R'MouV" class="h-16 w-auto mb-6 object-contain">
             <h1 class="text-4xl md:text-6xl font-bold mb-6 text-neutral-800">
                 <span class="text-primary">Réservez</span> votre créneau
             </h1>
@@ -453,7 +437,13 @@
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <div>
+                            <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                            <p class="text-sm text-neutral-400">Rehab ton MouV</p>
+                        </div>
+                    </div>
                     <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
                 
@@ -473,22 +463,24 @@
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
-                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Réseaux sociaux</a></li>
                     </ul>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Légal</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
-                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+                <p class="flex items-center justify-center gap-3">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                </p>
             </div>
         </div>
     </footer>

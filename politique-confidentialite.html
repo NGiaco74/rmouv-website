@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité - R'MouV</title>
+    <meta name="description" content="Politique de confidentialité et protection des données personnelles - R'MouV">
+    <meta property="og:image" content="Images/Logo.png">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#5A9FD4",
+                        secondary: "#FF8A3E",
+                        neutral: "#37474F"
+                    },
+                    fontFamily: {
+                        sans: ['Now', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FF8A3E !important;
+        }
+        .border-secondary {
+            border-color: #FF8A3E !important;
+        }
+        
+        .sticky-nav nav {
+            align-items: center !important;
+        }
+        .sticky-nav .flex.items-center {
+            align-items: center !important;
+        }
+        .sticky-nav .space-x-8 a {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0.5rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .sticky-nav nav {
+                padding: 1rem !important;
+            }
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        #auth-buttons, #auth-buttons-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        #user-menu, #user-menu-mobile {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        .auth-loaded #auth-buttons,
+        .auth-loaded #auth-buttons-mobile,
+        .auth-loaded #user-menu,
+        .auth-loaded #user-menu-mobile {
+            opacity: 1;
+        }
+    </style>
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- Configuration Supabase -->
+    <script src="api-integration.js"></script>
+</head>
+
+<body class="font-sans bg-white text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="flex items-center group">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
+                </a>
+            </div>
+            
+            <div class="hidden xl:flex items-center space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <div id="auth-buttons" class="flex items-center space-x-4">
+                    <a href="connexion.html" class="text-primary hover:text-primary/80 font-medium transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-check mr-2"></i>Mes réservations
+                                </a>
+                                <a href="profil.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
+                                <hr class="my-2">
+                                <button id="logout-btn" class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Menu mobile -->
+            <button id="mobile-menu-toggle" class="xl:hidden text-neutral-600 hover:text-primary transition-colors">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+        </nav>
+        
+        <!-- Menu mobile déroulant -->
+        <div id="mobile-menu" class="hidden xl:hidden bg-white border-t">
+            <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="index.html#projet" class="block font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                <a href="equipements.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <div id="auth-buttons-mobile" class="pt-4 space-y-3 border-t">
+                    <a href="connexion.html" class="block text-center text-primary hover:text-primary/80 font-medium transition-colors">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Connexion
+                    </a>
+                    <a href="inscription.html" class="block text-center bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-full font-medium transition-colors">
+                        <i class="fas fa-user-plus mr-2"></i>Créer un compte
+                    </a>
+                </div>
+                
+                <div id="user-menu-mobile" class="hidden pt-4 space-y-3 border-t">
+                    <a href="reservation.html" class="block text-center text-neutral-600 hover:text-primary transition-colors">
+                        <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                    </a>
+                    <a href="mes-reservations.html" class="block text-center text-neutral-600 hover:text-primary transition-colors">
+                        <i class="fas fa-calendar-check mr-2"></i>Mes réservations
+                    </a>
+                    <a href="profil.html" class="block text-center text-neutral-600 hover:text-primary transition-colors">
+                        <i class="fas fa-user mr-2"></i>Mon profil
+                    </a>
+                    <button id="logout-btn-mobile" class="w-full text-center text-red-600 hover:text-red-700 font-medium transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="min-h-screen py-12">
+        <div class="container mx-auto px-4 max-w-4xl">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-bold mb-4 text-primary">Politique de Confidentialité</h1>
+                <div class="w-24 h-1 bg-secondary mx-auto"></div>
+                <p class="text-neutral-600 mt-4">Protection de vos données personnelles</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm p-8 md:p-12 space-y-8 text-neutral-700">
+                <!-- À COMPLÉTER AVEC LE CONTENU GÉNÉRÉ PAR CHATGPT -->
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">1. Introduction</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Présentation de R'MouV et engagement en matière de protection des données personnelles.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">2. Responsable du traitement</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Identité du responsable du traitement, coordonnées, DPO si applicable.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">3. Données collectées</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Liste détaillée des données personnelles collectées (nom, prénom, email, téléphone, date de naissance, genre, pathologies, contre-indications, données de réservation, etc.).
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">4. Finalités du traitement</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Pourquoi les données sont collectées (gestion des comptes utilisateurs, réservations, suivi médical, communication, etc.).
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">5. Base légale du traitement</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Consentement, exécution d'un contrat, intérêt légitime, obligation légale.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">6. Durée de conservation</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Durées de conservation des différentes catégories de données selon les obligations légales et les besoins opérationnels.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">7. Destinataires des données</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Qui a accès aux données (équipe R'MouV, prestataires techniques comme Supabase, autorités si nécessaire).
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">8. Transferts de données hors UE</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Informations sur les transferts éventuels de données hors Union Européenne (notamment via Supabase).
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">9. Vos droits</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Droit d'accès, de rectification, d'effacement, de limitation, de portabilité, d'opposition, retrait du consentement. Procédure pour exercer ces droits.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">10. Cookies et technologies similaires</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Types de cookies utilisés, finalités, durée de conservation, gestion des cookies.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">11. Sécurité des données</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Mesures techniques et organisationnelles mises en place pour protéger les données.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">12. Modifications de la politique</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Droit de modifier la politique et information des utilisateurs en cas de modification.
+                    </p>
+                </section>
+                
+                <section>
+                    <h2 class="text-2xl font-bold mb-4 text-primary">13. Contact</h2>
+                    <p class="text-neutral-600 leading-relaxed">
+                        <strong>À compléter :</strong> Coordonnées pour toute question relative à la protection des données personnelles.
+                    </p>
+                </section>
+                
+                <div class="mt-12 pt-8 border-t border-neutral-200">
+                    <p class="text-sm text-neutral-500 text-center">
+                        Dernière mise à jour : <strong>À compléter avec la date</strong>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <a href="index.html" class="inline-flex items-center text-primary hover:text-primary/80 font-medium transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12 mt-16">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <div>
+                            <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                            <p class="text-sm text-neutral-400">Rehab ton MouV</p>
+                        </div>
+                    </div>
+                    <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
+                <p class="flex items-center justify-center gap-3">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+</body>
+</html>
+

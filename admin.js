@@ -9,7 +9,8 @@ let adminState = {
     currentDate: new Date(),
     slots: [],
     bookings: [],
-    selectedDate: null
+    selectedDate: null,
+    selectedSlots: [] // IDs des créneaux sélectionnés pour suppression multiple
 };
 
 // Initialisation Supabase
@@ -267,6 +268,15 @@ function showDayDetails(date) {
     } else {
         content.innerHTML = `
             <div class="space-y-4">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="slot-checkbox select-all-slots mr-2" onchange="selectAllVisibleSlots()">
+                        <span class="text-sm font-medium text-gray-700">Tout sélectionner</span>
+                    </label>
+                    <button id="bulk-delete-modal-btn" onclick="deleteMultipleSlots()" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm">
+                        <i class="fas fa-trash mr-2"></i>Supprimer sélection
+                    </button>
+                </div>
                 ${daySlots.map(slot => {
                     const slotBookings = dayBookings.filter(booking => 
                         booking.booking_time === slot.booking_time &&
@@ -276,58 +286,71 @@ function showDayDetails(date) {
                     const serviceName = slot.service_type === 'coaching_individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
                     const maxCapacity = slot.max_capacity;
                     const currentBookings = slotBookings.length;
+                    const isSelected = adminState.selectedSlots.includes(slot.id);
                     
                     return `
-                        <div class="time-slot ${currentBookings >= maxCapacity ? 'booked' : ''}">
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-semibold">${slot.booking_time} - ${serviceName}</h4>
-                                <div class="flex gap-2">
-                                    <button onclick="editSlot('${slot.id}')" class="text-blue-600 hover:text-blue-800 text-sm">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button onclick="deleteSlot('${slot.id}')" class="text-red-600 hover:text-red-800 text-sm">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="text-sm text-gray-600 mb-2">
-                                Capacité: ${currentBookings}/${maxCapacity}
-                            </div>
-                            
-                            ${slotBookings.length > 0 ? `
-                                <div class="space-y-2">
-                                    <h5 class="font-medium text-sm">Réservations:</h5>
-                                    ${slotBookings.map(booking => `
-                                        <div class="booking-item ${booking.service_type === 'coaching_individuel' ? 'booking-individuel' : 'booking-groupe'}">
-                                            <div class="flex justify-between items-center">
-                                                <div>
-                                                    <div class="font-medium">Utilisateur ${booking.user_id ? booking.user_id.substring(0, 8) : 'Inconnu'}</div>
-                                                    <div class="text-xs text-gray-500">ID: ${booking.user_id || 'Non disponible'}</div>
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    ${booking.status === 'confirmed' ? 'Confirmée' : 
-                                                      booking.status === 'cancelled' ? 'Annulée' : 'Terminée'}
-                                                </div>
-                                            </div>
-                                            ${booking.notes ? `<div class="text-xs text-gray-600 mt-1">${booking.notes}</div>` : ''}
+                        <div class="time-slot ${currentBookings >= maxCapacity ? 'booked' : ''} ${isSelected ? 'border-2 border-blue-500 bg-blue-50' : ''}">
+                            <div class="flex items-start gap-3 mb-2">
+                                <input type="checkbox" 
+                                       class="slot-checkbox mt-1" 
+                                       value="${slot.id}" 
+                                       ${isSelected ? 'checked' : ''}
+                                       onchange="toggleSlotSelection('${slot.id}'); this.closest('.time-slot').classList.toggle('border-2', this.checked); this.closest('.time-slot').classList.toggle('border-blue-500', this.checked); this.closest('.time-slot').classList.toggle('bg-blue-50', this.checked);">
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="font-semibold">${slot.booking_time} - ${serviceName}</h4>
+                                        <div class="flex gap-2">
+                                            <button onclick="editSlot('${slot.id}')" class="text-blue-600 hover:text-blue-800 text-sm">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button onclick="deleteSlot('${slot.id}')" class="text-red-600 hover:text-red-800 text-sm">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
-                                    `).join('')}
+                                    </div>
+                                    
+                                    <div class="text-sm text-gray-600 mb-2">
+                                        Capacité: ${currentBookings}/${maxCapacity}
+                                    </div>
+                                    
+                                    ${slotBookings.length > 0 ? `
+                                        <div class="space-y-2">
+                                            <h5 class="font-medium text-sm">Réservations:</h5>
+                                            ${slotBookings.map(booking => `
+                                                <div class="booking-item ${booking.service_type === 'coaching_individuel' ? 'booking-individuel' : 'booking-groupe'}">
+                                                    <div class="flex justify-between items-center">
+                                                        <div>
+                                                            <div class="font-medium">Utilisateur ${booking.user_id ? booking.user_id.substring(0, 8) : 'Inconnu'}</div>
+                                                            <div class="text-xs text-gray-500">ID: ${booking.user_id || 'Non disponible'}</div>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            ${booking.status === 'confirmed' ? 'Confirmée' : 
+                                                              booking.status === 'cancelled' ? 'Annulée' : 'Terminée'}
+                                                        </div>
+                                                    </div>
+                                                    ${booking.notes ? `<div class="text-xs text-gray-600 mt-1">${booking.notes}</div>` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <div class="text-sm text-gray-500">Aucune réservation</div>
+                                    `}
                                 </div>
-                            ` : `
-                                <div class="text-sm text-gray-500">Aucune réservation</div>
-                            `}
+                            </div>
                         </div>
                     `;
                 }).join('')}
                 
-                <div class="mt-6 pt-4 border-t">
+                <div class="mt-6 pt-4 border-t flex justify-between items-center">
                     <button onclick="addSlotForDate('${formatDateForInput(date)}')" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md font-medium transition-colors">
                         <i class="fas fa-plus mr-2"></i>Ajouter un autre créneau
                     </button>
                 </div>
             </div>
         `;
+        
+        // Mettre à jour le bouton de suppression en masse après le rendu
+        setTimeout(() => updateBulkDeleteButtons(), 100);
     }
     
     modal.classList.add('show');
@@ -338,6 +361,20 @@ function closeDayDetailsModal() {
     const modal = document.getElementById('day-details-modal');
     if (modal) {
         modal.classList.remove('show');
+        // Vider la sélection des créneaux du jour fermé
+        if (adminState.selectedDate) {
+            const daySlots = adminState.slots.filter(slot => {
+                const slotDate = new Date(slot.booking_date);
+                return slotDate.toDateString() === adminState.selectedDate.toDateString();
+            });
+            daySlots.forEach(slot => {
+                const index = adminState.selectedSlots.indexOf(slot.id);
+                if (index > -1) {
+                    adminState.selectedSlots.splice(index, 1);
+                }
+            });
+            updateBulkDeleteButtons();
+        }
     }
 }
 
@@ -542,6 +579,192 @@ async function handleAddSlotSubmit(event) {
     }
 }
 
+// Gérer la sélection d'un créneau pour suppression multiple
+function toggleSlotSelection(slotId) {
+    const index = adminState.selectedSlots.indexOf(slotId);
+    const isSelected = index > -1;
+    
+    if (isSelected) {
+        adminState.selectedSlots.splice(index, 1);
+    } else {
+        adminState.selectedSlots.push(slotId);
+    }
+    
+    // Mettre à jour l'affichage des boutons de suppression en masse
+    updateBulkDeleteButtons();
+    
+    // Retourner le nouvel état de sélection
+    return adminState.selectedSlots.includes(slotId);
+}
+
+// Mettre à jour l'affichage des boutons de suppression en masse
+function updateBulkDeleteButtons() {
+    const selectedCount = adminState.selectedSlots.length;
+    
+    // Bouton dans le modal de détails
+    const modalBulkDeleteBtn = document.getElementById('bulk-delete-modal-btn');
+    if (modalBulkDeleteBtn) {
+        if (selectedCount > 0) {
+            modalBulkDeleteBtn.classList.remove('hidden');
+            modalBulkDeleteBtn.innerHTML = `<i class="fas fa-trash mr-2"></i>Supprimer ${selectedCount} créneau(x) sélectionné(s)`;
+        } else {
+            modalBulkDeleteBtn.classList.add('hidden');
+        }
+    }
+    
+    // Bouton dans la vue liste
+    const listBulkDeleteBtn = document.getElementById('bulk-delete-list-btn');
+    if (listBulkDeleteBtn) {
+        if (selectedCount > 0) {
+            listBulkDeleteBtn.classList.remove('hidden');
+            listBulkDeleteBtn.innerHTML = `<i class="fas fa-trash mr-2"></i>Supprimer ${selectedCount} créneau(x) sélectionné(s)`;
+        } else {
+            listBulkDeleteBtn.classList.add('hidden');
+        }
+    }
+    
+    // Checkbox "Tout sélectionner"
+    const selectAllCheckboxes = document.querySelectorAll('.select-all-slots');
+    selectAllCheckboxes.forEach(checkbox => {
+        if (adminState.selectedSlots.length > 0) {
+            checkbox.indeterminate = adminState.selectedSlots.length < adminState.slots.length;
+            checkbox.checked = adminState.selectedSlots.length === adminState.slots.length;
+        } else {
+            checkbox.indeterminate = false;
+            checkbox.checked = false;
+        }
+    });
+}
+
+// Sélectionner tous les créneaux visibles
+function selectAllVisibleSlots() {
+    const checkbox = event ? event.target : window.event.target;
+    const isChecked = checkbox.checked;
+    
+    // Récupérer tous les IDs de créneaux visibles selon le contexte
+    let visibleSlotIds = [];
+    
+    // Si on est dans le modal de détails
+    const dayDetailsModal = document.getElementById('day-details-modal');
+    if (dayDetailsModal && dayDetailsModal.classList.contains('show') && adminState.selectedDate) {
+        const daySlots = adminState.slots.filter(slot => {
+            const slotDate = new Date(slot.booking_date);
+            return slotDate.toDateString() === adminState.selectedDate.toDateString();
+        });
+        visibleSlotIds = daySlots.map(slot => slot.id);
+    } else {
+        // Sinon, dans la vue liste - récupérer tous les créneaux visibles depuis le DOM
+        const slotCheckboxes = document.querySelectorAll('.slot-checkbox:not(.select-all-slots)');
+        visibleSlotIds = Array.from(slotCheckboxes)
+            .map(cb => cb.value)
+            .filter(id => id); // Filtrer les valeurs vides
+    }
+    
+    if (isChecked) {
+        // Ajouter tous les créneaux visibles
+        visibleSlotIds.forEach(id => {
+            if (!adminState.selectedSlots.includes(id)) {
+                adminState.selectedSlots.push(id);
+            }
+        });
+    } else {
+        // Retirer tous les créneaux visibles
+        visibleSlotIds.forEach(id => {
+            const index = adminState.selectedSlots.indexOf(id);
+            if (index > -1) {
+                adminState.selectedSlots.splice(index, 1);
+            }
+        });
+    }
+    
+    // Mettre à jour toutes les checkboxes visibles
+    visibleSlotIds.forEach(id => {
+        const slotCheckbox = document.querySelector(`.slot-checkbox[value="${id}"]:not(.select-all-slots)`);
+        if (slotCheckbox) {
+            slotCheckbox.checked = isChecked;
+            
+            // Mettre à jour visuellement les éléments sélectionnés
+            const slotElement = slotCheckbox.closest('.time-slot') || slotCheckbox.closest('.bg-gray-50');
+            if (slotElement) {
+                if (isChecked) {
+                    slotElement.classList.add('border-2', 'border-blue-500', 'bg-blue-50');
+                } else {
+                    slotElement.classList.remove('border-2', 'border-blue-500', 'bg-blue-50');
+                }
+            }
+        }
+    });
+    
+    updateBulkDeleteButtons();
+}
+
+// Supprimer plusieurs créneaux en une fois
+async function deleteMultipleSlots() {
+    if (adminState.selectedSlots.length === 0) {
+        alert('Aucun créneau sélectionné.');
+        return;
+    }
+    
+    const count = adminState.selectedSlots.length;
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer ${count} créneau(x) ? Toutes les réservations associées seront également supprimées.`)) {
+        return;
+    }
+    
+    try {
+        // Supprimer d'abord toutes les réservations associées
+        const { error: bookingsError } = await adminState.supabase
+            .from('bookings')
+            .delete()
+            .in('booking_slot_id', adminState.selectedSlots);
+        
+        if (bookingsError) {
+            console.error('Erreur suppression réservations:', bookingsError);
+        }
+        
+        // Supprimer tous les créneaux sélectionnés
+        const { error } = await adminState.supabase
+            .from('booking_slots')
+            .delete()
+            .in('id', adminState.selectedSlots);
+        
+        if (error) {
+            console.error('Erreur suppression créneaux:', error);
+            alert('Erreur lors de la suppression des créneaux.');
+            return;
+        }
+        
+        console.log(`✅ ${count} créneau(x) supprimé(s)`);
+        
+        // Vider la sélection
+        adminState.selectedSlots = [];
+        updateBulkDeleteButtons();
+        
+        // Actualiser toutes les données
+        await refreshCalendar();
+        
+        // Vérifier quelle vue est active et la mettre à jour
+        const calendarView = document.getElementById('calendar-view');
+        const listView = document.getElementById('list-view');
+        
+        if (calendarView && !calendarView.classList.contains('hidden')) {
+            // Vue calendrier active - rafraîchir le modal si ouvert
+            const dayDetailsModal = document.getElementById('day-details-modal');
+            if (dayDetailsModal && dayDetailsModal.classList.contains('show') && adminState.selectedDate) {
+                showDayDetails(adminState.selectedDate);
+            }
+        } else if (listView && !listView.classList.contains('hidden')) {
+            // Vue liste active - rafraîchir la liste
+            await displaySlotsList();
+        }
+        
+        alert(`${count} créneau(x) supprimé(s) avec succès !`);
+        
+    } catch (error) {
+        console.error('Erreur suppression créneaux:', error);
+        alert('Erreur lors de la suppression des créneaux.');
+    }
+}
+
 // Supprimer un créneau
 async function deleteSlot(slotId) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce créneau ? Toutes les réservations associées seront également supprimées.')) {
@@ -549,6 +772,10 @@ async function deleteSlot(slotId) {
     }
     
     try {
+        // Récupérer les informations du créneau avant suppression (pour savoir quelle date rafraîchir)
+        const slotToDelete = adminState.slots.find(s => s.id === slotId);
+        const slotDate = slotToDelete ? new Date(slotToDelete.booking_date) : null;
+        
         // Supprimer d'abord les réservations associées
         const { error: bookingsError } = await adminState.supabase
             .from('bookings')
@@ -572,10 +799,30 @@ async function deleteSlot(slotId) {
         }
         
         console.log('✅ Créneau supprimé');
-        alert('Créneau supprimé avec succès !');
         
-        // Actualiser le calendrier
+        // Actualiser toutes les données
         await refreshCalendar();
+        
+        // Vérifier quelle vue est active et la mettre à jour
+        const calendarView = document.getElementById('calendar-view');
+        const listView = document.getElementById('list-view');
+        
+        if (calendarView && !calendarView.classList.contains('hidden')) {
+            // Vue calendrier active - rafraîchir le modal si ouvert
+            const dayDetailsModal = document.getElementById('day-details-modal');
+            if (dayDetailsModal && dayDetailsModal.classList.contains('show') && slotDate && adminState.selectedDate) {
+                // Vérifier si la date du modal correspond à celle du créneau supprimé
+                if (slotDate.toDateString() === adminState.selectedDate.toDateString()) {
+                    // Rafraîchir le modal avec les nouvelles données
+                    showDayDetails(adminState.selectedDate);
+                }
+            }
+        } else if (listView && !listView.classList.contains('hidden')) {
+            // Vue liste active - rafraîchir la liste
+            await displaySlotsList();
+        }
+        
+        alert('Créneau supprimé avec succès !');
         
     } catch (error) {
         console.error('Erreur suppression créneau:', error);
@@ -726,13 +973,17 @@ function clearValidationErrors() {
 function switchView(viewType) {
     console.log('🔄 Changement de vue vers:', viewType);
     
+    // Vider la sélection des créneaux lors du changement de vue
+    adminState.selectedSlots = [];
+    updateBulkDeleteButtons();
+    
     // Masquer toutes les vues
     document.getElementById('calendar-view').classList.add('hidden');
     document.getElementById('calendar-grid-section').classList.add('hidden');
     document.getElementById('list-view').classList.add('hidden');
     document.getElementById('bookings-view').classList.add('hidden');
     document.getElementById('stats-view').classList.add('hidden');
-    document.getElementById('users-view').classList.add('hidden');
+    document.getElementById('patients-view').classList.add('hidden');
     
     // Désactiver tous les boutons
     document.querySelectorAll('.view-toggle').forEach(btn => {
@@ -767,9 +1018,9 @@ function switchView(viewType) {
             document.getElementById('stats-view').classList.remove('hidden');
             displayStats();
             break;
-        case 'users':
-            document.getElementById('users-view').classList.remove('hidden');
-            displayUsers();
+        case 'patients':
+            document.getElementById('patients-view').classList.remove('hidden');
+            displayPatients();
             break;
     }
 }
@@ -809,8 +1060,19 @@ async function displaySlotsList() {
         slotsByDate[date].push(slot);
     });
     
-    // Générer le HTML
-    let html = '';
+    // Générer le HTML avec en-tête de sélection
+    let html = `
+        <div class="mb-4 pb-4 border-b flex items-center justify-between">
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" class="slot-checkbox select-all-slots mr-2" onchange="selectAllVisibleSlots()">
+                <span class="text-sm font-medium text-gray-700">Tout sélectionner</span>
+            </label>
+            <button id="bulk-delete-list-btn" onclick="deleteMultipleSlots()" class="hidden bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm">
+                <i class="fas fa-trash mr-2"></i>Supprimer sélection
+            </button>
+        </div>
+    `;
+    
     Object.keys(slotsByDate).sort().forEach(date => {
         const dateSlots = slotsByDate[date];
         const dateObj = new Date(date);
@@ -832,19 +1094,29 @@ async function displaySlotsList() {
             const isFull = slot.current_bookings >= slot.max_capacity;
             const statusClass = isFull ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
             const statusText = isFull ? 'Complet' : 'Disponible';
+            const isSelected = adminState.selectedSlots.includes(slot.id);
             
             html += `
-                <div class="bg-gray-50 rounded-lg p-3 border">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-medium text-gray-800">${time}</span>
-                        <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
-                    </div>
-                    <div class="text-sm text-gray-600 mb-2">${typeName}</div>
-                    <div class="text-xs text-gray-500">${slot.current_bookings}/${slot.max_capacity} places</div>
-                    <div class="flex gap-2 mt-3">
-                        <button onclick="deleteSlot('${slot.id}')" class="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">
-                            <i class="fas fa-trash mr-1"></i>Supprimer
-                        </button>
+                <div class="bg-gray-50 rounded-lg p-3 border ${isSelected ? 'border-2 border-blue-500 bg-blue-50' : ''}">
+                    <div class="flex items-start gap-2 mb-2">
+                        <input type="checkbox" 
+                               class="slot-checkbox mt-1" 
+                               value="${slot.id}" 
+                               ${isSelected ? 'checked' : ''}
+                               onchange="toggleSlotSelection('${slot.id}'); this.closest('.bg-gray-50').classList.toggle('border-2', this.checked); this.closest('.bg-gray-50').classList.toggle('border-blue-500', this.checked); this.closest('.bg-gray-50').classList.toggle('bg-blue-50', this.checked);">
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-gray-800">${time}</span>
+                                <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mb-2">${typeName}</div>
+                            <div class="text-xs text-gray-500 mb-2">${slot.current_bookings}/${slot.max_capacity} places</div>
+                            <div class="flex gap-2 mt-2">
+                                <button onclick="deleteSlot('${slot.id}')" class="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded">
+                                    <i class="fas fa-trash mr-1"></i>Supprimer
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -857,6 +1129,9 @@ async function displaySlotsList() {
     });
     
     slotsList.innerHTML = html;
+    
+    // Mettre à jour le bouton de suppression en masse après le rendu
+    setTimeout(() => updateBulkDeleteButtons(), 100);
 }
 
 // Récupérer les informations utilisateur
@@ -1256,8 +1531,8 @@ async function toggleUserRole(userId, currentRole) {
         
         alert(`Rôle changé en "${newRole}" avec succès !`);
         
-        // Recharger la liste des utilisateurs
-        await displayUsers();
+        // Recharger la liste des patients et utilisateurs
+        await displayPatients();
         
     } catch (error) {
         console.error('Erreur toggleUserRole:', error);
@@ -1277,6 +1552,9 @@ window.editSlot = editSlot;
 window.previousMonth = previousMonth;
 window.nextMonth = nextMonth;
 window.switchView = switchView;
+window.toggleSlotSelection = toggleSlotSelection;
+window.deleteMultipleSlots = deleteMultipleSlots;
+window.selectAllVisibleSlots = selectAllVisibleSlots;
 
 // Initialisation de la page
 async function initializeAdminPage() {
@@ -1293,26 +1571,38 @@ async function initializeAdminPage() {
         addSlotForm.addEventListener('submit', handleAddSlotSubmit);
     }
     
+    // Configurer le formulaire patient
+    const patientForm = document.getElementById('patient-form');
+    if (patientForm) {
+        patientForm.addEventListener('submit', handlePatientFormSubmit);
+    }
+    
+    // Configurer la recherche et les filtres de patients
+    const patientsSearch = document.getElementById('patients-search');
+    if (patientsSearch) {
+        patientsSearch.addEventListener('input', async () => {
+            await displayPatients();
+        });
+    }
+    
+    const patientsRoleFilter = document.getElementById('patients-filter-role');
+    if (patientsRoleFilter) {
+        patientsRoleFilter.addEventListener('change', async () => {
+            console.log('🔄 Filtre rôle changé:', patientsRoleFilter.value);
+            await displayPatients();
+        });
+    }
+    
+    const patientsStatusFilter = document.getElementById('patients-filter-status');
+    if (patientsStatusFilter) {
+        patientsStatusFilter.addEventListener('change', async () => {
+            console.log('🔄 Filtre statut changé:', patientsStatusFilter.value);
+            await displayPatients();
+        });
+    }
+    
     // Initialiser l'authentification
     await initializeAuth();
-    
-    // Initialiser les filtres pour la vue utilisateurs
-    const roleFilter = document.getElementById('users-filter-role');
-    const statusFilter = document.getElementById('users-filter-status');
-    
-    if (roleFilter) {
-        roleFilter.addEventListener('change', () => {
-            console.log('🔄 Filtre rôle changé:', roleFilter.value);
-            displayUsers();
-        });
-    }
-    
-    if (statusFilter) {
-        statusFilter.addEventListener('change', () => {
-            console.log('🔄 Filtre statut changé:', statusFilter.value);
-            displayUsers();
-        });
-    }
     
     // Initialiser la vue par défaut (calendrier)
     switchView('calendar');
@@ -1533,6 +1823,675 @@ async function createRecurringSlots(startDate, timeType, time, startTime, endTim
     
     alert(message);
 }
+
+// ============================================
+// GESTION DES PATIENTS
+// ============================================
+
+// Afficher la liste des patients et utilisateurs (fusionnée)
+async function displayPatients() {
+    const patientsList = document.getElementById('patients-list');
+    if (!patientsList) return;
+    
+    console.log('🏥👥 Affichage de la liste des patients et utilisateurs');
+    
+    // Récupérer les valeurs des filtres
+    const roleFilter = document.getElementById('patients-filter-role');
+    const statusFilter = document.getElementById('patients-filter-status');
+    const searchInput = document.getElementById('patients-search');
+    const selectedRole = roleFilter ? roleFilter.value : '';
+    const selectedStatus = statusFilter ? statusFilter.value : '';
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    console.log('🔍 Filtres appliqués:', { role: selectedRole, status: selectedStatus, search: searchTerm });
+    
+    try {
+        // Récupérer tous les profils (tous les utilisateurs)
+        const { data: profiles, error } = await adminState.supabase
+            .from('profiles')
+            .select('*')
+            .order('last_name', { ascending: true })
+            .order('first_name', { ascending: true });
+        
+        if (error) {
+            console.error('❌ Erreur chargement profils:', error);
+            console.error('Détails erreur:', JSON.stringify(error, null, 2));
+            patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Erreur lors du chargement: ' + error.message + '</div>';
+            return;
+        }
+        
+        console.log('✅ Profils récupérés:', profiles?.length || 0);
+        
+        if (!profiles || profiles.length === 0) {
+            patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun utilisateur enregistré</div>';
+            // Mettre à jour les statistiques à 0
+            document.getElementById('total-users').textContent = '0';
+            document.getElementById('active-users').textContent = '0';
+            document.getElementById('admin-users').textContent = '0';
+            document.getElementById('users-with-bookings').textContent = '0';
+            return;
+        }
+        
+        // Récupérer les réservations pour calculer les statistiques
+        const { data: bookings, error: bookingsError } = await adminState.supabase
+            .from('bookings')
+            .select('user_id')
+            .eq('status', 'confirmed');
+        
+        if (bookingsError) {
+            console.error('Erreur chargement réservations:', bookingsError);
+        }
+        
+        // Calculer les statistiques (sur tous les profils)
+        const totalUsers = profiles.length;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const activeUsers = profiles.filter(p => new Date(p.created_at) > thirtyDaysAgo).length;
+        const adminUsers = profiles.filter(p => p.role === 'admin').length;
+        const usersWithBookings = bookings ? new Set(bookings.map(b => b.user_id)).size : 0;
+        
+        // Mettre à jour les cartes de statistiques
+        document.getElementById('total-users').textContent = totalUsers;
+        document.getElementById('active-users').textContent = activeUsers;
+        document.getElementById('admin-users').textContent = adminUsers;
+        document.getElementById('users-with-bookings').textContent = usersWithBookings;
+        
+        // Appliquer les filtres
+        let filteredProfiles = profiles;
+        
+        // Filtre par recherche
+        if (searchTerm) {
+            filteredProfiles = filteredProfiles.filter(p => 
+                `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase().includes(searchTerm) ||
+                p.email?.toLowerCase().includes(searchTerm)
+            );
+        }
+        
+        // Filtre par rôle
+        if (selectedRole) {
+            filteredProfiles = filteredProfiles.filter(p => p.role === selectedRole);
+        }
+        
+        // Filtre par statut
+        if (selectedStatus) {
+            if (selectedStatus === 'active') {
+                filteredProfiles = filteredProfiles.filter(p => new Date(p.created_at) > thirtyDaysAgo);
+            } else if (selectedStatus === 'inactive') {
+                filteredProfiles = filteredProfiles.filter(p => new Date(p.created_at) <= thirtyDaysAgo);
+            }
+        }
+        
+        console.log('👥 Profils filtrés:', filteredProfiles.length);
+        
+        // Vérifier s'il y a des résultats après filtrage
+        if (filteredProfiles.length === 0) {
+            patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun résultat ne correspond aux filtres sélectionnés</div>';
+            return;
+        }
+        
+        // Générer le HTML
+        let html = '';
+        filteredProfiles.forEach(profile => {
+            const pathologies = profile.pathologies && Array.isArray(profile.pathologies) 
+                ? profile.pathologies.join(', ') 
+                : '';
+            
+            const userName = profile.first_name && profile.last_name ? 
+                `${profile.first_name} ${profile.last_name}` : 
+                profile.email || `Utilisateur ${profile.id.substring(0, 8)}...`;
+            
+            const roleClass = profile.role === 'admin' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
+            const roleText = profile.role === 'admin' ? 'Admin' : 'User';
+            
+            const userBookings = bookings ? bookings.filter(b => b.user_id === profile.id).length : 0;
+            
+            html += `
+                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="text-lg font-semibold text-gray-800">
+                                    ${userName}
+                                </h3>
+                                <span class="text-xs px-2 py-1 rounded-full ${roleClass}">${roleText}</span>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
+                                <div><i class="fas fa-envelope mr-2"></i>${profile.email || 'N/A'}</div>
+                                ${profile.phone ? `<div><i class="fas fa-phone mr-2"></i>${profile.phone}</div>` : ''}
+                                ${profile.date_of_birth ? `<div><i class="fas fa-birthday-cake mr-2"></i>${new Date(profile.date_of_birth).toLocaleDateString('fr-FR')}</div>` : ''}
+                                ${profile.gender ? `<div><i class="fas fa-venus-mars mr-2"></i>${profile.gender}</div>` : ''}
+                                <div><i class="fas fa-calendar-check mr-2"></i>${userBookings} réservation(s)</div>
+                            </div>
+                            ${pathologies ? `<div class="mt-2 text-sm"><strong>Pathologies:</strong> ${pathologies}</div>` : ''}
+                            ${profile.contraindications ? `<div class="mt-2 text-sm text-red-600"><strong>Contre-indications:</strong> ${profile.contraindications}</div>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-2 ml-4">
+                            <button onclick="showPatientDetails('${profile.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
+                                <i class="fas fa-eye mr-1"></i>Voir détails
+                            </button>
+                            <button onclick="editPatient('${profile.id}')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
+                                <i class="fas fa-edit mr-1"></i>Modifier
+                            </button>
+                            <button onclick="toggleUserRole('${profile.id}', '${profile.role}')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm">
+                                <i class="fas fa-user-edit mr-1"></i>${profile.role === 'admin' ? 'Rendre User' : 'Rendre Admin'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        patientsList.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Erreur displayPatients:', error);
+        patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Erreur lors du chargement: ' + error.message + '</div>';
+    }
+}
+
+
+// Fermer le modal de patient
+function closePatientModal() {
+    const modal = document.getElementById('patient-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Modifier un patient existant
+async function editPatient(patientId) {
+    try {
+        const { data: patient, error } = await adminState.supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', patientId)
+            .single();
+        
+        if (error || !patient) {
+            alert('Erreur lors du chargement du patient');
+            return;
+        }
+        
+        const modal = document.getElementById('patient-modal');
+        const title = document.getElementById('patient-modal-title');
+        const form = document.getElementById('patient-form');
+        
+        if (!modal || !title || !form) return;
+        
+        title.textContent = `Modifier le patient: ${patient.first_name} ${patient.last_name}`;
+        
+        // Remplir le formulaire
+        document.getElementById('patient-first-name').value = patient.first_name || '';
+        document.getElementById('patient-last-name').value = patient.last_name || '';
+        document.getElementById('patient-email').value = patient.email || '';
+        document.getElementById('patient-phone').value = patient.phone || '';
+        document.getElementById('patient-date-of-birth').value = patient.date_of_birth || '';
+        document.getElementById('patient-gender').value = patient.gender || '';
+        
+        // Pathologies
+        if (patient.pathologies && Array.isArray(patient.pathologies)) {
+            document.getElementById('patient-pathologies').value = patient.pathologies.join(', ');
+        }
+        
+        document.getElementById('patient-contraindications').value = patient.contraindications || '';
+        document.getElementById('patient-emergency-name').value = patient.emergency_contact_name || '';
+        document.getElementById('patient-emergency-phone').value = patient.emergency_contact_phone || '';
+        
+        // Stocker l'ID du patient
+        form.dataset.patientId = patientId;
+        
+        modal.classList.add('show');
+        
+    } catch (error) {
+        console.error('Erreur editPatient:', error);
+        alert('Erreur lors du chargement du patient');
+    }
+}
+
+// Gérer la soumission du formulaire patient (édition uniquement)
+async function handlePatientFormSubmit(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const patientId = form.dataset.patientId;
+    
+    if (!patientId) {
+        alert('Erreur: ID patient manquant');
+        return;
+    }
+    
+    // Récupérer les données
+    const firstName = document.getElementById('patient-first-name').value;
+    const lastName = document.getElementById('patient-last-name').value;
+    const email = document.getElementById('patient-email').value;
+    const phone = document.getElementById('patient-phone').value;
+    const dateOfBirth = document.getElementById('patient-date-of-birth').value;
+    const gender = document.getElementById('patient-gender').value;
+    const pathologiesText = document.getElementById('patient-pathologies').value;
+    const contraindications = document.getElementById('patient-contraindications').value;
+    const emergencyName = document.getElementById('patient-emergency-name').value;
+    const emergencyPhone = document.getElementById('patient-emergency-phone').value;
+    
+    // Convertir pathologies en tableau
+    const pathologies = pathologiesText ? pathologiesText.split(',').map(p => p.trim()).filter(p => p) : null;
+    
+    try {
+        // Mise à jour du profil patient
+        const updateData = {
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            phone: phone || null,
+            date_of_birth: dateOfBirth || null,
+            gender: gender || null,
+            pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
+            contraindications: contraindications || null,
+            emergency_contact_name: emergencyName || null,
+            emergency_contact_phone: emergencyPhone || null,
+            patient_status: 'active',
+            updated_at: new Date().toISOString()
+        };
+        
+        const { error } = await adminState.supabase
+            .from('profiles')
+            .update(updateData)
+            .eq('id', patientId);
+        
+        if (error) throw error;
+        
+        alert('Fiche patient mise à jour avec succès !');
+        closePatientModal();
+        await displayPatients();
+        
+    } catch (error) {
+        console.error('Erreur handlePatientFormSubmit:', error);
+        alert('Erreur: ' + error.message);
+    }
+}
+
+// Afficher les détails d'un patient avec commentaires
+async function showPatientDetails(patientId) {
+    const modal = document.getElementById('patient-details-modal');
+    const title = document.getElementById('patient-details-title');
+    const content = document.getElementById('patient-details-content');
+    
+    if (!modal || !title || !content) return;
+    
+    try {
+        // Charger le patient
+        const { data: patient, error: patientError } = await adminState.supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', patientId)
+            .single();
+        
+        if (patientError || !patient) {
+            alert('Erreur lors du chargement du patient');
+            return;
+        }
+        
+        // Charger les commentaires
+        const { data: comments, error: commentsError } = await adminState.supabase
+            .from('patient_comments')
+            .select('*')
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false });
+        
+        if (commentsError) {
+            console.error('Erreur chargement commentaires:', commentsError);
+        }
+        
+        // Récupérer l'utilisateur actuel pour vérifier les permissions
+        const { data: { user: currentUser } } = await adminState.supabase.auth.getUser();
+        
+        title.textContent = `Détails: ${patient.first_name} ${patient.last_name}`;
+        
+        const pathologies = patient.pathologies && Array.isArray(patient.pathologies) 
+            ? patient.pathologies.join(', ') 
+            : 'Aucune';
+        
+        // Générer le contenu
+        content.innerHTML = `
+            <div class="space-y-6">
+                <!-- Informations patient -->
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold mb-4">Informations du patient</h4>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div><strong>Email:</strong> ${patient.email || 'N/A'}</div>
+                        <div><strong>Téléphone:</strong> ${patient.phone || 'N/A'}</div>
+                        <div><strong>Date de naissance:</strong> ${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('fr-FR') : 'N/A'}</div>
+                        <div><strong>Genre:</strong> ${patient.gender || 'N/A'}</div>
+                        <div class="md:col-span-2"><strong>Pathologies:</strong> ${pathologies}</div>
+                        ${patient.contraindications ? `<div class="md:col-span-2"><strong>Contre-indications:</strong> ${patient.contraindications}</div>` : ''}
+                        ${patient.emergency_contact_name ? `<div><strong>Contact d'urgence:</strong> ${patient.emergency_contact_name}</div>` : ''}
+                        ${patient.emergency_contact_phone ? `<div><strong>Tél. urgence:</strong> ${patient.emergency_contact_phone}</div>` : ''}
+                    </div>
+                </div>
+                
+                <!-- Section commentaires -->
+                <div class="border-t pt-6">
+                    <h4 class="text-lg font-semibold mb-4">Commentaires</h4>
+                    
+                    <!-- Formulaire d'ajout de commentaire -->
+                    <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                        <form id="add-comment-form" onsubmit="event.preventDefault(); addPatientComment('${patientId}');">
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Type de commentaire</label>
+                                <select id="comment-type" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                    <option value="general">Général</option>
+                                    <option value="medical">Médical</option>
+                                    <option value="administrative">Administratif</option>
+                                    <option value="follow_up">Suivi</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                                <textarea id="comment-text" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                            </div>
+                            <button type="submit" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md">
+                                <i class="fas fa-plus mr-2"></i>Ajouter un commentaire
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Liste des commentaires -->
+                    <div id="comments-list" class="space-y-3">
+                        ${comments && comments.length > 0 
+                            ? comments.map(comment => {
+                                // Vérifier si l'utilisateur actuel est l'auteur du commentaire
+                                const isAuthor = currentUser && comment.created_by === currentUser.id;
+                                const wasUpdated = comment.updated_at && comment.updated_at !== comment.created_at;
+                                
+                                return `
+                                <div class="bg-white border border-gray-200 rounded-lg p-4" id="comment-${comment.id}">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <div class="font-semibold">${comment.created_by_name}</div>
+                                            <div class="text-xs text-gray-500">
+                                                ${new Date(comment.created_at).toLocaleDateString('fr-FR')} à ${new Date(comment.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                                ${wasUpdated ? '<span class="ml-2 text-gray-400">(modifié)</span>' : ''}
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">${getCommentTypeLabel(comment.comment_type)}</span>
+                                            ${isAuthor ? `
+                                                <button onclick="editPatientComment('${comment.id}', '${patientId}')" class="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deletePatientComment('${comment.id}', '${patientId}')" class="text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50" title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="text-sm text-gray-700 mt-2" id="comment-text-${comment.id}">${comment.comment}</div>
+                                </div>
+                            `;
+                            }).join('')
+                            : '<p class="text-gray-500 text-center py-4">Aucun commentaire pour le moment</p>'
+                        }
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.add('show');
+        
+    } catch (error) {
+        console.error('Erreur showPatientDetails:', error);
+        alert('Erreur lors du chargement des détails du patient');
+    }
+}
+
+// Fonction utilitaire pour les labels des types de commentaires
+function getCommentTypeLabel(type) {
+    const labels = {
+        'general': 'Général',
+        'medical': 'Médical',
+        'administrative': 'Administratif',
+        'follow_up': 'Suivi'
+    };
+    return labels[type] || type;
+}
+
+// Fermer le modal de détails patient
+function closePatientDetailsModal() {
+    const modal = document.getElementById('patient-details-modal');
+    if (modal) {
+        modal.classList.remove('show');
+    }
+}
+
+// Ajouter un commentaire pour un patient
+async function addPatientComment(patientId) {
+    const commentText = document.getElementById('comment-text').value;
+    const commentType = document.getElementById('comment-type').value;
+    
+    if (!commentText.trim()) {
+        alert('Veuillez saisir un commentaire');
+        return;
+    }
+    
+    try {
+        const { data: { user } } = await adminState.supabase.auth.getUser();
+        
+        // Récupérer le nom de l'utilisateur actuel
+        const { data: currentProfile } = await adminState.supabase
+            .from('profiles')
+            .select('first_name, last_name')
+            .eq('id', user.id)
+            .single();
+        
+        const userName = currentProfile 
+            ? `${currentProfile.first_name || ''} ${currentProfile.last_name || ''}`.trim() || user.email
+            : user.email;
+        
+        // Créer le commentaire
+        const { error } = await adminState.supabase
+            .from('patient_comments')
+            .insert({
+                patient_id: patientId,
+                comment: commentText.trim(),
+                comment_type: commentType,
+                created_by: user.id,
+                created_by_name: userName
+            });
+        
+        if (error) throw error;
+        
+        // Réafficher les détails du patient (pour mettre à jour les commentaires)
+        await showPatientDetails(patientId);
+        
+        // Réinitialiser le formulaire
+        document.getElementById('comment-text').value = '';
+        
+    } catch (error) {
+        console.error('Erreur addPatientComment:', error);
+        alert('Erreur lors de l\'ajout du commentaire: ' + error.message);
+    }
+}
+
+// Modifier un commentaire patient
+async function editPatientComment(commentId, patientId) {
+    try {
+        // Récupérer le commentaire
+        const { data: comment, error: commentError } = await adminState.supabase
+            .from('patient_comments')
+            .select('*')
+            .eq('id', commentId)
+            .single();
+        
+        if (commentError || !comment) {
+            alert('Erreur lors du chargement du commentaire');
+            return;
+        }
+        
+        // Vérifier que l'utilisateur est l'auteur
+        const { data: { user } } = await adminState.supabase.auth.getUser();
+        if (!user || comment.created_by !== user.id) {
+            alert('Vous n\'êtes pas autorisé à modifier ce commentaire');
+            return;
+        }
+        
+        // Remplacer l'affichage du commentaire par un formulaire d'édition
+        const commentDiv = document.getElementById(`comment-${commentId}`);
+        if (!commentDiv) return;
+        
+        const commentText = commentDiv.querySelector(`#comment-text-${commentId}`);
+        const editForm = `
+            <div class="edit-comment-form mt-2 border-t pt-3">
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Type de commentaire</label>
+                    <select id="edit-comment-type-${commentId}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                        <option value="general" ${comment.comment_type === 'general' ? 'selected' : ''}>Général</option>
+                        <option value="medical" ${comment.comment_type === 'medical' ? 'selected' : ''}>Médical</option>
+                        <option value="administrative" ${comment.comment_type === 'administrative' ? 'selected' : ''}>Administratif</option>
+                        <option value="follow_up" ${comment.comment_type === 'follow_up' ? 'selected' : ''}>Suivi</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Commentaire</label>
+                    <textarea id="edit-comment-text-${commentId}" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md">${comment.comment}</textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="savePatientComment('${commentId}', '${patientId}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm">
+                        <i class="fas fa-check mr-1"></i>Enregistrer
+                    </button>
+                    <button onclick="cancelEditComment('${commentId}', '${patientId}')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
+                        <i class="fas fa-times mr-1"></i>Annuler
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        commentText.style.display = 'none';
+        commentText.insertAdjacentHTML('afterend', editForm);
+        
+    } catch (error) {
+        console.error('Erreur editPatientComment:', error);
+        alert('Erreur lors de la modification du commentaire: ' + error.message);
+    }
+}
+
+// Annuler l'édition d'un commentaire
+function cancelEditComment(commentId, patientId) {
+    const commentDiv = document.getElementById(`comment-${commentId}`);
+    if (!commentDiv) return;
+    
+    const editForm = commentDiv.querySelector('.edit-comment-form');
+    const commentText = commentDiv.querySelector(`#comment-text-${commentId}`);
+    
+    if (editForm) {
+        editForm.remove();
+    }
+    
+    if (commentText) {
+        commentText.style.display = 'block';
+    }
+}
+
+// Enregistrer un commentaire modifié
+async function savePatientComment(commentId, patientId) {
+    try {
+        const commentText = document.getElementById(`edit-comment-text-${commentId}`).value;
+        const commentType = document.getElementById(`edit-comment-type-${commentId}`).value;
+        
+        if (!commentText.trim()) {
+            alert('Veuillez saisir un commentaire');
+            return;
+        }
+        
+        // Vérifier que l'utilisateur est l'auteur
+        const { data: comment, error: commentError } = await adminState.supabase
+            .from('patient_comments')
+            .select('created_by')
+            .eq('id', commentId)
+            .single();
+        
+        if (commentError || !comment) {
+            alert('Erreur lors de la vérification du commentaire');
+            return;
+        }
+        
+        const { data: { user } } = await adminState.supabase.auth.getUser();
+        if (!user || comment.created_by !== user.id) {
+            alert('Vous n\'êtes pas autorisé à modifier ce commentaire');
+            return;
+        }
+        
+        // Mettre à jour le commentaire
+        const { error: updateError } = await adminState.supabase
+            .from('patient_comments')
+            .update({
+                comment: commentText.trim(),
+                comment_type: commentType,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', commentId);
+        
+        if (updateError) throw updateError;
+        
+        // Réafficher les détails du patient (pour mettre à jour les commentaires)
+        await showPatientDetails(patientId);
+        
+    } catch (error) {
+        console.error('Erreur savePatientComment:', error);
+        alert('Erreur lors de l\'enregistrement du commentaire: ' + error.message);
+    }
+}
+
+// Supprimer un commentaire patient
+async function deletePatientComment(commentId, patientId) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) {
+        return;
+    }
+    
+    try {
+        // Vérifier que l'utilisateur est l'auteur
+        const { data: comment, error: commentError } = await adminState.supabase
+            .from('patient_comments')
+            .select('created_by')
+            .eq('id', commentId)
+            .single();
+        
+        if (commentError || !comment) {
+            alert('Erreur lors de la vérification du commentaire');
+            return;
+        }
+        
+        const { data: { user } } = await adminState.supabase.auth.getUser();
+        if (!user || comment.created_by !== user.id) {
+            alert('Vous n\'êtes pas autorisé à supprimer ce commentaire');
+            return;
+        }
+        
+        // Supprimer le commentaire
+        const { error: deleteError } = await adminState.supabase
+            .from('patient_comments')
+            .delete()
+            .eq('id', commentId);
+        
+        if (deleteError) throw deleteError;
+        
+        // Réafficher les détails du patient (pour mettre à jour les commentaires)
+        await showPatientDetails(patientId);
+        
+    } catch (error) {
+        console.error('Erreur deletePatientComment:', error);
+        alert('Erreur lors de la suppression du commentaire: ' + error.message);
+    }
+}
+
+// Exposer les fonctions globalement
+window.closePatientModal = closePatientModal;
+window.editPatient = editPatient;
+window.showPatientDetails = showPatientDetails;
+window.closePatientDetailsModal = closePatientDetailsModal;
+window.addPatientComment = addPatientComment;
+window.editPatientComment = editPatientComment;
+window.cancelEditComment = cancelEditComment;
+window.savePatientComment = savePatientComment;
+window.deletePatientComment = deletePatientComment;
 
 // Initialiser la page quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', initializeAdminPage);

@@ -11,10 +11,10 @@
     <meta property="og:title" content="Notre Projet - R'MouV">
     <meta property="og:description" content="Découvrez notre approche pluridisciplinaire alliant kinésithérapie et coaching sportif.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="placeholder">
+    <meta property="og:image" content="Images/Logo.png">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="placeholder">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -94,30 +94,10 @@
             justify-content: center;
         }
         
-        /* Alignement spécifique du logo et du texte */
-        .sticky-nav .flex.items-center:first-child {
-            align-items: baseline !important;
-        }
-        .sticky-nav .text-2xl.font-bold {
-            line-height: 1.2 !important;
-        }
-        .sticky-nav .ml-2.text-sm {
-            margin-top: 0.25rem !important;
-        }
-        
         /* Alignement mobile */
         @media (max-width: 768px) {
             .sticky-nav nav {
                 padding: 1rem !important;
-            }
-            .sticky-nav .flex.items-center:first-child {
-                align-items: center !important;
-            }
-            .sticky-nav .text-2xl.font-bold {
-                font-size: 1.5rem !important;
-            }
-            .sticky-nav .ml-2.text-sm {
-                display: none !important;
             }
         }
         
@@ -134,11 +114,12 @@
     <header class="sticky-nav bg-white shadow-md">
         <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <a href="index.html" class="text-2xl font-bold text-primary">R'<span class="text-secondary">MouV</span></a>
-                <span class="ml-2 text-sm font-medium">Rehab ton MouV</span>
+                <a href="index.html" class="flex items-center group">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
+                </a>
             </div>
             
-            <div class="hidden md:flex items-center space-x-8">
+            <div class="hidden xl:flex items-center space-x-8">
                 <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
                 <a href="index.html#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
@@ -176,7 +157,7 @@
                                 <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                     <i class="fas fa-cog mr-2"></i>Administration
                                 </a>
-                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                     <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                                 </a>
                             </div>
@@ -185,49 +166,49 @@
                 </div>
             </div>
             
-            <button class="md:hidden text-neutral-700" id="mobile-menu-toggle">
+            <button class="xl:hidden text-neutral-600 hover:text-primary transition-colors" id="mobile-menu-toggle">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </nav>
         
         <!-- Mobile Menu -->
-        <div class="md:hidden hidden bg-white border-t" id="mobile-menu">
+        <div class="xl:hidden hidden bg-white border-t" id="mobile-menu">
             <div class="container mx-auto px-4 py-4 space-y-4">
-                <a href="index.html#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
-                <a href="equipements.html" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
-                <a href="index.html#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
-                <a href="rejoindre.html" class="block font-medium hover:text-primary transition-colors">Rejoindre R'MouV</a>
-                <a href="contact.html" class="block font-medium hover:text-primary transition-colors">Contact</a>
+                <a href="index.html#projet" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Notre Projet</a>
+                <a href="index.html#equipements" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Nos Équipements</a>
+                <a href="index.html#equipe" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Notre Équipe</a>
+                <a href="rejoindre.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Rejoindre R'MouV</a>
+                <a href="contact.html" class="block font-medium text-neutral-600 hover:text-primary transition-colors py-2">Contact</a>
                 
                 <!-- Boutons d'authentification mobile (masqués quand connecté) -->
-                <div id="auth-buttons-mobile" class="space-y-2">
-                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors text-center py-2">
+                <div id="auth-buttons-mobile" class="pt-2 space-y-3">
+                    <a href="connexion.html" class="block w-full text-primary hover:text-primary/80 font-medium transition-colors py-2">
                         <i class="fas fa-sign-in-alt mr-2"></i>Connexion
                     </a>
-                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-12 py-2 rounded-full font-medium transition-colors text-center">
+                    <a href="inscription.html" class="block w-full bg-secondary hover:bg-secondary/90 text-white px-6 py-2 rounded-full font-medium transition-colors text-center">
                         <i class="fas fa-user-plus mr-2"></i>Créer un compte
                     </a>
                 </div>
                 
                 <!-- User menu mobile (masqué par défaut) -->
-                <div id="user-menu-mobile" class="hidden space-y-2">
-                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full">
+                <div id="user-menu-mobile" class="hidden pt-2 space-y-2">
+                    <div class="flex items-center justify-center space-x-2 bg-primary text-white px-4 py-2 rounded-full mb-2">
                         <span id="user-initials-mobile" class="font-bold"></span>
                         <span class="text-sm">Connecté</span>
                     </div>
-                    <a href="reservation.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="reservation.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
                     </a>
-                    <a href="mes-reservations.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="mes-reservations.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-calendar mr-2"></i>Mes réservations
                     </a>
-                    <a href="profil.html" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="profil.html" class="block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-user mr-2"></i>Mon profil
                     </a>
-                    <a href="admin.html" id="admin-button-mobile" class="hidden block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="admin.html" id="admin-button-mobile" class="hidden block w-full py-2 text-gray-700 hover:bg-gray-100 rounded-md px-2">
                         <i class="fas fa-cog mr-2"></i>Administration
                     </a>
-                    <a href="#" onclick="logout()" class="block w-full text-center py-2 text-gray-700 hover:bg-gray-100 rounded-md">
+                    <a href="#" onclick="logout()" class="block w-full py-2 text-red-600 hover:bg-red-50 rounded-md px-2">
                         <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
                     </a>
                 </div>
@@ -238,6 +219,7 @@
     <!-- Hero Section -->
     <section class="hero-gradient py-16 md:py-24">
         <div class="container mx-auto px-4 text-center">
+            <img src="Images/Logo.png" alt="Logo R'MouV" class="h-16 w-auto mb-6 object-contain mx-auto">
             <h1 class="text-3xl md:text-5xl font-bold mb-6 text-neutral-800">
                 Notre <span class="text-primary">Projet</span>
             </h1>
@@ -307,23 +289,36 @@
                 <!-- Bénéfices de l'approche -->
                 <div class="mb-12">
                     <h2 class="text-2xl md:text-3xl font-bold mb-6 text-neutral-800">Les Bénéfices de Notre Approche</h2>
-                    <div class="grid md:grid-cols-3 gap-6">
-                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
-                            <i class="fas fa-sync-alt text-2xl text-primary mb-3"></i>
-                            <h4 class="font-semibold mb-2">Continuité des soins</h4>
-                            <p class="text-sm text-neutral-600">Transition fluide entre rééducation et réathlétisation</p>
-                        </div>
-                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
-                            <i class="fas fa-target text-2xl text-secondary mb-3"></i>
-                            <h4 class="font-semibold mb-2">Objectifs personnalisés</h4>
-                            <p class="text-sm text-neutral-600">Protocoles adaptés à votre situation spécifique</p>
-                        </div>
-                        <div class="text-center p-6 bg-neutral-50 rounded-lg">
-                            <i class="fas fa-chart-line text-2xl text-primary mb-3"></i>
-                            <h4 class="font-semibold mb-2">Suivi optimisé</h4>
-                            <p class="text-sm text-neutral-600">Évaluation continue et ajustement des programmes</p>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md">
+                        <div class="md:flex">
+                            <div class="md:w-1/3">
+                                <div class="w-full h-56 overflow-hidden">
+                                    <img src="Images/Jeromine.jpg" alt="Jeromine Paso" class="h-full w-full object-cover object-center">
+                                </div>
+                            </div>
+                            <div class="p-6 md:w-2/3">
+                                <h4 class="text-xl font-bold text-primary mb-2">Jeromine Paso</h4>
+                                <p class="text-sm text-neutral-600 mb-3">Kinésithérapeute DU périnéologie – rééducation pelvi-périnéale, pathologies neurologiques et suivi post-opératoire.</p>
+                                <p class="text-xs uppercase tracking-wide text-neutral-400">Centre Mouv'Santé – Brignais</p>
+                            </div>
                         </div>
                     </div>
+                    <div class="bg-white rounded-xl overflow-hidden shadow-md">
+                        <div class="md:flex">
+                            <div class="md:w-1/3">
+                                <div class="w-full h-56 overflow-hidden">
+                                    <img src="Images/Camille.jpg" alt="Camille Simonklein" class="h-full w-full object-cover object-center">
+                                </div>
+                            </div>
+                            <div class="p-6 md:w-2/3">
+                                <h4 class="text-xl font-bold text-secondary mb-2">Camille Simonklein</h4>
+                                <p class="text-sm text-neutral-600 mb-3">Coach sportive – préparation physique individualisée, cours collectifs et réathlétisation.</p>
+                                <p class="text-xs uppercase tracking-wide text-neutral-400">Coaching R'MouV – Suivi individuel & groupe</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 <!-- Tarifs et formules -->
@@ -406,7 +401,13 @@
         <div class="container mx-auto px-4">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <div>
+                            <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                            <p class="text-sm text-neutral-400">Rehab ton MouV</p>
+                        </div>
+                    </div>
                     <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
                 </div>
                 
@@ -426,22 +427,24 @@
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
                         <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
-                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Réseaux sociaux</a></li>
                     </ul>
                 </div>
                 
                 <div>
                     <h4 class="font-bold mb-4">Légal</h4>
                     <ul class="space-y-2">
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
-                        <li><a href="#" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
                     </ul>
                 </div>
             </div>
             
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
-                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+                <p class="flex items-center justify-center gap-3">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                </p>
             </div>
         </div>
     </footer>

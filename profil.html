@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - R'MouV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#5A9FD4",
+                        secondary: "#FF8A3E",
+                        neutral: "#37474F"
+                    },
+                    fontFamily: {
+                        sans: ['Now', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="footer.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+    </script>
+    
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50 text-neutral-700">
+    <!-- Navigation -->
+    <header class="sticky-nav bg-white shadow-md">
+        <nav class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <a href="index.html" class="flex items-center group">
+                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain transition-transform duration-300 group-hover:scale-105">
+                </a>
+            </div>
+            
+            <div class="hidden xl:flex items-center space-x-8">
+                <a href="index.html#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
+                <a href="equipements.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
+                <a href="equipe.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
+                <a href="rejoindre.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Rejoindre R'MouV</a>
+                <a href="contact.html" class="font-medium text-neutral-600 hover:text-primary transition-colors">Contact</a>
+                
+                <!-- User menu -->
+                <div id="user-menu" class="hidden flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center space-x-2 bg-primary text-white px-3 py-2 rounded-full hover:bg-primary/90 transition-colors">
+                            <span id="user-initials" class="font-bold"></span>
+                            <i class="fas fa-chevron-down text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50">
+                            <div class="py-3 px-2">
+                                <a href="reservation.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar-plus mr-2"></i>Réserver un créneau
+                                </a>
+                                <a href="mes-reservations.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-calendar mr-2"></i>Mes réservations
+                                </a>
+                                <a href="profil.html" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md bg-gray-50">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
+                                <a href="admin.html" id="admin-button-desktop" class="hidden block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                    <i class="fas fa-cog mr-2"></i>Administration
+                                </a>
+                                <a href="#" onclick="logout()" class="block px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Se déconnecter
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-md p-6 md:p-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-6">
+                <i class="fas fa-user-circle mr-2 text-primary"></i>Mon Profil
+            </h1>
+            
+            <!-- Formulaire de profil -->
+            <form id="profile-form" class="space-y-6">
+                <!-- Informations de base -->
+                <div class="border-b pb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Informations personnelles</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="first-name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Prénom *
+                            </label>
+                            <input type="text" id="first-name" name="first-name" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="last-name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nom *
+                            </label>
+                            <input type="text" id="last-name" name="last-name" required
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                                Email *
+                            </label>
+                            <input type="email" id="email" name="email" required disabled
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed">
+                            <p class="text-xs text-gray-500 mt-1">L'email ne peut pas être modifié</p>
+                        </div>
+                        
+                        <div>
+                            <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Téléphone
+                            </label>
+                            <input type="tel" id="phone" name="phone"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                   placeholder="06 12 34 56 78">
+                        </div>
+                        
+                        <div>
+                            <label for="date-of-birth" class="block text-sm font-medium text-gray-700 mb-2">
+                                Date de naissance
+                            </label>
+                            <input type="date" id="date-of-birth" name="date-of-birth"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                        
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 mb-2">
+                                Genre
+                            </label>
+                            <select id="gender" name="gender"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">Sélectionnez...</option>
+                                <option value="Homme">Homme</option>
+                                <option value="Femme">Femme</option>
+                                <option value="Autre">Autre</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Informations médicales -->
+                <div class="border-b pb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Informations médicales</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="pathologies" class="block text-sm font-medium text-gray-700 mb-2">
+                                Pathologies
+                            </label>
+                            <input type="text" id="pathologies" name="pathologies"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                   placeholder="Ex: lombalgie, tendinite épaule (séparées par des virgules)">
+                            <p class="text-xs text-gray-500 mt-1">Séparez les pathologies par des virgules</p>
+                        </div>
+                        
+                        <div>
+                            <label for="contraindications" class="block text-sm font-medium text-gray-700 mb-2">
+                                Contre-indications
+                            </label>
+                            <textarea id="contraindications" name="contraindications" rows="4"
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                      placeholder="Précisez vos contre-indications si nécessaire"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contact d'urgence -->
+                <div class="pb-6">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Contact d'urgence</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="emergency-contact-name" class="block text-sm font-medium text-gray-700 mb-2">
+                                Nom du contact
+                            </label>
+                            <input type="text" id="emergency-contact-name" name="emergency-contact-name"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                   placeholder="Nom du contact">
+                        </div>
+                        
+                        <div>
+                            <label for="emergency-contact-phone" class="block text-sm font-medium text-gray-700 mb-2">
+                                Téléphone du contact
+                            </label>
+                            <input type="tel" id="emergency-contact-phone" name="emergency-contact-phone"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                                   placeholder="06 12 34 56 78">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Boutons -->
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" onclick="window.location.href='index.html'" 
+                            class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit" id="save-btn"
+                            class="px-6 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors">
+                        <span id="save-text">Enregistrer les modifications</span>
+                        <span id="save-loading" class="hidden">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>Enregistrement...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-neutral-800 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
+                    <p class="text-neutral-300">Centre sport-santé pluridisciplinaire pour retrouver votre mobilité et votre bien-être.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Liens rapides</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#projet" class="text-neutral-300 hover:text-white transition-colors">Notre projet</a></li>
+                        <li><a href="index.html#equipements" class="text-neutral-300 hover:text-white transition-colors">Équipements</a></li>
+                        <li><a href="index.html#equipe" class="text-neutral-300 hover:text-white transition-colors">Notre équipe</a></li>
+                        <li><a href="index.html#inscription" class="text-neutral-300 hover:text-white transition-colors">Inscription</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Adresse</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Téléphone</a></li>
+                        <li><a href="contact.html" class="text-neutral-300 hover:text-white transition-colors">Email</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="mentions-legales.html" class="text-neutral-300 hover:text-white transition-colors">Mentions légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-neutral-300 hover:text-white transition-colors">Politique de confidentialité</a></li>
+                        <li><a href="cgu.html" class="text-neutral-300 hover:text-white transition-colors">CGU</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
+                <p>&copy; 2024 <span class="text-primary">R'</span><span class="text-secondary">MouV</span> - Rehab ton MouV. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+    <script src="profil.js"></script>
+</body>
+</html>
+
