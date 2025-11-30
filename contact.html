@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - R'MouV</title>
     <meta name="description" content="Contactez R'MouV - Centre sport-santé. Posez vos questions et obtenez des informations sur nos services de kinésithérapie et coaching sportif.">
-    <meta property="og:image" content="Images/Logo.png">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Contact - R'MouV">
+    <meta property="og:description" content="Contactez R'MouV - Centre sport-santé. Posez vos questions et obtenez des informations sur nos services.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://rmouv.fr/contact.html">
+    <meta property="og:image" content="https://rmouv.fr/Images/Logo.png">
+    <meta property="og:site_name" content="R'MouV">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rmouv.fr/contact.html">
+    
     <link rel="icon" type="image/png" href="Images/Logo.png">
     
     <!-- Tailwind CSS -->
@@ -235,11 +246,10 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-gradient py-20">
+    <section class="hero-gradient py-16 md:py-24">
         <div class="container mx-auto px-4 text-center">
-            <img src="Images/Logo.png" alt="Logo R'MouV" class="h-16 w-auto mb-6 object-contain mx-auto">
             <h1 class="text-4xl md:text-5xl font-bold mb-6 text-neutral-800">Contactez-nous</h1>
-            <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+            <p class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto">
                 Contactez-nous pour toute question, information ou demande concernant nos services
             </p>
         </div>
@@ -255,37 +265,50 @@
             
             <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 <!-- Adresse -->
-                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                <div class="bg-white p-8 rounded-xl shadow-md border border-neutral-100 text-center card-hover transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                     <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-map-marker-alt text-2xl text-primary"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Adresse</h3>
                     <p class="text-neutral-600">
-                        123 Avenue de la Santé<br>
-                        75000 Paris<br>
+                        400 Rue Barthélemy Thimonnier<br>
+                        69530 Brignais<br>
                         France
                     </p>
                 </div>
                 
                 <!-- Téléphone -->
-                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                <div class="bg-white p-8 rounded-xl shadow-md border border-neutral-100 text-center card-hover transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                     <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-phone text-2xl text-secondary"></i>
                     </div>
                     <h3 class="text-xl font-bold mb-4">Téléphone</h3>
-                    <p class="text-neutral-600 mb-2">
-                        <a href="tel:+33123456789" class="hover:text-primary transition-colors">
-                            01 23 45 67 89
-                        </a>
-                    </p>
-                    <p class="text-sm text-neutral-500">
-                        Lun-Ven : 8h-20h<br>
-                        Sam : 9h-17h
-                    </p>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-neutral-600 mb-1">
+                                <a href="tel:+33667332015" class="hover:text-primary transition-colors font-semibold">
+                                    06 67 33 20 15
+                                </a>
+                            </p>
+                            <p class="text-sm text-neutral-500">
+                                <strong>Camille Simonklein</strong> - Coach sportif &amp; réathlétisation
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-neutral-600 mb-1">
+                                <a href="tel:+33660352236" class="hover:text-primary transition-colors font-semibold">
+                                    06 60 35 22 36
+                                </a>
+                            </p>
+                            <p class="text-sm text-neutral-500">
+                                <strong>Jeromine Paso</strong> - Kinésithérapeute DU périnéologie
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Email -->
-                <div class="bg-white p-8 rounded-xl shadow-sm text-center card-hover">
+                <div class="bg-white p-8 rounded-xl shadow-md border border-neutral-100 text-center card-hover transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
                     <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-envelope text-2xl text-primary"></i>
                     </div>
@@ -365,6 +388,16 @@
                         <textarea id="message" name="message" rows="5" 
                                   placeholder="Décrivez votre demande, vos questions ou les informations que vous souhaitez obtenir..."
                                   class="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors resize-none"></textarea>
+                    </div>
+                    
+                    <div class="mb-6 flex items-start">
+                        <input type="checkbox" id="privacy-consent" name="privacy-consent" required
+                               class="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                        <label for="privacy-consent" class="ml-2 text-sm text-gray-600">
+                            J'accepte que mes données personnelles soient traitées conformément à la 
+                            <a href="politique-confidentialite.html" target="_blank" class="text-primary hover:underline">politique de confidentialité</a> 
+                            de R'MouV. *
+                        </label>
                     </div>
                     
                     <div class="text-center">

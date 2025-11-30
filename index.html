@@ -11,7 +11,12 @@
     <meta property="og:title" content="R'MouV – Rehab ton MouV">
     <meta property="og:description" content="Reprends ton corps en main. Révèle-toi.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="Images/Logo.png">
+    <meta property="og:url" content="https://rmouv.fr/">
+    <meta property="og:image" content="https://rmouv.fr/Images/Logo.png">
+    <meta property="og:site_name" content="R'MouV">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rmouv.fr/">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="Images/Logo.png">
@@ -22,16 +27,21 @@
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
         "name": "R'MouV",
-        "description": "Centre de rééducation et sport-santé pluridisciplinaire",
-        "url": "https://rmouv-rehabtonmouv.netlify.app",
-        "telephone": "+33-XX-XX-XX-XX",
+        "description": "Centre de rééducation et sport-santé pluridisciplinaire. Coaching sportif, réathlétisation et kinésithérapie à Brignais.",
+        "url": "https://rmouv.fr",
+        "telephone": "+33667332015",
+        "email": "contact@rmouv.fr",
         "address": {
             "@type": "PostalAddress",
-            "addressLocality": "Votre ville",
-            "addressRegion": "Votre région",
+            "streetAddress": "400 Rue Barthélemy Thimonnier",
+            "addressLocality": "Brignais",
+            "postalCode": "69530",
+            "addressRegion": "Auvergne-Rhône-Alpes",
             "addressCountry": "FR"
         },
         "medicalSpecialty": ["Physical Therapy", "Sports Medicine", "Neurological Rehabilitation"],
+        "priceRange": "€€",
+        "openingHours": "Mo-Fr 08:00-20:00, Sa 09:00-17:00",
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
             "name": "Services de rééducation",
@@ -40,14 +50,16 @@
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
-                        "name": "Kinésithérapie"
+                        "name": "Kinésithérapie",
+                        "description": "Rééducation pelvi-périnéale, douleurs chroniques et suivi post-opératoire"
                     }
                 },
                 {
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
-                        "name": "Coaching sportif"
+                        "name": "Coaching sportif et réathlétisation",
+                        "description": "Programmes individualisés pour retrouver la mobilité et optimiser la performance"
                     }
                 }
             ]
@@ -444,7 +456,7 @@
                 </p>
                 
                 <div class="grid md:grid-cols-2 gap-8 mt-12">
-                    <div class="bg-neutral-50 rounded-lg p-6">
+                    <div class="bg-white rounded-xl p-8 shadow-md border border-neutral-100 hover:shadow-lg transition-all duration-300">
                         <h3 class="text-xl font-bold mb-4 text-secondary">Nos points forts</h3>
                         <ul class="space-y-3">
                             <li class="flex items-start">
@@ -470,7 +482,7 @@
                         </ul>
                     </div>
                     
-                    <div class="bg-neutral-50 rounded-lg p-6">
+                    <div class="bg-white rounded-xl p-8 shadow-md border border-neutral-100 hover:shadow-lg transition-all duration-300">
                         <h3 class="text-xl font-bold mb-4 text-secondary">Nos services</h3>
                         <ul class="space-y-3">
                             <li class="flex items-start">
@@ -497,19 +509,19 @@
                     </div>
                 </div>
                 
-                <div class="mt-12 p-6 bg-primary/5 rounded-lg border-l-4 border-primary">
-                    <p class="text-neutral-700 mb-4 text-center">
+                <div class="mt-12 p-8 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border-l-4 border-primary shadow-sm">
+                    <p class="text-neutral-700 mb-4 text-center text-lg leading-relaxed">
                         <i class="fas fa-info-circle text-primary mr-2"></i>
                         Parce que chaque corps est unique, notre approche est sur mesure, à l'écoute de vos besoins et de vos objectifs.
                     </p>
-                    <p class="italic font-bold text-neutral-600 text-center text-lg">
+                    <p class="italic font-bold text-neutral-700 text-center text-xl">
                         "Un corps en mouvement, une vie en évolution."
                     </p>
                 </div>
             </div>
             
             <div class="text-center mt-12">
-                <a href="projet.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all shadow-lg inline-block">
+                <a href="projet.html" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 inline-block">
                     Plus d'informations
                 </a>
             </div>
@@ -526,48 +538,75 @@
             
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 <!-- Huber 360 -->
-                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
-                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-20 h-20 object-contain rounded-full">
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md">
+                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-16 h-16 object-contain">
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Huber 360</h3>
-                    <p class="text-neutral-600">Plateforme de rééducation de la posture, de l'équilibre, de la souplesse et de la mobilité</p>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">Huber 360</h3>
+                    <p class="text-neutral-600 leading-relaxed">Plateforme de rééducation de la posture, de l'équilibre, de la souplesse et de la mobilité</p>
                 </div>
                 
                 <!-- Méthode Allyane -->
-                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
-                    <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-20 h-20 object-contain rounded-full">
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md">
+                    <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-16 h-16 object-contain">
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Méthode Allyane</h3>
-                    <p class="text-neutral-600">Reprogrammation neuromusculaire par imagerie mentale et sons basse fréquence pour traiter les inhibitions motrices</p>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">Méthode Allyane</h3>
+                    <p class="text-neutral-600 leading-relaxed">Reprogrammation neuromusculaire par imagerie mentale et sons basse fréquence pour traiter les inhibitions motrices</p>
                 </div>
                 
                 <!-- Réalité Virtuelle Thérapeutique -->
-                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
-                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-20 h-20 object-contain rounded-full">
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md">
+                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-16 h-16 object-contain">
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Réalité virtuelle thérapeutique</h3>
-                    <p class="text-neutral-600">Rééducation musculaire ludique favorisant l'équilibre et lutte contre la kinésiophobie</p>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">Réalité virtuelle thérapeutique</h3>
+                    <p class="text-neutral-600 leading-relaxed">Rééducation musculaire ludique favorisant l'équilibre et lutte contre la kinésiophobie</p>
                 </div>
                 
                 <!-- Stendo -->
-                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
-                    <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-20 h-20 object-contain rounded-full">
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md">
+                    <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-16 h-16 object-contain">
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Stendo</h3>
-                    <p class="text-neutral-600">Pulsothérapie : mobilisation tissulaire cardio-synchronisée, stimulation endothéliale, amélioration de la circulation sanguine</p>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">Stendo</h3>
+                    <p class="text-neutral-600 leading-relaxed">Pulsothérapie : mobilisation tissulaire cardio-synchronisée, stimulation endothéliale, amélioration de la circulation sanguine</p>
                 </div>
                 
                 <!-- Vibra Moov -->
-                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
-                    <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-20 h-20 object-contain rounded-full">
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md">
+                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-16 h-16 object-contain">
                     </div>
-                    <h3 class="text-xl font-bold mb-2">Vibramoov</h3>
-                    <p class="text-neutral-600">Stimulateur proprioceptif par vibration, agit sur la mobilité, l'antalgie, la spasticité et la tonicité, accélère la récupération</p>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">Vibramoov</h3>
+                    <p class="text-neutral-600 leading-relaxed">Stimulateur proprioceptif par vibration, agit sur la mobilité, l'antalgie, la spasticité et la tonicité, accélère la récupération</p>
+                </div>
+                
+                <!-- MÁS -->
+                <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all duration-300 hover:shadow-md border-2 border-secondary/30">
+                    <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                        <img src="Images/MAS.png?v=2" alt="MÁS" class="w-16 h-16 object-contain" onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-walking text-4xl text-secondary\'></i>';">
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-neutral-800">MÁS</h3>
+                    <p class="text-neutral-600 leading-relaxed mb-4">Mobility Activation Station - Aide unique à la verticalisation et à la marche pour réapprendre à marcher en toute sécurité</p>
+                    
+                    <!-- Vidéo YouTube -->
+                    <div class="mb-4 rounded-lg overflow-hidden shadow-md" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                        <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/3vPob3uxbUc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    
+                    <div class="bg-secondary/10 border border-secondary/30 rounded-lg p-4 mt-4">
+                        <p class="text-sm text-neutral-700 mb-2">
+                            <i class="fas fa-info-circle text-secondary mr-2"></i>
+                            <strong>En cours d'acquisition</strong>
+                        </p>
+                        <p class="text-xs text-neutral-600 mb-3">
+                            Le MÁS n'est pas encore disponible. Nous avons ouvert une cagnotte participative pour nous aider à l'acquérir et le rendre accessible à tous.
+                        </p>
+                        <a href="#" class="text-primary font-semibold underline hover:text-primary/80 inline-flex items-center text-sm" target="_blank" rel="noopener">
+                            <i class="fas fa-heart mr-2"></i>Contribuer à la cagnotte participative
+                        </a>
+                    </div>
                 </div>
             </div>
             
@@ -588,22 +627,22 @@
             </div>
             
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all text-center">
+                <div class="bg-white rounded-xl overflow-hidden shadow-md border border-neutral-100 card-hover transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-center">
                     <div class="w-full h-48 md:h-56 overflow-hidden">
-                        <img src="Images/Jeromine.jpg" alt="Jeromine Paso" class="h-full w-full object-cover" style="object-position: 50% 26%;">
+                        <img src="Images/Jeromine.jpg" alt="Jeromine Paso" class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" style="object-position: 50% 26%;">
                     </div>
                     <div class="p-6">
-                        <h3 class="text-xl font-bold text-neutral-800">Jeromine Paso</h3>
+                        <h3 class="text-xl font-bold text-neutral-800 mb-2">Jeromine Paso</h3>
                         <p class="text-primary font-medium">Kinésithérapeute DU périnéologie</p>
                     </div>
                 </div>
                 
-                <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all text-center">
+                <div class="bg-white rounded-xl overflow-hidden shadow-md border border-neutral-100 card-hover transition-all duration-300 hover:shadow-xl hover:-translate-y-1 text-center">
                     <div class="w-full h-48 md:h-56 overflow-hidden">
-                        <img src="Images/Camille.jpg" alt="Camille Simonklein" class="h-full w-full object-cover" style="object-position: 50% 35%;">
+                        <img src="Images/Camille.jpg" alt="Camille Simonklein" class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" style="object-position: 50% 35%;">
                     </div>
                     <div class="p-6">
-                        <h3 class="text-xl font-bold text-neutral-800">Camille Simonklein</h3>
+                        <h3 class="text-xl font-bold text-neutral-800 mb-2">Camille Simonklein</h3>
                         <p class="text-secondary font-medium">Coach sportive & réathlétisation</p>
                     </div>
                 </div>

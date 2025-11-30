@@ -116,6 +116,7 @@ a:hover {
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    overflow-x: hidden;
     padding: 0 var(--spacing-lg);
 }
 
@@ -1132,6 +1133,47 @@ a:hover {
         border: 2px solid currentColor;
     }
 }
+
+/* Responsive pour tous les selects */
+select {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Empêcher le débordement des conteneurs flex avec selects */
+.filter-container,
+.filter-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.filter-container select,
+.filter-container input,
+.filter-wrapper select,
+.filter-wrapper input {
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .filter-container,
+    .filter-wrapper {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .filter-container select,
+    .filter-container input,
+    .filter-wrapper select,
+    .filter-wrapper input {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
 
 /* Focus styles */
 button:focus-visible,

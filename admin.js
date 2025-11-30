@@ -1469,8 +1469,8 @@ async function displayUsers() {
                             <div class="font-medium">${new Date(profile.updated_at).toLocaleDateString('fr-FR')}</div>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="toggleUserRole('${profile.id}', '${profile.role}')" class="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded">
-                                <i class="fas fa-user-edit mr-1"></i>Changer rôle
+                            <button onclick="editPatient('${profile.id}')" class="text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded">
+                                <i class="fas fa-edit mr-1"></i>Modifier
                             </button>
                         </div>
                     </div>
@@ -1946,34 +1946,31 @@ async function displayPatients() {
             const userBookings = bookings ? bookings.filter(b => b.user_id === profile.id).length : 0;
             
             html += `
-                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                    <div class="flex justify-between items-start mb-3">
-                        <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-2">
-                                <h3 class="text-lg font-semibold text-gray-800">
+                <div class="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-3 md:gap-4">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 class="text-base md:text-lg font-semibold text-gray-800 break-words">
                                     ${userName}
                                 </h3>
-                                <span class="text-xs px-2 py-1 rounded-full ${roleClass}">${roleText}</span>
+                                <span class="text-xs px-2 py-1 rounded-full ${roleClass} whitespace-nowrap">${roleText}</span>
                             </div>
-                            <div class="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
-                                <div><i class="fas fa-envelope mr-2"></i>${profile.email || 'N/A'}</div>
-                                ${profile.phone ? `<div><i class="fas fa-phone mr-2"></i>${profile.phone}</div>` : ''}
-                                ${profile.date_of_birth ? `<div><i class="fas fa-birthday-cake mr-2"></i>${new Date(profile.date_of_birth).toLocaleDateString('fr-FR')}</div>` : ''}
-                                ${profile.gender ? `<div><i class="fas fa-venus-mars mr-2"></i>${profile.gender}</div>` : ''}
-                                <div><i class="fas fa-calendar-check mr-2"></i>${userBookings} réservation(s)</div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
+                                <div class="break-words"><i class="fas fa-envelope mr-1 md:mr-2"></i><span class="break-all">${profile.email || 'N/A'}</span></div>
+                                ${profile.phone ? `<div class="break-words"><i class="fas fa-phone mr-1 md:mr-2"></i>${profile.phone}</div>` : ''}
+                                ${profile.date_of_birth ? `<div><i class="fas fa-birthday-cake mr-1 md:mr-2"></i>${new Date(profile.date_of_birth).toLocaleDateString('fr-FR')}</div>` : ''}
+                                ${profile.gender ? `<div><i class="fas fa-venus-mars mr-1 md:mr-2"></i>${profile.gender}</div>` : ''}
+                                <div><i class="fas fa-calendar-check mr-1 md:mr-2"></i>${userBookings} réservation(s)</div>
                             </div>
-                            ${pathologies ? `<div class="mt-2 text-sm"><strong>Pathologies:</strong> ${pathologies}</div>` : ''}
-                            ${profile.contraindications ? `<div class="mt-2 text-sm text-red-600"><strong>Contre-indications:</strong> ${profile.contraindications}</div>` : ''}
+                            ${pathologies ? `<div class="mt-2 text-xs md:text-sm break-words"><strong>Pathologies:</strong> ${pathologies}</div>` : ''}
+                            ${profile.contraindications ? `<div class="mt-2 text-xs md:text-sm text-red-600 break-words"><strong>Contre-indications:</strong> ${profile.contraindications}</div>` : ''}
                         </div>
-                        <div class="flex flex-col gap-2 ml-4">
-                            <button onclick="showPatientDetails('${profile.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
-                                <i class="fas fa-eye mr-1"></i>Voir détails
+                        <div class="flex flex-row md:flex-col gap-2 md:ml-4 flex-shrink-0">
+                            <button onclick="showPatientDetails('${profile.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
+                                <i class="fas fa-eye mr-1"></i><span class="hidden sm:inline">Voir détails</span><span class="sm:hidden">Détails</span>
                             </button>
-                            <button onclick="editPatient('${profile.id}')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
+                            <button onclick="editPatient('${profile.id}')" class="bg-gray-500 hover:bg-gray-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
                                 <i class="fas fa-edit mr-1"></i>Modifier
-                            </button>
-                            <button onclick="toggleUserRole('${profile.id}', '${profile.role}')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md text-sm">
-                                <i class="fas fa-user-edit mr-1"></i>${profile.role === 'admin' ? 'Rendre User' : 'Rendre Admin'}
                             </button>
                         </div>
                     </div>
@@ -2027,6 +2024,7 @@ async function editPatient(patientId) {
         document.getElementById('patient-phone').value = patient.phone || '';
         document.getElementById('patient-date-of-birth').value = patient.date_of_birth || '';
         document.getElementById('patient-gender').value = patient.gender || '';
+        document.getElementById('patient-role').value = patient.role || 'user';
         
         // Pathologies
         if (patient.pathologies && Array.isArray(patient.pathologies)) {
@@ -2067,6 +2065,7 @@ async function handlePatientFormSubmit(event) {
     const phone = document.getElementById('patient-phone').value;
     const dateOfBirth = document.getElementById('patient-date-of-birth').value;
     const gender = document.getElementById('patient-gender').value;
+    const role = document.getElementById('patient-role').value;
     const pathologiesText = document.getElementById('patient-pathologies').value;
     const contraindications = document.getElementById('patient-contraindications').value;
     const emergencyName = document.getElementById('patient-emergency-name').value;
@@ -2084,6 +2083,7 @@ async function handlePatientFormSubmit(event) {
             phone: phone || null,
             date_of_birth: dateOfBirth || null,
             gender: gender || null,
+            role: role || 'user',
             pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
             contraindications: contraindications || null,
             emergency_contact_name: emergencyName || null,

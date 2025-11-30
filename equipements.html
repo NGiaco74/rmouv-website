@@ -11,10 +11,15 @@
     <meta property="og:title" content="Nos Équipements - R'MouV">
     <meta property="og:description" content="Plateau technique de dernière génération pour votre rééducation et renforcement.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="placeholder">
+    <meta property="og:url" content="https://rmouv.fr/equipements.html">
+    <meta property="og:image" content="https://rmouv.fr/Images/Logo.png">
+    <meta property="og:site_name" content="R'MouV">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rmouv.fr/equipements.html">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="placeholder">
+    <link rel="icon" type="image/png" href="Images/Logo.png">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -71,6 +76,46 @@
         }
         .equipment-detail.active {
             display: block;
+        }
+        
+        /* Masquer la scrollbar tout en gardant le scroll */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Responsive pour les équipements */
+        @media (max-width: 640px) {
+            #equipements-overview .flex {
+                flex-wrap: nowrap;
+            }
+            
+            /* S'assurer que l'icône du MÁS est visible */
+            button[onclick*="mas"] i.fa-walking {
+                display: block !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+            }
+            
+            /* Permettre le scroll horizontal du carrousel */
+            #equipements-overview .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+                scroll-behavior: smooth;
+            }
+        }
+        
+        /* Empêcher le débordement horizontal */
+        body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        
+        .container {
+            max-width: 100%;
+            overflow-x: hidden;
         }
         
         /* Amélioration de l'alignement de la navigation */
@@ -216,12 +261,12 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="relative bg-gradient-to-r from-primary/10 to-secondary/10" id="hero">
-        <div class="container mx-auto px-4 py-24 md:py-32 flex flex-col items-center text-center">
-            <h1 class="text-4xl md:text-6xl font-bold mb-6 text-neutral-800">
+    <section class="hero-gradient py-16 md:py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 text-neutral-800">
                 Nos Équipements
             </h1>
-            <p class="text-xl md:text-2xl mb-8 max-w-3xl text-neutral-600">
+            <p class="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto">
                 Découvrez notre plateau technique de dernière génération pour une rééducation et un renforcement optimaux
             </p>
         </div>
@@ -230,38 +275,83 @@
     <!-- Équipements Grid -->
     <section id="equipements-overview" class="py-2">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-2">
+            <!-- Desktop: titre centré -->
+            <div class="hidden xl:block text-center mb-2">
                 <h2 class="text-3xl md:text-4xl font-bold mb-1 text-neutral-800">Technologies de Pointe</h2>
                 <div class="w-24 h-1 bg-secondary mx-auto"></div>
             </div>
             
-            <!-- Navigation des équipements -->
-            <div class="flex justify-center items-center gap-4 mb-1">
-                <button onclick="navigateEquipment(-1)" id="prev-equipment-nav" class="p-3 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors" title="Équipement précédent">
-                    <i class="fas fa-chevron-left text-primary"></i>
+            <!-- Mobile: titre à gauche -->
+            <div class="xl:hidden mb-4">
+                <h2 class="text-2xl font-bold mb-1 text-neutral-800">Technologies de Pointe</h2>
+                <div class="w-24 h-1 bg-secondary"></div>
+            </div>
+            
+            <!-- Navigation des équipements - Desktop (horizontal en haut) -->
+            <div class="hidden xl:flex items-center gap-2 md:gap-4 mb-1 pb-2">
+                <button onclick="navigateEquipment(-1)" id="prev-equipment-nav" class="p-2 md:p-3 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex-shrink-0" title="Équipement précédent">
+                    <i class="fas fa-chevron-left text-primary text-sm md:text-base"></i>
                 </button>
                 
-                <div class="flex gap-3">
-                    <button onclick="showEquipmentDetail('huber360')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden" title="Huber 360">
-                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-12 h-12 object-contain">
+                <div class="flex-1 overflow-x-auto scrollbar-hide" style="scroll-behavior: smooth;">
+                    <div class="flex gap-2 md:gap-3 justify-center min-w-max px-2">
+                        <button onclick="showEquipmentDetail('huber360')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Huber 360">
+                            <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-12 h-12 object-contain">
+                        </button>
+                        <button onclick="showEquipmentDetail('allyane')" class="w-16 h-16 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Méthode Allyane">
+                            <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-12 h-12 object-contain">
+                        </button>
+                        <button onclick="showEquipmentDetail('rv')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Réalité Virtuelle Thérapeutique">
+                            <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-12 h-12 object-contain">
+                        </button>
+                        <button onclick="showEquipmentDetail('stendo')" class="w-16 h-16 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Stendo">
+                            <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-12 h-12 object-contain">
+                        </button>
+                        <button onclick="showEquipmentDetail('vibramoov')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Vibra Moov">
+                            <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-12 h-12 object-contain">
+                        </button>
+                        <button onclick="showEquipmentDetail('mas')" class="w-16 h-16 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="MÁS">
+                            <img src="Images/MAS.png?v=2" alt="MÁS" class="w-12 h-12 object-contain" style="display:none;" onload="this.style.display='block'; const icon = this.nextElementSibling; if(icon) icon.style.display='none';" onerror="this.style.display='none';">
+                            <i class="fas fa-walking text-2xl text-secondary"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <button onclick="navigateEquipment(1)" id="next-equipment-nav" class="p-2 md:p-3 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex-shrink-0" title="Équipement suivant">
+                    <i class="fas fa-chevron-right text-primary text-sm md:text-base"></i>
+                </button>
+            </div>
+            
+            <!-- Navigation des équipements - Mobile (vertical à gauche) -->
+            <div class="xl:hidden flex gap-3">
+                <div class="flex flex-col gap-2 overflow-y-auto scrollbar-hide max-h-[600px] pr-2 flex-shrink-0">
+                    <button onclick="showEquipmentDetail('huber360')" class="w-14 h-14 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Huber 360">
+                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-10 h-10 object-contain">
                     </button>
-                    <button onclick="showEquipmentDetail('allyane')" class="w-16 h-16 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden" title="Méthode Allyane">
-                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-12 h-12 object-contain">
+                    <button onclick="showEquipmentDetail('allyane')" class="w-14 h-14 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Méthode Allyane">
+                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-10 h-10 object-contain">
                     </button>
-                    <button onclick="showEquipmentDetail('rv')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden" title="Réalité Virtuelle Thérapeutique">
-                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-12 h-12 object-contain">
+                    <button onclick="showEquipmentDetail('rv')" class="w-14 h-14 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Réalité Virtuelle Thérapeutique">
+                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-10 h-10 object-contain">
                     </button>
-                    <button onclick="showEquipmentDetail('stendo')" class="w-16 h-16 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden" title="Stendo">
-                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-12 h-12 object-contain">
+                    <button onclick="showEquipmentDetail('stendo')" class="w-14 h-14 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Stendo">
+                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-10 h-10 object-contain">
                     </button>
-                    <button onclick="showEquipmentDetail('vibramoov')" class="w-16 h-16 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden" title="Vibra Moov">
-                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-12 h-12 object-contain">
+                    <button onclick="showEquipmentDetail('vibramoov')" class="w-14 h-14 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="Vibra Moov">
+                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-10 h-10 object-contain">
+                    </button>
+                    <button onclick="showEquipmentDetail('mas')" class="w-14 h-14 rounded-full bg-secondary/10 hover:bg-secondary/20 transition-colors flex items-center justify-center overflow-hidden flex-shrink-0" title="MÁS">
+                        <img src="Images/MAS.png?v=2" alt="MÁS" class="w-10 h-10 object-contain" style="display:none;" onload="this.style.display='block'; const icon = this.nextElementSibling; if(icon) icon.style.display='none';" onerror="this.style.display='none';">
+                        <i class="fas fa-walking text-xl text-secondary"></i>
                     </button>
                 </div>
                 
-                <button onclick="navigateEquipment(1)" id="next-equipment-nav" class="p-3 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors" title="Équipement suivant">
-                    <i class="fas fa-chevron-right text-primary"></i>
-                </button>
+                <!-- Contenu des détails à côté des miniatures sur mobile -->
+                <div class="flex-1 min-w-0">
+                    <div id="equipment-content-mobile" class="mt-0">
+                        <!-- Le contenu sera généré dynamiquement -->
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -269,12 +359,10 @@
     <!-- Section détaillée des équipements -->
     <section id="equipment-details" class="pt-1 pb-16 bg-white">
         <div class="container mx-auto px-4">
-            <div class="text-center mb-2">
-            </div>
-            
-            <div class="max-w-6xl mx-auto relative">
+            <!-- Desktop layout -->
+            <div class="hidden xl:block max-w-6xl mx-auto relative">
                 <!-- Flèche gauche -->
-                <button id="prev-equipment" onclick="navigateEquipment(-1)" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-4 rounded-full shadow-lg transition-all z-10">
+                <button id="prev-equipment" onclick="navigateEquipment(-1)" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-4 rounded-full shadow-lg transition-all z-10">
                     <i class="fas fa-chevron-left text-xl"></i>
                 </button>
                 
@@ -284,7 +372,7 @@
                 </div>
                 
                 <!-- Flèche droite -->
-                <button id="next-equipment" onclick="navigateEquipment(1)" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-4 rounded-full shadow-lg transition-all z-10">
+                <button id="next-equipment" onclick="navigateEquipment(1)" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-4 rounded-full shadow-lg transition-all z-10">
                     <i class="fas fa-chevron-right text-xl"></i>
                 </button>
             </div>
@@ -374,6 +462,47 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkUserLogin();
             
+            // Vérifier les images du MÁS et afficher l'icône si nécessaire
+            const masButtons = document.querySelectorAll('button[onclick*="mas"]');
+            masButtons.forEach(function(masButton) {
+                const masImg = masButton.querySelector('img');
+                const masIcon = masButton.querySelector('i');
+                if (masImg && masIcon) {
+                    // Forcer l'affichage de l'icône par défaut immédiatement
+                    masIcon.style.display = 'block';
+                    masIcon.style.visibility = 'visible';
+                    masIcon.style.opacity = '1';
+                    // Vérifier si l'image existe après un court délai
+                    setTimeout(function() {
+                        if (masImg.complete) {
+                            if (masImg.naturalHeight === 0) {
+                                // Image n'existe pas
+                                masImg.style.display = 'none';
+                                masIcon.style.display = 'block';
+                                masIcon.style.visibility = 'visible';
+                            } else {
+                                // Image existe
+                                masImg.style.display = 'block';
+                                masIcon.style.display = 'none';
+                            }
+                        } else {
+                            // Image en cours de chargement, vérifier à la fin
+                            masImg.onload = function() {
+                                this.style.display = 'block';
+                                if (masIcon) masIcon.style.display = 'none';
+                            };
+                            masImg.onerror = function() {
+                                this.style.display = 'none';
+                                if (masIcon) {
+                                    masIcon.style.display = 'block';
+                                    masIcon.style.visibility = 'visible';
+                                }
+                            };
+                        }
+                    }, 100);
+                }
+            });
+            
             // Initialiser avec le premier équipement
             showEquipmentDetail('huber360');
             
@@ -388,7 +517,7 @@
         });
 
         // Équipements détaillés
-        const equipmentOrder = ['huber360', 'allyane', 'rv', 'stendo', 'vibramoov'];
+        const equipmentOrder = ['huber360', 'allyane', 'rv', 'stendo', 'vibramoov', 'mas'];
         let currentEquipmentIndex = 0;
         
         const equipmentDetails = {
@@ -399,32 +528,34 @@
                 details: `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="md:flex">
-                            <div class="md:w-1/2 p-8">
-                                <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-full h-64 object-contain rounded-lg">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-full h-48 md:h-64 object-contain rounded-lg">
                             </div>
-                            <div class="md:w-1/2 p-8">
+                            <div class="md:w-1/2 p-4 md:p-8">
                                 <h3 class="text-2xl font-bold mb-4 text-primary">Huber 360</h3>
-                                <p class="text-neutral-600 mb-6">Plateforme de rééducation de la posture, de l'équilibre, de la souplesse et de la mobilité</p>
+                                <p class="text-neutral-600 mb-6">
+                                    Plateforme de rééducation intervenant sur plusieurs domaines :
+                                </p>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <h4 class="font-semibold text-lg mb-2">Fonctionnalités principales :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Évaluation et rééducation de la posture</li>
-                                            <li>Amélioration de l'équilibre et de la proprioception</li>
-                                            <li>Renforcement musculaire ciblé</li>
-                                            <li>Rééducation fonctionnelle</li>
-                                        </ul>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">La mobilité articulaire et la souplesse</h4>
+                                        <p class="text-neutral-600">Pour un gain en amplitude de mouvements.</p>
                                     </div>
                                     
                                     <div>
-                                        <h4 class="font-semibold text-lg mb-2">Indications :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Troubles de l'équilibre</li>
-                                            <li>Déficits proprioceptifs</li>
-                                            <li>Rééducation post-traumatique</li>
-                                            <li>Prévention des chutes</li>
-                                        </ul>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">Le tonus musculaire</h4>
+                                        <p class="text-neutral-600">Des muscles superficiels et profonds en améliorant la coordination et la force.</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">La posture</h4>
+                                        <p class="text-neutral-600">Avec des exercices d'équilibre pour une augmentation de la stabilité.</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">La résistance</h4>
+                                        <p class="text-neutral-600">Avec un travail en endurance sur des exercices dynamiques.</p>
                                     </div>
                                 </div>
                             </div>
@@ -439,29 +570,14 @@
                 details: `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="md:flex">
-                            <div class="md:w-1/2 p-8">
-                                <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-full h-64 object-contain rounded-lg">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-full h-48 md:h-64 object-contain rounded-lg">
                             </div>
-                            <div class="md:w-1/2 p-8">
+                            <div class="md:w-1/2 p-4 md:p-8">
                                 <h3 class="text-2xl font-bold mb-4 text-secondary">Méthode Allyane</h3>
-                                <p class="text-neutral-600 mb-6">Reprogrammation neuromusculaire par imagerie mentale et sons basse fréquence pour traiter les inhibitions motrices</p>
-                                
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Principe :</h4>
-                                        <p class="text-neutral-600">Technique innovante utilisant l'imagerie mentale et des sons basse fréquence pour débloquer les inhibitions neuromusculaires.</p>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Applications :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Rééducation post-chirurgicale</li>
-                                            <li>Récupération après blessure</li>
-                                            <li>Amélioration des performances sportives</li>
-                                            <li>Traitement des douleurs chroniques</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <p class="text-neutral-600 mb-6">
+                                    La méthode Allyane est un outil technologique de reprogrammation neuromusculaire. Elle associe un travail proprioceptif, des sons de basses fréquences stimulant l'aire motrice du cerveau et de l'imagerie mentale afin de traiter des inhibitions motrices. La recréation d'une boucle sensorimotrice va permettre d'améliorer nettement votre motricité de manière globale ou localisée. Cette technique est efficace pour des pathologies neurologiques et/ou des traumatismes physiques.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -474,34 +590,14 @@
                 details: `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="md:flex">
-                            <div class="md:w-1/2 p-8">
-                                <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-full h-64 object-contain rounded-lg">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-full h-48 md:h-64 object-contain rounded-lg">
                             </div>
-                            <div class="md:w-1/2 p-8">
+                            <div class="md:w-1/2 p-4 md:p-8">
                                 <h3 class="text-2xl font-bold mb-4 text-primary">Réalité Virtuelle Thérapeutique</h3>
-                                <p class="text-neutral-600 mb-6">Rééducation musculaire ludique favorisant l'équilibre et lutte contre la kinésiophobie</p>
-                                
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Avantages :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Rééducation ludique et motivante</li>
-                                            <li>Amélioration de l'équilibre</li>
-                                            <li>Lutte contre la peur du mouvement</li>
-                                            <li>Suivi précis des progrès</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Technologies :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Casques de réalité virtuelle</li>
-                                            <li>Capteurs de mouvement</li>
-                                            <li>Environnements immersifs</li>
-                                            <li>Jeux thérapeutiques adaptés</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <p class="text-neutral-600 mb-6">
+                                    À l'aide d'un casque et d'un ordinateur vous serez plongés dans un univers en 3D qui vous proposera des exercices ludiques pour effectuer des mouvements fonctionnels. Cette technologie vise à diminuer la douleur, accélérer la rééducation et à lutter contre la kinésiophobie. Votre attention étant détournée par le jeu vidéo, vos émotions telles que la peur, le stress, l'appréhension seront diminuées.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -514,34 +610,14 @@
                 details: `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="md:flex">
-                            <div class="md:w-1/2 p-8">
-                                <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-full h-64 object-contain rounded-lg">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-full h-48 md:h-64 object-contain rounded-lg">
                             </div>
-                            <div class="md:w-1/2 p-8">
+                            <div class="md:w-1/2 p-4 md:p-8">
                                 <h3 class="text-2xl font-bold mb-4 text-secondary">Stendo</h3>
-                                <p class="text-neutral-600 mb-6">Pulsothérapie : mobilisation tissulaire cardio-synchronisée, stimulation endothéliale, amélioration de la circulation sanguine</p>
-                                
-                                <div class="space-y-4">
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Mécanisme d'action :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Mobilisation tissulaire synchronisée au rythme cardiaque</li>
-                                            <li>Stimulation de l'endothélium vasculaire</li>
-                                            <li>Amélioration de la microcirculation</li>
-                                            <li>Optimisation de la récupération</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div>
-                                        <h4 class="font-semibold text-lg mb-2">Bénéfices :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Réduction de l'inflammation</li>
-                                            <li>Accélération de la cicatrisation</li>
-                                            <li>Amélioration de la mobilité</li>
-                                            <li>Diminution des douleurs</li>
-                                        </ul>
-                                    </div>
-                                </div>
+                                <p class="text-neutral-600 mb-6">
+                                    Dispositif de massage stimulant l'appareil circulatoire, grâce à la pulsothérapie le retour veineux est amélioré ainsi que le drainage. Utile pour des problèmes de circulation sanguine, en rééducation post opératoire, pour des douleurs chroniques mais aussi dans une notion de performance, de récupération physique et de bien être.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -554,33 +630,72 @@
                 details: `
                     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
                         <div class="md:flex">
-                            <div class="md:w-1/2 p-8">
-                                <img src="Images/Vibra Moov.png?v=2" alt="Vibramoov" class="w-full h-64 object-contain rounded-lg">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <img src="Images/Vibra Moov.png?v=2" alt="Vibramoov" class="w-full h-48 md:h-64 object-contain rounded-lg">
                             </div>
-                            <div class="md:w-1/2 p-8">
+                            <div class="md:w-1/2 p-4 md:p-8">
                                 <h3 class="text-2xl font-bold mb-4 text-primary">Vibramoov</h3>
-                                <p class="text-neutral-600 mb-6">Stimulateur proprioceptif par vibration, agit sur la mobilité, l'antalgie, la spasticité et la tonicité, accélère la récupération</p>
+                                <p class="text-neutral-600 mb-6">
+                                    Stimulateur proprioceptif par vibration visant à coordonner la motricité et les informations neuro sensorielles pour accélérer le processus de rééducation, il possède 4 modes d'action :
+                                </p>
                                 
                                 <div class="space-y-4">
                                     <div>
-                                        <h4 class="font-semibold text-lg mb-2">Effets thérapeutiques :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Amélioration de la mobilité articulaire</li>
-                                            <li>Effet antalgique naturel</li>
-                                            <li>Réduction de la spasticité</li>
-                                            <li>Renforcement de la tonicité musculaire</li>
-                                        </ul>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">La mobilité</h4>
+                                        <p class="text-neutral-600">Activation des zones neuromotrices par stimulation neurosensorielle permettant de ressentir le mouvement et initier une réponse motrice en corrélation avec la sensation ressentie.</p>
                                     </div>
                                     
                                     <div>
-                                        <h4 class="font-semibold text-lg mb-2">Applications :</h4>
-                                        <ul class="list-disc list-inside text-neutral-600 space-y-1">
-                                            <li>Rééducation neurologique</li>
-                                            <li>Traitement des douleurs chroniques</li>
-                                            <li>Amélioration des performances sportives</li>
-                                            <li>Récupération post-exercice</li>
-                                        </ul>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">Antalgie</h4>
+                                        <p class="text-neutral-600">Traitement et diminution de la douleur par stimulation des mécanorécepteurs.</p>
                                     </div>
+                                    
+                                    <div>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">Spasticité</h4>
+                                        <p class="text-neutral-600">Stimulation du muscle antagoniste à celui qui est spastique pour une inhibition réciproque de ceux deux muscles. La contraction et l'étirement du muscle à répétition réduisent la spasticité.</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <h4 class="font-semibold text-lg mb-2 text-primary">Tonus musculaire</h4>
+                                        <p class="text-neutral-600">Travail moteur et proprioceptif permettant de regagner en tonus et masse musculaire plus rapidement.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+            },
+            'mas': {
+                name: 'MÁS',
+                image: 'Images/MAS.png?v=2',
+                description: 'Mobility Activation Station - Aide unique à la verticalisation et à la marche',
+                details: `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="md:flex">
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <div class="w-full rounded-lg overflow-hidden" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                                    <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/3vPob3uxbUc" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                </div>
+                            </div>
+                            <div class="md:w-1/2 p-4 md:p-8">
+                                <h3 class="text-2xl font-bold mb-4 text-secondary">MÁS - Mobility Activation Station</h3>
+                                <p class="text-neutral-600 mb-4">
+                                    The Mobility Activation Station ou MÁS est une aide unique à la verticalisation et à la marche conçue aux États-Unis. Elle a été développée dans le but de révolutionner le monde de la neuro-régénération et de fournir un appareil d'entraînement adaptable pour toutes les pathologies, qui en fait l'appareil le plus sûr pour réapprendre à marcher. Avec le MÁS, les personnes peuvent se tenir debout, s'entraîner et marcher avec 100% de leur poids corporel étant donné qu'aucun harnais ni tapis roulant n'est requis.
+                                </p>
+                                <p class="text-neutral-600 mb-4">
+                                    Nous avons eu la chance de faire le voyage jusqu'au MaxRCenter à Yverdon-les-Bains en Suisse afin d'assister à la présentation du MÁS et de voir son utilisation au cours d'une séance. Nous sommes convaincues de l'efficacité de cet appareil dans la rééducation à la marche. C'est pourquoi nous souhaitons l'importer en France afin que vous puissiez en bénéficier.
+                                </p>
+                                <div class="bg-secondary/10 border border-secondary/30 rounded-lg p-4 mb-4">
+                                    <p class="text-sm text-neutral-700 mb-2">
+                                        <i class="fas fa-info-circle text-secondary mr-2"></i>
+                                        <strong>En cours d'acquisition</strong>
+                                    </p>
+                                    <p class="text-xs text-neutral-600 mb-3">
+                                        Le MÁS n'est pas encore disponible. Nous avons ouvert une cagnotte participative pour nous aider à l'acquérir et le rendre accessible à tous.
+                                    </p>
+                                    <a href="#" class="text-primary font-semibold underline hover:text-primary/80 inline-flex items-center text-sm" target="_blank" rel="noopener">
+                                        <i class="fas fa-heart mr-2"></i>Contribuer à la cagnotte participative
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -594,29 +709,36 @@
             if (equipment) {
                 // Trouver l'index de l'équipement dans l'ordre
                 currentEquipmentIndex = equipmentOrder.indexOf(equipmentId);
-                document.getElementById('equipment-content').innerHTML = equipment.details;
                 
-                // Scroll pour positionner la vue comme dans l'image
-                setTimeout(() => {
-                    const overviewSection = document.getElementById('equipements-overview');
-                    const detailsSection = document.getElementById('equipment-details');
-                    
-                    // Positionner pour que le titre soit visible en haut et les détails en bas
-                    const overviewTop = overviewSection.offsetTop;
-                    const detailsBottom = detailsSection.offsetTop + detailsSection.offsetHeight;
-                    const viewportHeight = window.innerHeight;
-                    
-                    // Calculer la position pour avoir le titre en haut et les détails visibles en bas
-                    const scrollPosition = overviewTop - 80; // Marge pour le header
-                    
-                    window.scrollTo({
-                        top: Math.max(0, scrollPosition),
-                        behavior: 'smooth'
-                    });
-                }, 100);
+                // Afficher dans le conteneur desktop
+                const desktopContent = document.getElementById('equipment-content');
+                if (desktopContent) {
+                    desktopContent.innerHTML = equipment.details;
+                }
+                
+                // Afficher dans le conteneur mobile
+                const mobileContent = document.getElementById('equipment-content-mobile');
+                if (mobileContent) {
+                    mobileContent.innerHTML = equipment.details;
+                }
                 
                 updateNavigationButtons();
                 updateTooltips();
+                
+                // Scroll pour positionner la vue (desktop uniquement)
+                if (window.innerWidth >= 1280) {
+                    setTimeout(() => {
+                        const overviewSection = document.getElementById('equipements-overview');
+                        if (overviewSection) {
+                            const overviewTop = overviewSection.offsetTop;
+                            const scrollPosition = overviewTop - 80; // Marge pour le header
+                            window.scrollTo({
+                                top: Math.max(0, scrollPosition),
+                                behavior: 'smooth'
+                            });
+                        }
+                    }, 100);
+                }
             }
         }
         
@@ -664,18 +786,62 @@
             equipmentButtons.forEach((button, index) => {
                 if (index === currentEquipmentIndex) {
                     // Équipement sélectionné : légèrement plus grand et avec bordure
-                    button.className = 'w-20 h-20 rounded-full bg-primary/20 border-2 border-primary transition-all flex items-center justify-center overflow-hidden shadow-lg';
+                    button.className = 'w-14 h-14 md:w-20 md:h-20 rounded-full bg-primary/20 border-2 border-primary transition-all flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0';
                     const img = button.querySelector('img');
-                    if (img) {
-                        img.className = 'w-14 h-14 object-contain mx-auto';
+                    const icon = button.querySelector('i');
+                    if (img && icon) {
+                        // Pour le MÁS, toujours afficher l'icône par défaut
+                        if (button.getAttribute('onclick') && button.getAttribute('onclick').includes('mas')) {
+                            icon.style.display = 'block';
+                            icon.className = 'fas fa-walking text-xl md:text-2xl text-secondary';
+                            img.className = 'w-10 h-10 md:w-14 md:h-14 object-contain mx-auto';
+                            // Vérifier si l'image existe
+                            if (img.complete && img.naturalHeight > 0) {
+                                img.style.display = 'block';
+                                icon.style.display = 'none';
+                            } else {
+                                img.style.display = 'none';
+                            }
+                        } else {
+                            // Pour les autres équipements, afficher l'image
+                            img.className = 'w-10 h-10 md:w-14 md:h-14 object-contain mx-auto';
+                            img.style.display = 'block';
+                            if (icon) icon.style.display = 'none';
+                        }
+                    } else if (icon) {
+                        // Pas d'image, afficher l'icône
+                        icon.style.display = 'block';
+                        icon.className = 'fas fa-walking text-xl md:text-2xl text-secondary';
                     }
                 } else {
                     // Équipements non sélectionnés : taille normale
                     const isSecondary = index % 2 === 1; // Alternance des couleurs
-                    button.className = `w-16 h-16 rounded-full ${isSecondary ? 'bg-secondary/10 hover:bg-secondary/20' : 'bg-primary/10 hover:bg-primary/20'} transition-all flex items-center justify-center overflow-hidden`;
+                    button.className = `w-12 h-12 md:w-16 md:h-16 rounded-full ${isSecondary ? 'bg-secondary/10 hover:bg-secondary/20' : 'bg-primary/10 hover:bg-primary/20'} transition-all flex items-center justify-center overflow-hidden flex-shrink-0`;
                     const img = button.querySelector('img');
-                    if (img) {
-                        img.className = 'w-12 h-12 object-contain mx-auto';
+                    const icon = button.querySelector('i');
+                    if (img && icon) {
+                        // Pour le MÁS, toujours afficher l'icône par défaut
+                        if (button.getAttribute('onclick') && button.getAttribute('onclick').includes('mas')) {
+                            icon.style.display = 'block';
+                            icon.className = 'fas fa-walking text-xl md:text-2xl text-secondary';
+                            img.className = 'w-8 h-8 md:w-12 md:h-12 object-contain mx-auto';
+                            // Vérifier si l'image existe
+                            if (img.complete && img.naturalHeight > 0) {
+                                img.style.display = 'block';
+                                icon.style.display = 'none';
+                            } else {
+                                img.style.display = 'none';
+                            }
+                        } else {
+                            // Pour les autres équipements, afficher l'image
+                            img.className = 'w-8 h-8 md:w-12 md:h-12 object-contain mx-auto';
+                            img.style.display = 'block';
+                            if (icon) icon.style.display = 'none';
+                        }
+                    } else if (icon) {
+                        // Pas d'image, afficher l'icône
+                        icon.style.display = 'block';
+                        icon.className = 'fas fa-walking text-xl md:text-2xl text-secondary';
                     }
                 }
             });

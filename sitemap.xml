@@ -1,39 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Page d'accueil -->
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/</loc>
-        <lastmod>2024-12-27</lastmod>
+        <loc>https://rmouv.fr/</loc>
+        <lastmod>2025-11-29</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
     </url>
+    <!-- Pages principales -->
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/projet.html</loc>
-        <lastmod>2024-12-27</lastmod>
+        <loc>https://rmouv.fr/projet.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/equipements.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/equipe.html</loc>
+        <lastmod>2025-11-29</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/equipements.html</loc>
-        <lastmod>2024-12-27</lastmod>
+        <loc>https://rmouv.fr/contact.html</loc>
+        <lastmod>2025-11-29</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/equipe.html</loc>
-        <lastmod>2024-12-27</lastmod>
+        <loc>https://rmouv.fr/rejoindre.html</loc>
+        <lastmod>2025-11-29</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
+    <!-- Pages utilisateur -->
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/rejoindre.html</loc>
-        <lastmod>2024-12-27</lastmod>
+        <loc>https://rmouv.fr/inscription.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/connexion.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/reservation.html</loc>
+        <lastmod>2025-11-29</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.9</priority>
     </url>
     <url>
-        <loc>https://rmouv-rehabtonmouv.netlify.app/contact.html</loc>
-        <lastmod>2024-12-27</lastmod>
-        <changefreq>monthly</changefreq>
+        <loc>https://rmouv.fr/mes-reservations.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>weekly</changefreq>
         <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/profil.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <!-- Pages légales -->
+    <url>
+        <loc>https://rmouv.fr/mentions-legales.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/politique-confidentialite.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://rmouv.fr/cgu.html</loc>
+        <lastmod>2025-11-29</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.5</priority>
     </url>
 </urlset>
