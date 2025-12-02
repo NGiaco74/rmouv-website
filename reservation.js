@@ -296,10 +296,15 @@ function createSlotCard(slot) {
     card.dataset.slotId = slot.id;
     
     // Nouvelle logique de disponibilité cohérente
+    // Vérifier d'abord si le type de service existe pour ce créneau (max > 0)
+    const hasIndividuelSlot = slot.coaching_individuel.max > 0;
+    const hasGroupeSlot = slot.coaching_groupe.max > 0;
+    
     const hasIndividuelBooking = slot.coaching_individuel.current > 0;
     const hasGroupeBooking = slot.coaching_groupe.current > 0;
     
     // Logique : Si un type de cours est réservé, l'autre type n'est plus disponible
+    // MAIS on vérifie d'abord si le type de service existe pour ce créneau
     let isIndividuelAvailable = false;
     let isGroupeAvailable = false;
     
@@ -308,13 +313,13 @@ function createSlotCard(slot) {
         isIndividuelAvailable = false;
         isGroupeAvailable = false;
     } else if (hasGroupeBooking) {
-        // Si cours collectif réservé, créneau fermé pour les cours individuels
+        // Si cours collectif réservé, seul le groupe reste disponible (si le créneau groupe existe)
         isIndividuelAvailable = false;
-        isGroupeAvailable = false;
+        isGroupeAvailable = hasGroupeSlot && slot.coaching_groupe.current < slot.coaching_groupe.max;
     } else {
-        // Aucune réservation, les deux types sont disponibles
-        isIndividuelAvailable = slot.coaching_individuel.current < slot.coaching_individuel.max;
-        isGroupeAvailable = slot.coaching_groupe.current < slot.coaching_groupe.max;
+        // Aucune réservation, les types sont disponibles seulement s'ils existent pour ce créneau
+        isIndividuelAvailable = hasIndividuelSlot && slot.coaching_individuel.current < slot.coaching_individuel.max;
+        isGroupeAvailable = hasGroupeSlot && slot.coaching_groupe.current < slot.coaching_groupe.max;
     }
     
     const isAvailable = isIndividuelAvailable || isGroupeAvailable;
@@ -489,6 +494,10 @@ function updateSlotDisplayImmediately(slot, serviceKey) {
     });
     
     // Reconstruire le contenu de la carte avec la nouvelle logique
+    // Vérifier d'abord si le type de service existe pour ce créneau (max > 0)
+    const hasIndividuelSlot = slot.coaching_individuel.max > 0;
+    const hasGroupeSlot = slot.coaching_groupe.max > 0;
+    
     const hasIndividuelBooking = slot.coaching_individuel.current > 0;
     const hasGroupeBooking = slot.coaching_groupe.current > 0;
     
@@ -500,13 +509,13 @@ function updateSlotDisplayImmediately(slot, serviceKey) {
         isIndividuelAvailable = false;
         isGroupeAvailable = false;
     } else if (hasGroupeBooking) {
-        // Si cours groupe réservé, seul le groupe reste disponible
+        // Si cours groupe réservé, seul le groupe reste disponible (si le créneau groupe existe)
         isIndividuelAvailable = false;
-        isGroupeAvailable = slot.coaching_groupe.current < slot.coaching_groupe.max;
+        isGroupeAvailable = hasGroupeSlot && slot.coaching_groupe.current < slot.coaching_groupe.max;
     } else {
-        // Aucune réservation, les deux types sont disponibles
-        isIndividuelAvailable = slot.coaching_individuel.current < slot.coaching_individuel.max;
-        isGroupeAvailable = slot.coaching_groupe.current < slot.coaching_groupe.max;
+        // Aucune réservation, les types sont disponibles seulement s'ils existent pour ce créneau
+        isIndividuelAvailable = hasIndividuelSlot && slot.coaching_individuel.current < slot.coaching_individuel.max;
+        isGroupeAvailable = hasGroupeSlot && slot.coaching_groupe.current < slot.coaching_groupe.max;
     }
     
     const isAvailable = isIndividuelAvailable || isGroupeAvailable;
@@ -632,6 +641,16 @@ async function makeReservation() {
         return;
     }
     
+    // Vérifier d'abord si le type de service existe pour ce créneau
+    if (serviceKey === 'coaching_individuel' && slot.coaching_individuel.max === 0) {
+        alert('Ce créneau n\'est pas disponible pour les cours individuels.');
+        return;
+    }
+    if (serviceKey === 'coaching_groupe' && slot.coaching_groupe.max === 0) {
+        alert('Ce créneau n\'est pas disponible pour les cours collectifs.');
+        return;
+    }
+    
     // Appliquer la logique de disponibilité cohérente
     const hasIndividuelBooking = slot.coaching_individuel.current > 0;
     const hasGroupeBooking = slot.coaching_groupe.current > 0;
@@ -681,20 +700,45 @@ async function makeReservation() {
         await updateSlotCounter(slot.date, slot.time, serviceKey, 1);
         
         // Succès
-        alert('Réservation confirmée ! Vous recevrez un email de confirmation.');
+        alert('Réservation confirmée !');
         
         // Mise à jour immédiate de l'affichage local
         updateSlotDisplayImmediately(slot, serviceKey);
         
         // Réinitialiser la sélection
         appState.selectedSlot = null;
+        appState.selectedService = null;
         document.querySelectorAll('.slot-card').forEach(c => c.classList.remove('selected'));
-        document.getElementById('book-slot').disabled = true;
+        const bookButton = document.getElementById('book-slot');
+        if (bookButton) {
+            bookButton.disabled = true;
+        }
         
-        // Recharger les créneaux depuis Supabase après un délai
+        // Rafraîchir toutes les vues automatiquement
+        const currentView = getCurrentView();
         setTimeout(async () => {
-            await displayAvailableSlots();
-        }, 2000);
+            console.log('🔄 Rafraîchissement automatique après réservation...');
+            try {
+                // Rafraîchir la vue actuelle
+                if (currentView === 'month') {
+                    await displayMonthCalendar();
+                } else if (currentView === 'week') {
+                    await displayWeekSlots();
+                } else if (currentView === 'list') {
+                    await displaySlotsList();
+                } else if (currentView === 'my-bookings') {
+                    await displayMyBookings();
+                }
+                
+                // Toujours rafraîchir "Mes réservations" si on est sur une autre vue
+                if (currentView !== 'my-bookings') {
+                    // Ne pas attendre, juste mettre à jour en arrière-plan
+                    displayMyBookings().catch(err => console.error('Erreur rafraîchissement mes réservations:', err));
+                }
+            } catch (error) {
+                console.error('Erreur lors du rafraîchissement:', error);
+            }
+        }, 500);
         
     } catch (error) {
         console.error('Erreur réservation:', error);
@@ -733,29 +777,38 @@ async function initializeReservationPage() {
     const today = new Date();
     appState.currentMonth = today.getMonth();
     appState.currentYear = today.getFullYear();
+    appState.showOnlyAvailable = true; // Filtre par défaut activé
     
-    console.log('📅 Variables calendrier initialisées:', {
-        currentMonth: appState.currentMonth,
-        currentYear: appState.currentYear
-    });
-    
-    // Afficher le calendrier mensuel par défaut
-    console.log('📅 Appel de displayMonthlyCalendar...');
+    // Afficher la vue calendrier mensuel par défaut
+    console.log('📅 Affichage de la vue calendrier mensuel par défaut...');
     try {
-        await displayMonthlyCalendar();
-        console.log('✅ displayMonthlyCalendar terminé avec succès');
+        await displayMonthCalendar();
+        console.log('✅ Vue calendrier mensuel affichée avec succès');
     } catch (error) {
-        console.error('❌ Erreur dans displayMonthlyCalendar:', error);
+        console.error('❌ Erreur dans displayMonthCalendar:', error);
     }
     
     console.log('✅ Page de réservation initialisée');
+}
+
+// Fonction pour obtenir la vue actuelle
+function getCurrentView() {
+    const monthView = document.getElementById('month-view');
+    const weekView = document.getElementById('week-view');
+    const listView = document.getElementById('list-view');
+    const myBookingsView = document.getElementById('my-bookings-view');
+    
+    if (monthView && !monthView.classList.contains('hidden')) return 'month';
+    if (weekView && !weekView.classList.contains('hidden')) return 'week';
+    if (listView && !listView.classList.contains('hidden')) return 'list';
+    if (myBookingsView && !myBookingsView.classList.contains('hidden')) return 'my-bookings';
+    return 'month'; // Par défaut
 }
 
 // Fonction pour changer de vue dans la réservation
 function switchReservationView(viewType) {
     console.log('🔄 Changement de vue réservation vers:', viewType);
     console.log('🔄 Éléments trouvés:', {
-        calendarView: !!document.getElementById('calendar-view'),
         weekView: !!document.getElementById('week-view'),
         listView: !!document.getElementById('list-view'),
         myBookingsView: !!document.getElementById('my-bookings-view')
@@ -769,33 +822,39 @@ function switchReservationView(viewType) {
     
     console.log('🔄 Nombre de vues trouvées:', document.querySelectorAll('.reservation-view').length);
     
-    // Désactiver tous les boutons
+    // Désactiver tous les boutons - retirer toutes les classes de style d'abord
     document.querySelectorAll('.reservation-view-toggle').forEach(btn => {
         btn.classList.remove('active');
+        // Retirer toutes les classes de style possibles
+        btn.classList.remove('bg-white', 'text-gray-600', 'border-gray-300', 'bg-primary', 'text-white', 'border-primary');
+        // Réappliquer les classes par défaut (non actif)
         btn.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
     });
     
     // Activer le bouton sélectionné
     const activeButton = document.getElementById(`view-${viewType}`);
     if (activeButton) {
-        activeButton.classList.add('active');
-        activeButton.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
-        activeButton.classList.add('bg-primary', 'text-white', 'border-primary');
+        // Retirer toutes les classes de style
+        activeButton.classList.remove('bg-white', 'text-gray-600', 'border-gray-300', 'bg-primary', 'text-white', 'border-primary');
+        // Ajouter les classes actives
+        activeButton.classList.add('active', 'bg-primary', 'text-white', 'border-primary');
+    }
+    
+    // Gérer l'affichage du filtre
+    const filterSection = document.getElementById('filter-section');
+    if (filterSection) {
+        if (viewType === 'month') {
+            filterSection.classList.remove('hidden');
+        } else {
+            filterSection.classList.add('hidden');
+        }
     }
     
     // Afficher la vue sélectionnée
     switch(viewType) {
-        case 'calendar':
-            console.log('🔄 Affichage de la vue calendrier');
-            const calendarView = document.getElementById('calendar-view');
-            if (calendarView) {
-                console.log('✅ Élément calendar-view trouvé');
-                calendarView.classList.remove('hidden');
-                console.log('✅ Classe hidden supprimée');
-                displayMonthlyCalendar();
-            } else {
-                console.error('❌ Élément calendar-view non trouvé');
-            }
+        case 'month':
+            document.getElementById('month-view').classList.remove('hidden');
+            displayMonthCalendar();
             break;
         case 'week':
             document.getElementById('week-view').classList.remove('hidden');
@@ -810,136 +869,6 @@ function switchReservationView(viewType) {
             displayMyBookings();
             break;
     }
-}
-
-// Afficher le calendrier mensuel
-async function displayMonthlyCalendar() {
-    console.log('📅 Début displayMonthlyCalendar');
-    console.log('📅 Recherche de l\'élément monthly-calendar...');
-    const calendarContainer = document.getElementById('monthly-calendar');
-    console.log('📅 Élément trouvé:', calendarContainer);
-    if (!calendarContainer) {
-        console.error('❌ Élément monthly-calendar non trouvé');
-        return;
-    }
-    
-    console.log('📅 Affichage du calendrier mensuel');
-    console.log('📅 Mois actuel:', appState.currentMonth, 'Année actuelle:', appState.currentYear);
-    
-    const today = new Date();
-    const currentMonth = appState.currentMonth || today.getMonth();
-    const currentYear = appState.currentYear || today.getFullYear();
-    
-    console.log('📅 Mois utilisé:', currentMonth, 'Année utilisée:', currentYear);
-    
-    // Mettre à jour le titre du mois
-    const monthTitle = document.getElementById('current-month');
-    if (monthTitle) {
-        const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
-                           'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-        monthTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-    }
-    
-    // Générer le calendrier
-    const firstDay = new Date(currentYear, currentMonth, 1);
-    const lastDay = new Date(currentYear, currentMonth + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay()); // Commencer le dimanche
-    
-    // Récupérer les créneaux du mois
-    const monthStart = new Date(currentYear, currentMonth, 1);
-    const monthEnd = new Date(currentYear, currentMonth + 1, 0);
-    console.log('📅 Période:', monthStart, 'à', monthEnd);
-    
-    let slots = [];
-    try {
-        slots = await generateMonthSlots(monthStart, monthEnd);
-        console.log('📅 Créneaux récupérés:', slots.length);
-    } catch (error) {
-        console.error('❌ Erreur récupération créneaux:', error);
-        console.log('📅 Utilisation de créneaux vides pour test');
-        slots = [];
-    }
-    
-    // Créer la grille du calendrier
-    let html = `
-        <div class="grid grid-cols-7 gap-1 mb-4">
-            <div class="text-center font-semibold text-gray-600 py-2">Dim</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Lun</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Mar</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Mer</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Jeu</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Ven</div>
-            <div class="text-center font-semibold text-gray-600 py-2">Sam</div>
-        </div>
-        <div class="grid grid-cols-7 gap-1">
-    `;
-    
-    console.log('📅 Génération des jours du calendrier...');
-    
-    // Générer les jours du calendrier
-    for (let i = 0; i < 42; i++) { // 6 semaines x 7 jours
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        
-        const isCurrentMonth = currentDate.getMonth() === currentMonth;
-        const isToday = currentDate.toDateString() === today.toDateString();
-        const dateStr = currentDate.toISOString().split('T')[0];
-        
-        console.log(`📅 Jour ${i}: ${currentDate.getDate()}, mois actuel: ${isCurrentMonth}, aujourd'hui: ${isToday}`);
-        
-        // Vérifier s'il y a des créneaux pour ce jour
-        const daySlots = slots.filter(slot => slot.date === dateStr);
-        const hasSlots = daySlots.length > 0;
-        
-        // Déterminer les types de créneaux disponibles
-        let hasIndividuel = false;
-        let hasGroupe = false;
-        let hasIndividuelAvailable = false;
-        let hasGroupeAvailable = false;
-        
-        if (hasSlots) {
-            hasIndividuel = daySlots.some(slot => slot.coaching_individuel.max > 0);
-            hasGroupe = daySlots.some(slot => slot.coaching_groupe.max > 0);
-            hasIndividuelAvailable = hasIndividuel && daySlots.some(slot => slot.coaching_individuel.current < slot.coaching_individuel.max);
-            hasGroupeAvailable = hasGroupe && daySlots.some(slot => slot.coaching_groupe.current < slot.coaching_groupe.max);
-        }
-        
-        let dayClasses = 'calendar-day';
-        if (!isCurrentMonth) dayClasses += ' other-month';
-        if (isToday) dayClasses += ' today';
-        
-        // Appliquer les codes couleur selon les types disponibles
-        if (hasIndividuelAvailable && hasGroupeAvailable) {
-            dayClasses += ' has-both';
-        } else if (hasIndividuelAvailable) {
-            dayClasses += ' has-individuel';
-        } else if (hasGroupeAvailable) {
-            dayClasses += ' has-groupe';
-        } else if (hasSlots) {
-            dayClasses += ' has-slots'; // Créneaux mais tous complets
-        }
-        
-        html += `
-            <div class="${dayClasses}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
-                <div class="text-sm font-medium mb-1">${currentDate.getDate()}</div>
-                ${hasSlots ? createDaySlotsDisplay(daySlots) : ''}
-            </div>
-        `;
-    }
-    
-    html += '</div>';
-    console.log('📅 HTML final généré:', html.length, 'caractères');
-    console.log('📅 HTML à insérer:', html.substring(0, 200) + '...');
-    
-    calendarContainer.innerHTML = html;
-    
-    console.log('📅 HTML inséré dans le conteneur');
-    console.log('📅 Contenu du conteneur après insertion:', calendarContainer.innerHTML.length, 'caractères');
-    console.log('📅 Premiers caractères du conteneur:', calendarContainer.innerHTML.substring(0, 200) + '...');
-    
-    // Configurer les événements de navigation
-    setupCalendarNavigation();
 }
 
 // Générer les créneaux pour un mois
@@ -988,12 +917,12 @@ async function generateMonthSlots(startDate, endDate) {
                     dayName: slotDate.toLocaleDateString('fr-FR', { weekday: 'long' }),
                     dateFormatted: slotDate.toLocaleDateString('fr-FR'),
                     coaching_individuel: {
-                        max: 1,
+                        max: 0,  // Initialiser à 0, sera mis à jour seulement si le type existe
                         current: 0,
                         userReserved: false
                     },
                     coaching_groupe: {
-                        max: 3,
+                        max: 0,  // Initialiser à 0, sera mis à jour seulement si le type existe
                         current: 0,
                         userReserved: false
                     }
@@ -1026,228 +955,6 @@ async function generateMonthSlots(startDate, endDate) {
     } catch (error) {
         console.error('Erreur generateMonthSlots:', error);
         return [];
-    }
-}
-
-// Sélectionner un jour dans le calendrier
-function selectCalendarDay(dateStr) {
-    console.log('📅 Jour sélectionné:', dateStr);
-    
-    // Retirer la sélection précédente
-    document.querySelectorAll('.calendar-day.selected').forEach(day => {
-        day.classList.remove('selected');
-    });
-    
-    // Ajouter la sélection au jour cliqué
-    const selectedDay = document.querySelector(`[data-date="${dateStr}"]`);
-    if (selectedDay) {
-        selectedDay.classList.add('selected');
-    }
-    
-    // Afficher les créneaux de ce jour dans une modal ou un panneau
-    showDaySlots(dateStr);
-}
-
-// Afficher les créneaux d'un jour sélectionné
-async function showDaySlots(dateStr) {
-    console.log('📅 Affichage des créneaux pour:', dateStr);
-    
-    // Récupérer les créneaux de ce jour spécifique
-    if (!appState.supabase) {
-        alert('Erreur de connexion à la base de données.');
-        return;
-    }
-    
-    try {
-        const { data: dbSlots, error } = await appState.supabase
-            .from('booking_slots')
-            .select('*')
-            .eq('booking_date', dateStr)
-            .order('booking_time', { ascending: true });
-        
-        if (error) {
-            console.error('Erreur chargement créneaux du jour:', error);
-            alert('Erreur lors du chargement des créneaux.');
-            return;
-        }
-        
-        console.log('📅 Créneaux du jour récupérés:', dbSlots);
-        
-        if (!dbSlots || dbSlots.length === 0) {
-            alert('Aucun créneau disponible pour ce jour.');
-            return;
-        }
-        
-        // Charger les réservations existantes
-        const bookingData = await loadExistingBookings();
-        const bookingCounts = bookingData.bookingCounts || {};
-        const userBookings = bookingData.userBookings || {};
-        
-        // Formater les créneaux
-        const daySlots = [];
-        dbSlots.forEach(dbSlot => {
-            const slotDate = new Date(dbSlot.booking_date);
-            const slotId = `${dbSlot.booking_date}_${dbSlot.booking_time}`;
-            const counts = bookingCounts[slotId] || { coaching_individuel: 0, coaching_groupe: 0 };
-            const userReservations = userBookings[slotId] || { coaching_individuel: false, coaching_groupe: false };
-            
-            daySlots.push({
-                id: slotId,
-                date: dbSlot.booking_date,
-                time: dbSlot.booking_time,
-                dayName: slotDate.toLocaleDateString('fr-FR', { weekday: 'long' }),
-                dateFormatted: slotDate.toLocaleDateString('fr-FR'),
-                coaching_individuel: {
-                    max: dbSlot.service_type === 'coaching_individuel' ? dbSlot.max_capacity : 1,
-                    current: dbSlot.service_type === 'coaching_individuel' ? counts.coaching_individuel : 0,
-                    userReserved: userReservations.coaching_individuel
-                },
-                coaching_groupe: {
-                    max: dbSlot.service_type === 'coaching_groupe' ? dbSlot.max_capacity : 3,
-                    current: dbSlot.service_type === 'coaching_groupe' ? counts.coaching_groupe : 0,
-                    userReserved: userReservations.coaching_groupe
-                }
-            });
-        });
-        
-        // Créer une modal pour sélectionner le type de service
-        showServiceSelectionModal(daySlots, dateStr);
-        
-    } catch (error) {
-        console.error('Erreur showDaySlots:', error);
-        alert('Erreur lors du chargement des créneaux.');
-    }
-}
-
-// Afficher la modal de sélection de service
-function showServiceSelectionModal(daySlots, dateStr) {
-    // Grouper les créneaux par heure
-    const slotsByTime = {};
-    daySlots.forEach(slot => {
-        if (!slotsByTime[slot.time]) {
-            slotsByTime[slot.time] = [];
-        }
-        slotsByTime[slot.time].push(slot);
-    });
-    
-    // Créer le contenu de la modal
-    let slotsHtml = '';
-    Object.keys(slotsByTime).forEach(time => {
-        const timeSlots = slotsByTime[time];
-        const hasIndividuel = timeSlots.some(s => s.coaching_individuel.max > 0);
-        const hasGroupe = timeSlots.some(s => s.coaching_groupe.max > 0);
-        
-        const individuelAvailable = hasIndividuel && timeSlots.some(s => s.coaching_individuel.current < s.coaching_individuel.max);
-        const groupeAvailable = hasGroupe && timeSlots.some(s => s.coaching_groupe.current < s.coaching_groupe.max);
-        
-        slotsHtml += `
-            <div class="border border-gray-200 rounded-lg p-4 mb-3">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-lg font-semibold text-gray-800">${time}</h4>
-                    <div class="flex gap-2">
-                        ${individuelAvailable ? `
-                            <button onclick="selectServiceForSlot('${timeSlots[0].id}', 'individuel')" 
-                                    class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                <span class="slot-type-indicator individuel mr-2"></span>
-                                Individuel
-                            </button>
-                        ` : ''}
-                        ${groupeAvailable ? `
-                            <button onclick="selectServiceForSlot('${timeSlots[0].id}', 'groupe')" 
-                                    class="bg-secondary hover:bg-secondary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                                <span class="slot-type-indicator groupe mr-2"></span>
-                                Groupe
-                            </button>
-                        ` : ''}
-                    </div>
-                </div>
-                <div class="text-sm text-gray-600">
-                    ${hasIndividuel ? `
-                        <div class="flex items-center mb-1">
-                            <span class="slot-type-indicator individuel mr-2"></span>
-                            Individuel: ${timeSlots[0].coaching_individuel.current}/${timeSlots[0].coaching_individuel.max} places
-                            ${individuelAvailable ? '<span class="text-green-600 ml-2">✓ Disponible</span>' : '<span class="text-red-600 ml-2">✗ Complet</span>'}
-                        </div>
-                    ` : ''}
-                    ${hasGroupe ? `
-                        <div class="flex items-center">
-                            <span class="slot-type-indicator groupe mr-2"></span>
-                            Groupe: ${timeSlots[0].coaching_groupe.current}/${timeSlots[0].coaching_groupe.max} places
-                            ${groupeAvailable ? '<span class="text-green-600 ml-2">✓ Disponible</span>' : '<span class="text-red-600 ml-2">✗ Complet</span>'}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    });
-    
-    const modalHtml = `
-        <div id="service-selection-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold text-gray-800">Créneaux du ${new Date(dateStr).toLocaleDateString('fr-FR')}</h3>
-                    <button onclick="closeServiceSelectionModal()" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                <div class="mb-4">
-                    <p class="text-gray-600">Choisissez le type de coaching pour votre réservation :</p>
-                </div>
-                <div class="space-y-3">
-                    ${slotsHtml}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Ajouter la modal au DOM
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-// Sélectionner un service pour un créneau
-function selectServiceForSlot(slotId, serviceType) {
-    console.log('🎯 Sélection service:', serviceType, 'pour créneau:', slotId);
-    
-    // Trouver le créneau dans les données
-    const slot = appState.currentSlots?.find(s => s.id === slotId);
-    if (!slot) {
-        console.error('❌ Créneau non trouvé:', slotId);
-        return;
-    }
-    
-    // Stocker le service sélectionné
-    appState.selectedService = serviceType;
-    appState.selectedSlot = slot;
-    appState.selectedSlotService = serviceType === 'individuel' ? 'coaching_individuel' : 'coaching_groupe';
-    
-    console.log('✅ Service sélectionné:', serviceType);
-    console.log('✅ Créneau sélectionné:', slot);
-    
-    // Fermer la modal
-    closeServiceSelectionModal();
-    
-    // Afficher un message de confirmation
-    const serviceName = serviceType === 'individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
-    const confirmMessage = `Confirmer la réservation pour le ${serviceName} le ${slot.dateFormatted} à ${slot.time} ?`;
-    
-    if (confirm(confirmMessage)) {
-        makeReservation();
-    }
-}
-
-// Fermer la modal de sélection de service
-function closeServiceSelectionModal() {
-    const modal = document.getElementById('service-selection-modal');
-    if (modal) {
-        modal.remove();
-    }
-}
-
-// Fermer la modal des créneaux du jour
-function closeDaySlotsModal() {
-    const modal = document.getElementById('day-slots-modal');
-    if (modal) {
-        modal.remove();
     }
 }
 
@@ -1304,88 +1011,6 @@ function createSlotCardHTML(slot) {
     `;
 }
 
-// Créer l'affichage des créneaux pour un jour du calendrier
-function createDaySlotsDisplay(daySlots) {
-    let html = '';
-    
-    // Grouper les créneaux par heure
-    const slotsByTime = {};
-    daySlots.forEach(slot => {
-        if (!slotsByTime[slot.time]) {
-            slotsByTime[slot.time] = [];
-        }
-        slotsByTime[slot.time].push(slot);
-    });
-    
-    // Afficher chaque heure avec les types disponibles selon la nouvelle logique
-    Object.keys(slotsByTime).forEach(time => {
-        const timeSlots = slotsByTime[time];
-        const hasIndividuel = timeSlots.some(s => s.coaching_individuel.max > 0);
-        const hasGroupe = timeSlots.some(s => s.coaching_groupe.max > 0);
-        
-        // Nouvelle logique : vérifier si un type est réservé
-        const hasIndividuelBooking = timeSlots.some(s => s.coaching_individuel.current > 0);
-        const hasGroupeBooking = timeSlots.some(s => s.coaching_groupe.current > 0);
-        
-        // Si un type est réservé, l'autre n'est plus disponible
-        const individuelAvailable = hasIndividuel && !hasIndividuelBooking && !hasGroupeBooking;
-        const groupeAvailable = hasGroupe && !hasIndividuelBooking && !hasGroupeBooking;
-        
-        html += `<div class="text-xs mb-1">`;
-        html += `<div class="font-medium text-gray-700">${time}</div>`;
-        
-        if (hasIndividuel) {
-            const status = individuelAvailable ? 'text-green-600' : 'text-red-600';
-            const icon = individuelAvailable ? '✓' : '✗';
-            html += `<div class="${status}">`;
-            html += `<span class="slot-type-indicator individuel"></span>`;
-            html += `${icon} Individuel</div>`;
-        }
-        
-        if (hasGroupe) {
-            const status = groupeAvailable ? 'text-green-600' : 'text-red-600';
-            const icon = groupeAvailable ? '✓' : '✗';
-            html += `<div class="${status}">`;
-            html += `<span class="slot-type-indicator groupe"></span>`;
-            html += `${icon} Groupe</div>`;
-        }
-        
-        html += `</div>`;
-    });
-    
-    return html;
-}
-
-// Configurer la navigation du calendrier
-function setupCalendarNavigation() {
-    const prevMonthBtn = document.getElementById('prev-month');
-    const nextMonthBtn = document.getElementById('next-month');
-    
-    if (prevMonthBtn) {
-        prevMonthBtn.onclick = () => {
-            console.log('📅 Mois précédent cliqué');
-            appState.currentMonth = (appState.currentMonth - 1 + 12) % 12;
-            if (appState.currentMonth === 11) {
-                appState.currentYear--;
-            }
-            console.log('📅 Nouveau mois:', appState.currentMonth, 'Nouvelle année:', appState.currentYear);
-            displayMonthlyCalendar();
-        };
-    }
-    
-    if (nextMonthBtn) {
-        nextMonthBtn.onclick = () => {
-            console.log('📅 Mois suivant cliqué');
-            appState.currentMonth = (appState.currentMonth + 1) % 12;
-            if (appState.currentMonth === 0) {
-                appState.currentYear++;
-            }
-            console.log('📅 Nouveau mois:', appState.currentMonth, 'Nouvelle année:', appState.currentYear);
-            displayMonthlyCalendar();
-        };
-    }
-}
-
 // Afficher les créneaux de la semaine (vue existante)
 async function displayWeekSlots() {
     console.log('📅 Affichage de la vue semaine');
@@ -1414,17 +1039,26 @@ async function displaySlotsList() {
     // Filtrer seulement les créneaux disponibles selon la nouvelle logique
     const availableSlots = [];
     slots.forEach(slot => {
+        // Vérifier quels types de service existent pour ce créneau (max > 0)
+        const hasIndividuelSlot = slot.coaching_individuel.max > 0;
+        const hasGroupeSlot = slot.coaching_groupe.max > 0;
+        
         const hasIndividuelBooking = slot.coaching_individuel.current > 0;
         const hasGroupeBooking = slot.coaching_groupe.current > 0;
         
-        // Nouvelle logique : un créneau est disponible seulement si aucun des deux types n'est réservé
-        const isAvailable = !hasIndividuelBooking && !hasGroupeBooking;
+        // Vérifier la disponibilité : un créneau est disponible si au moins un type a des places disponibles
+        // Pour les créneaux individuels : disponible seulement si pas encore réservé
+        // Pour les créneaux de groupe : disponible tant qu'il reste des places (current < max)
+        const isIndividuelAvailable = hasIndividuelSlot && !hasIndividuelBooking && !hasGroupeBooking;
+        const isGroupeAvailable = hasGroupeSlot && !hasIndividuelBooking && slot.coaching_groupe.current < slot.coaching_groupe.max;
+        
+        const isAvailable = isIndividuelAvailable || isGroupeAvailable;
         
         if (isAvailable) {
             availableSlots.push({
                 ...slot,
-                hasIndividuelAvailable: true, // Les deux types sont disponibles
-                hasGroupeAvailable: true
+                hasIndividuelAvailable: isIndividuelAvailable,
+                hasGroupeAvailable: isGroupeAvailable
             });
         }
     });
@@ -1491,8 +1125,13 @@ async function displaySlotsList() {
 
 // Créer une carte de créneau style Doctolib
 function createDoctolibSlotCard(slot) {
-    const hasIndividuelAvailable = slot.hasIndividuelAvailable;
-    const hasGroupeAvailable = slot.hasGroupeAvailable;
+    // Vérifier quels types de service existent pour ce créneau (max > 0)
+    const hasIndividuelSlot = slot.coaching_individuel.max > 0;
+    const hasGroupeSlot = slot.coaching_groupe.max > 0;
+    
+    // Vérifier la disponibilité : le type doit exister ET avoir des places disponibles
+    const hasIndividuelAvailable = hasIndividuelSlot && slot.coaching_individuel.current < slot.coaching_individuel.max;
+    const hasGroupeAvailable = hasGroupeSlot && slot.coaching_groupe.current < slot.coaching_groupe.max;
     
     return `
         <div class="border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors">
@@ -1573,17 +1212,33 @@ async function displayMyBookings() {
             const date = new Date(booking.booking_date);
             const time = booking.booking_time;
             const serviceType = booking.service_type === 'coaching_individuel' ? 'Individuel' : 'Collectif';
+            const dateStr = booking.booking_date;
+            const isPast = date < new Date();
             
             html += `
-                <div class="slot-list-item">
-                    <div class="flex justify-between items-center">
+                <div class="slot-list-item border border-gray-200 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
                         <div>
                             <div class="font-semibold text-gray-800">${serviceType}</div>
-                            <div class="text-sm text-gray-600">${date.toLocaleDateString('fr-FR')} à ${time}</div>
+                            <div class="text-sm text-gray-600">${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à ${time}</div>
                         </div>
                         <div class="text-right">
                             <span class="text-sm px-2 py-1 bg-green-100 text-green-800 rounded-full">Confirmé</span>
                         </div>
+                    </div>
+                    <div class="flex gap-2 ${isPast ? 'opacity-50' : ''}">
+                        ${!isPast ? `
+                            <button onclick="cancelBooking('${booking.id}', '${dateStr}', '${time}', '${booking.service_type}')" 
+                                    class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-times mr-2"></i>Annuler
+                            </button>
+                            <button onclick="modifyBooking('${booking.id}', '${dateStr}', '${time}', '${booking.service_type}')" 
+                                    class="flex-1 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Modifier
+                            </button>
+                        ` : `
+                            <div class="text-sm text-gray-500 italic">Cette réservation est passée</div>
+                        `}
                     </div>
                 </div>
             `;
@@ -1746,9 +1401,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('🔍 Fonctions exposées:', {
         selectSlot: typeof window.selectSlot,
         makeReservation: typeof window.makeReservation,
-        switchReservationView: typeof window.switchReservationView,
-        selectCalendarDay: typeof window.selectCalendarDay,
-        closeDaySlotsModal: typeof window.closeDaySlotsModal
+        switchReservationView: typeof window.switchReservationView
     });
     
     // Initialiser le reste immédiatement
@@ -1756,11 +1409,555 @@ document.addEventListener('DOMContentLoaded', async function() {
     await initializeReservationPage();
 });
 
+// Sélectionner un service pour un créneau (utilisé par la vue liste)
+function selectServiceForSlot(slotId, serviceType) {
+    console.log('🎯 Sélection service:', serviceType, 'pour créneau:', slotId);
+    
+    // Trouver le créneau dans les données
+    const slot = appState.currentSlots?.find(s => s.id === slotId);
+    if (!slot) {
+        console.error('❌ Créneau non trouvé:', slotId);
+        alert('Erreur : créneau non trouvé');
+        return;
+    }
+    
+    // Vérifier que le type de service existe pour ce créneau
+    const serviceKey = serviceType === 'individuel' ? 'coaching_individuel' : 'coaching_groupe';
+    if (slot[serviceKey].max === 0) {
+        alert(`Ce créneau n'est pas disponible pour le ${serviceType === 'individuel' ? 'coaching individuel' : 'coaching groupe'}.`);
+        return;
+    }
+    
+    // Vérifier la disponibilité
+    if (slot[serviceKey].current >= slot[serviceKey].max) {
+        alert('Ce créneau est complet.');
+        return;
+    }
+    
+    // Vérifier si l'utilisateur a déjà réservé ce créneau
+    if (slot[serviceKey].userReserved) {
+        alert('Vous avez déjà réservé ce créneau.');
+        return;
+    }
+    
+    // Stocker le service sélectionné
+    appState.selectedService = serviceType;
+    appState.selectedSlot = slot;
+    appState.selectedSlotService = serviceKey;
+    
+    console.log('✅ Service sélectionné:', serviceType);
+    console.log('✅ Créneau sélectionné:', slot);
+    
+    // Afficher un message de confirmation
+    const serviceName = serviceType === 'individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
+    const confirmMessage = `Confirmer la réservation pour le ${serviceName} le ${slot.dateFormatted} à ${slot.time} ?`;
+    
+    if (confirm(confirmMessage)) {
+        makeReservation();
+    }
+}
+
+// ============================================
+// NOUVELLE VUE CALENDRIER MENSUEL
+// ============================================
+
+// Afficher la liste des jours disponibles
+async function displayMonthCalendar() {
+    const daysListContainer = document.getElementById('available-days-list');
+    if (!daysListContainer) return;
+    
+    // S'assurer que currentMonth et currentYear sont initialisés
+    if (appState.currentMonth === undefined || appState.currentMonth === null) {
+        const today = new Date();
+        appState.currentMonth = today.getMonth();
+        appState.currentYear = today.getFullYear();
+    }
+    
+    const currentMonth = appState.currentMonth;
+    const currentYear = appState.currentYear;
+    
+    // Mettre à jour le titre
+    const monthTitle = document.getElementById('current-month-title');
+    if (monthTitle) {
+        const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                           'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        monthTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+    }
+    
+    // Récupérer les créneaux du mois
+    const monthStart = new Date(currentYear, currentMonth, 1);
+    const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+    const slots = await generateMonthSlots(monthStart, monthEnd);
+    
+    // Grouper les créneaux par date
+    const slotsByDate = {};
+    slots.forEach(slot => {
+        if (!slotsByDate[slot.date]) {
+            slotsByDate[slot.date] = [];
+        }
+        slotsByDate[slot.date].push(slot);
+    });
+    
+    // Identifier les jours disponibles et les trier
+    const availableDates = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    Object.keys(slotsByDate).sort().forEach(date => {
+        const dateObj = new Date(date);
+        if (dateObj < today) return; // Ignorer les dates passées
+        
+        const daySlots = slotsByDate[date];
+        
+        // Vérifier si l'utilisateur a déjà réservé un créneau ce jour
+        const hasUserReservation = daySlots.some(slot => 
+            slot.coaching_individuel.userReserved || slot.coaching_groupe.userReserved
+        );
+        
+        // Vérifier s'il y a des créneaux disponibles (non réservés par l'utilisateur)
+        const hasAvailable = daySlots.some(slot => {
+            const hasIndividuel = slot.coaching_individuel.max > 0 && 
+                                 slot.coaching_individuel.current < slot.coaching_individuel.max &&
+                                 !slot.coaching_individuel.userReserved;
+            const hasGroupe = slot.coaching_groupe.max > 0 && 
+                             slot.coaching_groupe.current < slot.coaching_groupe.max &&
+                             !slot.coaching_groupe.userReserved;
+            return hasIndividuel || hasGroupe;
+        });
+        
+        // Si le filtre est activé, n'afficher que les jours avec créneaux disponibles
+        // (exclure les jours où l'utilisateur a déjà réservé, car il ne peut réserver qu'1 par jour)
+        if (appState.showOnlyAvailable) {
+            if (hasAvailable && !hasUserReservation) {
+                availableDates.push({
+                    date: date,
+                    dateObj: dateObj,
+                    slots: daySlots,
+                    hasUserReservation: hasUserReservation
+                });
+            }
+        } else {
+            // Afficher tous les jours qui ont des créneaux (disponibles ou réservés par l'utilisateur)
+            // Même si l'utilisateur a réservé, on affiche le jour pour qu'il puisse voir/modifier
+            const hasAnySlots = daySlots.some(slot => 
+                slot.coaching_individuel.max > 0 || slot.coaching_groupe.max > 0
+            );
+            if (hasAnySlots) {
+                availableDates.push({
+                    date: date,
+                    dateObj: dateObj,
+                    slots: daySlots,
+                    hasUserReservation: hasUserReservation
+                });
+            }
+        }
+    });
+    
+    if (availableDates.length === 0) {
+        daysListContainer.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun créneau disponible ce mois</div>';
+        appState.monthSlots = slots;
+        appState.slotsByDate = slotsByDate;
+        return;
+    }
+    
+    // Générer la liste des jours
+    let html = '';
+    availableDates.forEach(({ date, dateObj, slots: daySlots, hasUserReservation }) => {
+        const dayName = dateObj.toLocaleDateString('fr-FR', { weekday: 'long' });
+        const dayNumber = dateObj.getDate();
+        const isExpanded = appState.expandedDays?.includes(date);
+        
+        // Filtrer les créneaux selon le filtre
+        let slotsToShow = daySlots;
+        if (appState.showOnlyAvailable) {
+            // Afficher uniquement les créneaux disponibles
+            // Un créneau est disponible si :
+            // 1. Il a des places libres (current < max)
+            // 2. L'utilisateur ne l'a pas déjà réservé
+            // 3. L'utilisateur n'a pas réservé un autre créneau ce jour (limite 1 par jour)
+            slotsToShow = daySlots.filter(slot => {
+                // Si l'utilisateur a déjà réservé un créneau ce jour, aucun autre créneau n'est disponible
+                if (hasUserReservation) {
+                    return false;
+                }
+                
+                const hasIndividuel = slot.coaching_individuel.max > 0 && 
+                                     slot.coaching_individuel.current < slot.coaching_individuel.max &&
+                                     !slot.coaching_individuel.userReserved;
+                const hasGroupe = slot.coaching_groupe.max > 0 && 
+                                 slot.coaching_groupe.current < slot.coaching_groupe.max &&
+                                 !slot.coaching_groupe.userReserved;
+                return hasIndividuel || hasGroupe;
+            });
+        } else {
+            // Quand le filtre est désactivé, afficher tous les créneaux du jour
+            // (même ceux réservés par l'utilisateur, pour qu'il puisse les voir/modifier)
+            slotsToShow = daySlots;
+        }
+        
+        html += `
+            <div class="bg-white rounded-lg shadow-sm border overflow-hidden ${hasUserReservation ? 'border-blue-300' : ''}">
+                <button onclick="toggleDaySlots('${date}')" 
+                        class="w-full flex justify-between items-center p-4 hover:bg-gray-50 transition-colors text-left">
+                    <div class="flex items-center gap-3">
+                        <h4 class="text-lg font-semibold text-gray-800">
+                            ${dayName.charAt(0).toUpperCase() + dayName.slice(1)} ${dayNumber}
+                        </h4>
+                        ${hasUserReservation ? `
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <i class="fas fa-check-circle mr-1"></i>Réservé
+                            </span>
+                        ` : ''}
+                    </div>
+                    <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} text-gray-400"></i>
+                </button>
+                
+                <div id="day-slots-${date}" class="${isExpanded ? '' : 'hidden'} border-t">
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        `;
+        
+        slotsToShow.forEach(slot => {
+            const hasIndividuel = slot.coaching_individuel.max > 0 && 
+                                 slot.coaching_individuel.current < slot.coaching_individuel.max;
+            const hasGroupe = slot.coaching_groupe.max > 0 && 
+                             slot.coaching_groupe.current < slot.coaching_groupe.max;
+            
+            // Vérifier si l'utilisateur a réservé ce créneau spécifique
+            const userReservedIndividuel = slot.coaching_individuel.userReserved;
+            const userReservedGroupe = slot.coaching_groupe.userReserved;
+            const slotUserReserved = userReservedIndividuel || userReservedGroupe;
+            
+            // Si l'utilisateur a réservé un créneau ce jour (n'importe quel créneau), 
+            // tous les autres créneaux sont non disponibles (limite 1 créneau par jour)
+            // SAUF le créneau qu'il a réservé (qui reste visible mais non cliquable)
+            const individuelNotAvailable = userReservedIndividuel || (hasUserReservation && !userReservedIndividuel) || !hasIndividuel;
+            const groupeNotAvailable = userReservedGroupe || (hasUserReservation && !userReservedGroupe) || !hasGroupe;
+            
+            html += `
+                <div class="border rounded-lg p-4 hover:border-primary transition-all ${slotUserReserved ? 'border-blue-300 bg-blue-50' : 'border-gray-200'}">
+                    <div class="text-center mb-3">
+                        <div class="flex items-center justify-center gap-2">
+                            <div class="text-lg font-semibold text-gray-800">${slot.time}</div>
+                            ${slotUserReserved ? `
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <i class="fas fa-check-circle mr-1"></i>Réservé
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-3">
+                        ${slot.coaching_individuel.max > 0 ? `
+                            <button onclick="selectSlotForDay('${slot.id}', 'individuel', '${date}')" 
+                                    class="w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${individuelNotAvailable ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50' : 'bg-primary hover:bg-primary/90 text-white'}"
+                                    ${individuelNotAvailable ? 'disabled' : ''}>
+                                <span class="slot-type-indicator individuel mr-2"></span>
+                                Coaching Individuel
+                                ${userReservedIndividuel ? '<i class="fas fa-check ml-2"></i>' : ''}
+                            </button>
+                        ` : ''}
+                        ${slot.coaching_groupe.max > 0 ? `
+                            <button onclick="selectSlotForDay('${slot.id}', 'groupe', '${date}')" 
+                                    class="w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors ${groupeNotAvailable ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-50' : 'bg-secondary hover:bg-secondary/90 text-white'}"
+                                    ${groupeNotAvailable ? 'disabled' : ''}>
+                                <span class="slot-type-indicator groupe mr-2"></span>
+                                Coaching Groupe
+                                ${userReservedGroupe ? '<i class="fas fa-check ml-2"></i>' : ''}
+                            </button>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 text-center">
+                        ${slot.coaching_individuel.max > 0 ? `
+                            <div class="${userReservedIndividuel ? 'text-blue-600 font-medium' : ''}">
+                                Individuel: ${slot.coaching_individuel.current}/${slot.coaching_individuel.max}
+                                ${userReservedIndividuel ? ' ✓' : ''}
+                            </div>
+                        ` : ''}
+                        ${slot.coaching_groupe.max > 0 ? `
+                            <div class="${userReservedGroupe ? 'text-blue-600 font-medium' : ''}">
+                                Groupe: ${slot.coaching_groupe.current}/${slot.coaching_groupe.max}
+                                ${userReservedGroupe ? ' ✓' : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    daysListContainer.innerHTML = html;
+    
+    // Stocker les créneaux pour utilisation ultérieure
+    appState.monthSlots = slots;
+    appState.slotsByDate = slotsByDate;
+}
+
+// Toggle l'affichage des créneaux d'un jour
+function toggleDaySlots(dateStr) {
+    if (!appState.expandedDays) {
+        appState.expandedDays = [];
+    }
+    
+    const index = appState.expandedDays.indexOf(dateStr);
+    if (index > -1) {
+        appState.expandedDays.splice(index, 1);
+    } else {
+        appState.expandedDays.push(dateStr);
+    }
+    
+    // Rafraîchir l'affichage
+    displayMonthCalendar();
+}
+
+// Toggle le filtre "voir uniquement les créneaux disponibles"
+function toggleAvailableFilter() {
+    const checkbox = document.getElementById('show-only-available');
+    if (checkbox) {
+        appState.showOnlyAvailable = checkbox.checked;
+        // Réinitialiser les jours expandés pour éviter les problèmes d'affichage
+        appState.expandedDays = [];
+        displayMonthCalendar();
+    }
+}
+
+// Changer de mois
+function changeMonth(direction) {
+    // S'assurer que currentMonth et currentYear sont initialisés
+    if (appState.currentMonth === undefined || appState.currentMonth === null) {
+        const today = new Date();
+        appState.currentMonth = today.getMonth();
+        appState.currentYear = today.getFullYear();
+    }
+    
+    appState.currentMonth += direction;
+    
+    if (appState.currentMonth < 0) {
+        appState.currentMonth = 11;
+        appState.currentYear--;
+    } else if (appState.currentMonth > 11) {
+        appState.currentMonth = 0;
+        appState.currentYear++;
+    }
+    
+    console.log('📅 Changement de mois:', {
+        direction,
+        newMonth: appState.currentMonth,
+        newYear: appState.currentYear
+    });
+    
+    displayMonthCalendar();
+}
+
+
+// Sélectionner un créneau pour un jour et réserver directement
+async function selectSlotForDay(slotId, serviceType, dateStr) {
+    if (!appState.isLoggedIn) {
+        alert('Vous devez être connecté pour effectuer une réservation.');
+        window.location.href = 'connexion.html';
+        return;
+    }
+    
+    // Trouver le créneau
+    const slot = appState.monthSlots?.find(s => s.id === slotId);
+    if (!slot) {
+        alert('Créneau non trouvé.');
+        return;
+    }
+    
+    // Vérifier la disponibilité
+    const serviceKey = serviceType === 'individuel' ? 'coaching_individuel' : 'coaching_groupe';
+    
+    // Vérifier si l'utilisateur a déjà réservé ce créneau
+    if (slot[serviceKey].userReserved) {
+        alert('Vous avez déjà réservé ce créneau.');
+        return;
+    }
+    
+    if (slot[serviceKey].max === 0) {
+        alert(`Ce créneau n'est pas disponible pour le ${serviceType === 'individuel' ? 'coaching individuel' : 'coaching groupe'}.`);
+        return;
+    }
+    
+    if (slot[serviceKey].current >= slot[serviceKey].max) {
+        alert('Ce créneau est complet.');
+        return;
+    }
+    
+    // Afficher un message de confirmation
+    const serviceName = serviceType === 'individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
+    const dateObj = new Date(dateStr);
+    const dateFormatted = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const confirmMessage = `Confirmer la réservation pour le ${serviceName} le ${dateFormatted} à ${slot.time} ?`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    // Effectuer la réservation
+    try {
+        const { data, error } = await appState.supabase
+            .from('bookings')
+            .insert([{
+                user_id: appState.currentUser.id,
+                service_type: serviceKey,
+                booking_date: dateStr,
+                booking_time: slot.time,
+                duration: 60,
+                status: 'confirmed'
+            }])
+            .select();
+        
+        if (error) {
+            console.error('Erreur réservation:', error);
+            alert('Erreur lors de la réservation. Veuillez réessayer.');
+            return;
+        }
+        
+        console.log('✅ Réservation créée:', data);
+        
+        // Mettre à jour le compteur dans booking_slots
+        await updateSlotCounter(dateStr, slot.time, serviceKey, 1);
+        
+        // Succès
+        alert('Réservation confirmée !');
+        
+        // Rafraîchir l'affichage
+        setTimeout(async () => {
+            await displayMonthCalendar();
+            if (typeof displayMyBookings === 'function') {
+                await displayMyBookings();
+            }
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erreur réservation:', error);
+        alert('Erreur lors de la réservation. Veuillez réessayer.');
+    }
+}
+
+// Annuler une réservation
+async function cancelBooking(bookingId, dateStr, time, serviceType) {
+    const confirmMessage = `Êtes-vous sûr de vouloir annuler cette réservation ?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        const { error } = await appState.supabase
+            .from('bookings')
+            .delete()
+            .eq('id', bookingId);
+        
+        if (error) {
+            console.error('Erreur annulation:', error);
+            alert('Erreur lors de l\'annulation. Veuillez réessayer.');
+            return;
+        }
+        
+        // Mettre à jour le compteur dans booking_slots
+        await updateSlotCounter(dateStr, time, serviceType, -1);
+        
+        alert('Réservation annulée avec succès.');
+        
+        // Rafraîchir l'affichage
+        setTimeout(async () => {
+            await displayMyBookings();
+            await displayMonthCalendar();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erreur annulation:', error);
+        alert('Erreur lors de l\'annulation. Veuillez réessayer.');
+    }
+}
+
+// Modifier une réservation (ouvrir la vue liste mensuelle avec le jour sélectionné)
+async function modifyBooking(bookingId, dateStr, time, serviceType) {
+    // D'abord annuler la réservation actuelle
+    const confirmMessage = `Pour modifier cette réservation, nous allons d'abord annuler la réservation actuelle, puis vous pourrez en sélectionner une nouvelle. Continuer ?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        // Annuler la réservation
+        const { error } = await appState.supabase
+            .from('bookings')
+            .delete()
+            .eq('id', bookingId);
+        
+        if (error) {
+            console.error('Erreur annulation:', error);
+            alert('Erreur lors de la modification. Veuillez réessayer.');
+            return;
+        }
+        
+        // Mettre à jour le compteur
+        await updateSlotCounter(dateStr, time, serviceType, -1);
+        
+        // Basculer vers la vue liste mensuelle
+        switchReservationView('month');
+        
+        // Attendre un peu pour que la vue se charge
+        setTimeout(async () => {
+            // Trouver le mois de la réservation
+            const dateObj = new Date(dateStr);
+            appState.currentMonth = dateObj.getMonth();
+            appState.currentYear = dateObj.getFullYear();
+            
+            // Afficher le calendrier
+            await displayMonthCalendar();
+            
+            // Expand le jour concerné
+            if (!appState.expandedDays) {
+                appState.expandedDays = [];
+            }
+            if (!appState.expandedDays.includes(dateStr)) {
+                appState.expandedDays.push(dateStr);
+            }
+            
+            // Rafraîchir pour afficher le jour expandé
+            await displayMonthCalendar();
+            
+            // Scroll vers le jour
+            const dayElement = document.querySelector(`[onclick="toggleDaySlots('${dateStr}')"]`);
+            if (dayElement) {
+                dayElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            alert('Réservation annulée. Veuillez sélectionner un nouveau créneau.');
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erreur modification:', error);
+        alert('Erreur lors de la modification. Veuillez réessayer.');
+    }
+}
+
+
+
 // Exposer les fonctions globalement à la fin du fichier
 window.selectSlot = selectSlot;
 window.makeReservation = makeReservation;
 window.switchReservationView = switchReservationView;
-window.selectCalendarDay = selectCalendarDay;
-window.closeDaySlotsModal = closeDaySlotsModal;
 window.selectServiceForSlot = selectServiceForSlot;
-window.closeServiceSelectionModal = closeServiceSelectionModal;
+window.getCurrentView = getCurrentView;
+window.displayWeekSlots = displayWeekSlots;
+window.displaySlotsList = displaySlotsList;
+window.displayMyBookings = displayMyBookings;
+window.displayMonthCalendar = displayMonthCalendar;
+window.changeMonth = changeMonth;
+window.toggleDaySlots = toggleDaySlots;
+window.toggleAvailableFilter = toggleAvailableFilter;
+window.selectSlotForDay = selectSlotForDay;
+window.cancelBooking = cancelBooking;
+window.modifyBooking = modifyBooking;

@@ -119,49 +119,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
-        /* Calendrier mensuel */
-        .calendar-day {
-            min-height: 120px;
-            border: 1px solid #e5e7eb;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .calendar-day:hover {
-            background-color: #f9fafb;
-        }
-        .calendar-day.has-slots {
-            background-color: #f0f9ff;
-            border-color: #5A9FD4;
-        }
-        .calendar-day.selected {
-            background-color: #FFF7F0;
-            border-color: #FF8A3E;
-        }
-        .calendar-day.other-month {
-            background-color: #f9fafb;
-            color: #9ca3af;
-        }
-        .calendar-day.today {
-            background-color: #fef3c7;
-            border-color: #f59e0b;
-        }
-        
-        /* Codes couleur pour les types de créneaux */
-        .calendar-day.has-individuel {
-            background-color: #EFF6FF;
-            border-color: #5A9FD4;
-        }
-        .calendar-day.has-groupe {
-            background-color: #FFF7F0;
-            border-color: #FF8A3E;
-        }
-        .calendar-day.has-both {
-            background: linear-gradient(135deg, #EFF6FF 50%, #FFF7F0 50%);
-            border-color: #5A9FD4;
-        }
-        
-        /* Indicateurs de type dans le calendrier */
+        /* Indicateurs de type */
         .slot-type-indicator {
             display: inline-block;
             width: 8px;
@@ -174,14 +132,6 @@
         }
         .slot-type-indicator.groupe {
             background-color: #FF8A3E;
-        }
-        
-        /* Améliorer l'affichage des créneaux dans le calendrier */
-        .calendar-day .text-xs {
-            line-height: 1.2;
-        }
-        .calendar-day .font-medium {
-            font-weight: 600;
         }
         
         /* Liste des créneaux */
@@ -342,7 +292,7 @@
                 <h2 class="text-3xl font-bold text-gray-800 mb-4">Sélectionnez votre créneau</h2>
                 <p id="selected-service-info" class="text-lg text-gray-600">
                     Ces créneaux concernent uniquement les cours de coaching sportif encadrés par nos coachs.
-                    Pour réserver une séance de kinésithérapie avec Jeromine Paso, contactez-la via son
+                    Pour réserver une séance de kinésithérapie avec Jéromine Paso, contactez-la via son
                     <a href="https://www.doctolib.fr/masseur-kinesitherapeute/brignais/jeromine-paso" class="text-primary font-semibold underline hover:text-primary/80" target="_blank" rel="noopener">profil Doctolib</a>,
                     par SMS au <a href="tel:+33660352236" class="text-primary font-semibold hover:text-primary/80">06&nbsp;60&nbsp;35&nbsp;22&nbsp;36</a>
                     ou par e-mail à <a href="mailto:pjmkde@outlook.fr" class="text-primary font-semibold hover:text-primary/80">pjmkde@outlook.fr</a>.
@@ -350,41 +300,43 @@
             </div>
 
             <!-- Sélecteur de vue -->
-            <div class="flex flex-wrap justify-center gap-2 mb-8">
-                <button id="view-calendar" onclick="switchReservationView('calendar')" class="reservation-view-toggle active bg-white text-primary border-2 border-primary px-4 py-2 rounded-lg font-medium transition-all hover:bg-primary hover:text-white">
-                    <i class="fas fa-calendar-alt mr-2"></i>Calendrier mensuel
-                </button>
-                <button id="view-week" onclick="switchReservationView('week')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
-                    <i class="fas fa-calendar-week mr-2"></i>Vue semaine
-                </button>
-                <button id="view-list" onclick="switchReservationView('list')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
-                    <i class="fas fa-list mr-2"></i>Liste des créneaux
+            <div class="flex flex-wrap justify-center gap-2 mb-4">
+                <button id="view-month" onclick="switchReservationView('month')" class="reservation-view-toggle active bg-white text-primary border-2 border-primary px-4 py-2 rounded-lg font-medium transition-all hover:bg-primary hover:text-white">
+                    <i class="fas fa-calendar-alt mr-2"></i>Liste mensuelle
                 </button>
                 <button id="view-my-bookings" onclick="switchReservationView('my-bookings')" class="reservation-view-toggle bg-white text-gray-600 border-2 border-gray-300 px-4 py-2 rounded-lg font-medium transition-all hover:bg-gray-100">
                     <i class="fas fa-calendar-check mr-2"></i>Mes réservations
                 </button>
             </div>
+            
+            <!-- Filtre pour afficher uniquement les créneaux disponibles -->
+            <div id="filter-section" class="flex justify-center mb-6">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="show-only-available" checked onchange="toggleAvailableFilter()" class="mr-2 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                    <span class="text-sm text-gray-700">Voir uniquement les créneaux disponibles</span>
+                </label>
+            </div>
 
-            <!-- Vue Calendrier mensuel -->
-            <div id="calendar-view" class="reservation-view">
-                <!-- Navigation du calendrier -->
-                <div class="flex justify-between items-center mb-8">
-                    <button id="prev-month" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+            <!-- Vue Liste des Jours Disponibles -->
+            <div id="month-view" class="reservation-view">
+                <!-- Navigation du mois -->
+                <div class="flex justify-between items-center mb-6">
+                    <button id="prev-month-btn" onclick="changeMonth(-1)" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
                         <i class="fas fa-chevron-left mr-2"></i>Mois précédent
                     </button>
-                    <h3 id="current-month" class="text-xl font-semibold text-gray-800"></h3>
-                    <button id="next-month" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
+                    <h3 id="current-month-title" class="text-xl font-semibold text-gray-800"></h3>
+                    <button id="next-month-btn" onclick="changeMonth(1)" class="bg-white px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors">
                         Mois suivant<i class="fas fa-chevron-right ml-2"></i>
                     </button>
                 </div>
 
-                <!-- Grille du calendrier mensuel -->
-                <div id="monthly-calendar" class="bg-white rounded-lg shadow-sm border p-6">
-                    <!-- Le calendrier sera généré dynamiquement -->
+                <!-- Liste des jours disponibles -->
+                <div id="available-days-list" class="space-y-3 mb-6">
+                    <!-- Les jours seront générés dynamiquement -->
                 </div>
             </div>
 
-            <!-- Vue Semaine -->
+            <!-- Vue Semaine (désactivée mais conservée pour compatibilité) -->
             <div id="week-view" class="reservation-view hidden">
                 <!-- Navigation de la semaine -->
                 <div class="flex justify-between items-center mb-8">
@@ -423,12 +375,6 @@
                 </div>
             </div>
 
-            <!-- Bouton de réservation -->
-            <div class="text-center mt-8">
-                <button id="book-slot" class="bg-secondary hover:bg-secondary/90 text-white px-8 py-3 rounded-full font-medium text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                    <i class="fas fa-calendar-check mr-2"></i>Réserver ce créneau
-                </button>
-            </div>
         </div>
     </section>
 

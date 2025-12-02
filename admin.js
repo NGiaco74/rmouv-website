@@ -387,6 +387,24 @@ function showAddSlotModal() {
 }
 
 // Fermer le modal d'ajout de créneau
+// Fonction pour gérer le toggle "indéfiniment" pour les créneaux récurrents
+window.toggleRecurringIndefinite = function() {
+    const indefiniteCheckbox = document.getElementById('recurring-indefinite');
+    const weeksInput = document.getElementById('recurring-weeks');
+    
+    if (indefiniteCheckbox && weeksInput) {
+        if (indefiniteCheckbox.checked) {
+            // Désactiver le champ nombre de semaines
+            weeksInput.disabled = true;
+            weeksInput.value = '';
+        } else {
+            // Réactiver le champ et remettre la valeur par défaut
+            weeksInput.disabled = false;
+            weeksInput.value = '4';
+        }
+    }
+};
+
 function closeAddSlotModal() {
     const modal = document.getElementById('add-slot-modal');
     if (modal) {
@@ -458,6 +476,17 @@ function addSlotForDate(dateStr) {
             form.reset();
         }
         
+        // Réinitialiser l'option "indéfiniment"
+        const indefiniteCheckbox = document.getElementById('recurring-indefinite');
+        const weeksInput = document.getElementById('recurring-weeks');
+        if (indefiniteCheckbox) {
+            indefiniteCheckbox.checked = false;
+        }
+        if (weeksInput) {
+            weeksInput.disabled = false;
+            weeksInput.value = '4';
+        }
+        
         // Masquer les options de récurrence
         if (recurringOptions) {
             recurringOptions.classList.add('hidden');
@@ -491,7 +520,8 @@ async function handleAddSlotSubmit(event) {
     // Vérifier si la récurrence est activée
     const isRecurring = formData.get('recurring-slot') === 'on';
     const recurringDays = formData.getAll('recurring-days');
-    const recurringWeeks = parseInt(formData.get('recurring-weeks')) || 4;
+    const isIndefinite = document.getElementById('recurring-indefinite')?.checked || false;
+    const recurringWeeks = isIndefinite ? null : (parseInt(formData.get('recurring-weeks')) || 4);
     
     console.log('📋 Données du formulaire:', {
         date,
@@ -561,9 +591,21 @@ async function handleAddSlotSubmit(event) {
         // Fermer le modal et actualiser
         closeAddSlotModal();
         
-        // Petit délai pour s'assurer que la DB est synchronisée
+        // Rafraîchir automatiquement toutes les vues après création
         setTimeout(async () => {
-            await refreshCalendar();
+            console.log('🔄 Rafraîchissement automatique après création de créneau...');
+            try {
+                // Rafraîchir le calendrier
+                await refreshCalendar();
+                
+                // Rafraîchir aussi la liste si elle est visible
+                const slotsListContainer = document.getElementById('slots-list');
+                if (slotsListContainer && !slotsListContainer.closest('.hidden')) {
+                    await displaySlotsList();
+                }
+            } catch (error) {
+                console.error('Erreur lors du rafraîchissement:', error);
+            }
         }, 500);
         
     } catch (error) {
@@ -1697,9 +1739,13 @@ async function createSingleSlot(date, timeType, time, startTime, endTime, select
     alert(message);
 }
 
-// Fonction pour créer des créneaux récurrents
+// Fonction pour créer des créneaux récurrents (optimisée avec batch creation)
 async function createRecurringSlots(startDate, timeType, time, startTime, endTime, selectedTypes, recurringDays, weeks, groupCapacity, notes) {
-    console.log('🔄 Création de créneaux récurrents:', {
+    // Si weeks est null, créer des créneaux indéfiniment (jusqu'à 1 an dans le futur)
+    const isIndefinite = weeks === null || weeks === undefined;
+    const maxWeeks = isIndefinite ? 52 : weeks; // 1 an = 52 semaines
+    
+    console.log('🔄 Création de créneaux récurrents (mode batch):', {
         startDate,
         timeType,
         time,
@@ -1707,7 +1753,7 @@ async function createRecurringSlots(startDate, timeType, time, startTime, endTim
         endTime,
         selectedTypes,
         recurringDays,
-        weeks,
+        weeks: isIndefinite ? 'indéfiniment (52 semaines)' : weeks,
         groupCapacity
     });
     
@@ -1723,8 +1769,6 @@ async function createRecurringSlots(startDate, timeType, time, startTime, endTim
     
     const targetDays = recurringDays.map(day => dayMap[day]);
     const startDateObj = new Date(startDate);
-    const createdSlots = [];
-    const skippedSlots = [];
     
     // Déterminer les heures à créer selon le type
     let hoursToCreate = [];
@@ -1745,83 +1789,138 @@ async function createRecurringSlots(startDate, timeType, time, startTime, endTim
     console.log('📅 Jours cibles:', targetDays);
     console.log('📅 Date de départ:', startDateObj);
     console.log('🕐 Heures à créer:', hoursToCreate);
+    console.log('📅 Mode:', isIndefinite ? 'indéfiniment (52 semaines)' : `${weeks} semaines`);
     
-    // Créer des créneaux pour chaque semaine
-    for (let week = 0; week < weeks; week++) {
-        console.log(`📅 Semaine ${week + 1}/${weeks}`);
-        
+    // ÉTAPE 1 : Calculer TOUTES les dates/heures à créer en une seule fois
+    const slotsToCreate = [];
+    const endDate = new Date(startDateObj);
+    endDate.setDate(endDate.getDate() + (maxWeeks * 7));
+    
+    for (let week = 0; week < maxWeeks; week++) {
         for (const dayOfWeek of targetDays) {
             // Calculer la date pour ce jour de la semaine
             const daysUntilTarget = (dayOfWeek - startDateObj.getDay() + 7) % 7;
             const targetDate = new Date(startDateObj);
             targetDate.setDate(startDateObj.getDate() + daysUntilTarget + (week * 7));
             
+            // Ne pas créer de créneaux dans le passé
+            if (targetDate < new Date()) {
+                continue;
+            }
+            
             const dateStr = targetDate.toISOString().split('T')[0];
             
-            console.log(`📅 Calcul date: jour ${dayOfWeek}, semaine ${week}, date calculée: ${dateStr}`);
-            
-            // Créer les créneaux pour cette date et chaque heure
+            // Pour chaque heure et chaque type de service
             for (const hour of hoursToCreate) {
                 for (const serviceType of selectedTypes) {
-                    try {
-                        // Vérifier si le créneau existe déjà
-                        const { data: existingSlotData, error: checkError } = await adminState.supabase
-                            .from('booking_slots')
-                            .select('id, service_type')
-                            .eq('booking_date', dateStr)
-                            .eq('booking_time', hour)
-                            .eq('service_type', serviceType)
-                            .single();
-                        
-                        if (existingSlotData) {
-                            console.log(`⚠️ Créneau ${serviceType} existe déjà pour ${dateStr} ${hour}`);
-                            skippedSlots.push(`${dateStr} ${hour} (${serviceType})`);
-                            continue;
-                        }
-                        
-                        // Créer le créneau
-                        const maxCapacity = serviceType === 'coaching_groupe' ? groupCapacity : 1;
-                        const { data, error } = await adminState.supabase
-                            .from('booking_slots')
-                            .insert([{
-                                service_type: serviceType,
-                                booking_date: dateStr,
-                                booking_time: hour,
-                                max_capacity: maxCapacity,
-                                current_bookings: 0
-                            }])
-                            .select();
-                        
-                        if (error) {
-                            console.error(`Erreur création créneau ${serviceType} ${dateStr} ${hour}:`, error);
-                            if (error.code === '23505') { // Contrainte d'unicité violée
-                                console.log(`⚠️ Créneau ${serviceType} créé entre temps`);
-                                skippedSlots.push(`${dateStr} ${hour} (${serviceType})`);
-                                continue;
-                            }
-                            throw error;
-                        }
-                        
-                        createdSlots.push(data[0]);
-                        console.log(`✅ Créneau récurrent ${serviceType} créé pour ${dateStr} ${hour}`);
-                        
-                    } catch (error) {
-                        console.error(`Erreur création créneau ${serviceType} ${dateStr} ${hour}:`, error);
-                        skippedSlots.push(`${dateStr} ${hour} (${serviceType})`);
-                    }
+                    const maxCapacity = serviceType === 'coaching_groupe' ? groupCapacity : 1;
+                    slotsToCreate.push({
+                        service_type: serviceType,
+                        booking_date: dateStr,
+                        booking_time: hour,
+                        max_capacity: maxCapacity,
+                        current_bookings: 0
+                    });
                 }
             }
         }
     }
     
+    console.log(`📦 ${slotsToCreate.length} créneaux à créer au total`);
+    
+    if (slotsToCreate.length === 0) {
+        alert('⚠️ Aucun créneau à créer (toutes les dates sont dans le passé)');
+        return;
+    }
+    
+    // ÉTAPE 2 : Vérifier quels créneaux existent déjà (en une seule requête)
+    const dateStrings = [...new Set(slotsToCreate.map(s => s.booking_date))];
+    const timeStrings = [...new Set(slotsToCreate.map(s => s.booking_time))];
+    const serviceTypes = [...new Set(slotsToCreate.map(s => s.service_type))];
+    
+    console.log('🔍 Vérification des créneaux existants...');
+    const { data: existingSlots, error: checkError } = await adminState.supabase
+        .from('booking_slots')
+        .select('booking_date, booking_time, service_type')
+        .in('booking_date', dateStrings)
+        .in('booking_time', timeStrings)
+        .in('service_type', serviceTypes);
+    
+    if (checkError) {
+        console.error('Erreur lors de la vérification des créneaux existants:', checkError);
+        alert('❌ Erreur lors de la vérification des créneaux existants');
+        return;
+    }
+    
+    // Créer un Set pour vérification rapide
+    const existingSlotsSet = new Set(
+        existingSlots.map(s => `${s.booking_date}_${s.booking_time}_${s.service_type}`)
+    );
+    
+    // ÉTAPE 3 : Filtrer les créneaux qui n'existent pas encore
+    const newSlots = slotsToCreate.filter(slot => {
+        const key = `${slot.booking_date}_${slot.booking_time}_${slot.service_type}`;
+        return !existingSlotsSet.has(key);
+    });
+    
+    const skippedCount = slotsToCreate.length - newSlots.length;
+    
+    console.log(`✅ ${newSlots.length} nouveaux créneaux à créer`);
+    console.log(`⚠️ ${skippedCount} créneaux existent déjà`);
+    
+    if (newSlots.length === 0) {
+        alert(`⚠️ Tous les créneaux existent déjà (${skippedCount} créneaux ignorés)`);
+        return;
+    }
+    
+    // ÉTAPE 4 : Créer TOUS les créneaux en une seule requête batch (comme Outlook)
+    console.log('🚀 Création batch de tous les créneaux...');
+    
+    // Supabase permet d'insérer jusqu'à 1000 lignes par requête
+    // On va diviser en chunks de 1000 si nécessaire
+    const chunkSize = 1000;
+    let createdCount = 0;
+    let errorCount = 0;
+    
+    for (let i = 0; i < newSlots.length; i += chunkSize) {
+        const chunk = newSlots.slice(i, i + chunkSize);
+        
+        try {
+            const { data, error } = await adminState.supabase
+                .from('booking_slots')
+                .insert(chunk)
+                .select();
+            
+            if (error) {
+                console.error(`Erreur création batch (chunk ${i / chunkSize + 1}):`, error);
+                // Si erreur de contrainte d'unicité, certains créneaux ont peut-être été créés entre temps
+                if (error.code === '23505') {
+                    errorCount += chunk.length;
+                } else {
+                    throw error;
+                }
+            } else {
+                createdCount += data.length;
+                console.log(`✅ Chunk ${i / chunkSize + 1}: ${data.length} créneaux créés`);
+            }
+        } catch (error) {
+            console.error(`Erreur fatale lors de la création batch:`, error);
+            errorCount += chunk.length;
+        }
+    }
+    
     // Afficher le résumé
     let message = `✅ Création récurrente terminée !\n`;
-    message += `📅 ${createdSlots.length} créneau(x) créé(s)\n`;
-    if (skippedSlots.length > 0) {
-        message += `⚠️ ${skippedSlots.length} créneau(x) existant(s) ignoré(s)`;
+    message += `📅 ${createdCount} créneau(x) créé(s)\n`;
+    if (skippedCount > 0) {
+        message += `⚠️ ${skippedCount} créneau(x) existant(s) ignoré(s)\n`;
+    }
+    if (errorCount > 0) {
+        message += `❌ ${errorCount} créneau(x) en erreur`;
     }
     
     alert(message);
+    console.log('✅ Création récurrente terminée');
 }
 
 // ============================================
@@ -2492,6 +2591,8 @@ window.editPatientComment = editPatientComment;
 window.cancelEditComment = cancelEditComment;
 window.savePatientComment = savePatientComment;
 window.deletePatientComment = deletePatientComment;
+window.refreshCalendar = refreshCalendar;
+window.displaySlotsList = displaySlotsList;
 
 // Initialiser la page quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', initializeAdminPage);

@@ -751,8 +751,14 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     Nombre de semaines <span class="text-red-500">*</span>
                                 </label>
-                                <input type="number" id="recurring-weeks" name="recurring-weeks" value="4" min="1" max="52" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="4">
-                                <span class="text-sm text-gray-600 ml-2">semaines</span>
+                                <div class="flex items-center gap-3">
+                                    <input type="number" id="recurring-weeks" name="recurring-weeks" value="4" min="1" max="52" class="w-20 px-2 py-1 border border-gray-300 rounded text-sm" placeholder="4">
+                                    <span class="text-sm text-gray-600">semaines</span>
+                                    <label class="flex items-center ml-4">
+                                        <input type="checkbox" id="recurring-indefinite" name="recurring-indefinite" class="mr-2" onchange="toggleRecurringIndefinite()">
+                                        <span class="text-sm text-gray-700">Indéfiniment</span>
+                                    </label>
+                                </div>
                             </div>
         </div>
     </div>

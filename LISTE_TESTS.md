@@ -40,7 +40,7 @@
   - [ ] Toutes les images d'équipements s'affichent
 
 - [ ] **Page Équipe (equipe.html)**
-  - [ ] Les photos de Camille et Jeromine s'affichent
+  - [ ] Les photos de Camille et Jéromine s'affichent
   - [ ] Les coordonnées sont correctes
   - [ ] Le lien Doctolib fonctionne
   - [ ] La mention "(prise de RDV non disponible)" est visible
@@ -399,7 +399,7 @@
 ### 12.3. Informations de contact
 - [ ] L'adresse est correcte : 400 Rue Barthélemy Thimonnier, 69530 Brignais
 - [ ] Le téléphone de Camille : 06 67 33 20 15
-- [ ] Le téléphone de Jeromine : 06 60 35 22 36
+- [ ] Le téléphone de Jéromine : 06 60 35 22 36
 - [ ] L'email : contact@rmouv.fr
 - [ ] L'email de Camille : camille.simonklein@gmail.com
 
@@ -509,4 +509,5 @@ Avant la mise en production, vérifier :
 
 **Date de création** : 29 novembre 2025  
 **Dernière mise à jour** : 29 novembre 2025
+
 

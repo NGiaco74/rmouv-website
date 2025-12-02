@@ -358,6 +358,9 @@ async function initializeAuth() {
             }
             
             updateUI(!!session, session?.user);
+            
+            // Rafraîchir automatiquement les pages concernées
+            refreshPageAfterAuthChange(event);
         });
         
     } catch (error) {
@@ -605,6 +608,12 @@ async function signIn(email, password) {
         }
         
         showNotification('Connexion réussie !', 'success');
+        
+        // Rafraîchir automatiquement la page si nécessaire
+        setTimeout(() => {
+            refreshPageAfterAuthChange('SIGNED_IN');
+        }, 500);
+        
         return { success: true, data };
     } catch (error) {
         showNotification('Erreur de connexion: ' + error.message, 'error');
@@ -626,8 +635,46 @@ async function logout() {
         }
         
         showNotification('Déconnexion réussie', 'info');
+        
+        // Rafraîchir automatiquement la page si nécessaire
+        setTimeout(() => {
+            refreshPageAfterAuthChange('SIGNED_OUT');
+        }, 500);
     } catch (error) {
         showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
+    }
+}
+
+// Fonction pour rafraîchir les pages après changement d'authentification
+function refreshPageAfterAuthChange(event) {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    console.log('🔄 Rafraîchissement après changement auth:', event, 'Page:', currentPage);
+    
+    // Si on est sur la page de réservation, rafraîchir les vues
+    if (currentPage === 'reservation.html' && typeof window.switchReservationView === 'function') {
+        const currentView = typeof window.getCurrentView === 'function' ? window.getCurrentView() : 'week';
+        console.log('🔄 Rafraîchissement de la vue réservation:', currentView);
+        
+        setTimeout(() => {
+            if (currentView === 'month' && typeof window.displayMonthCalendar === 'function') {
+                window.displayMonthCalendar().catch(err => console.error('Erreur rafraîchissement vue calendrier:', err));
+            } else if (currentView === 'week' && typeof window.displayWeekSlots === 'function') {
+                window.displayWeekSlots().catch(err => console.error('Erreur rafraîchissement vue semaine:', err));
+            } else if (currentView === 'list' && typeof window.displaySlotsList === 'function') {
+                window.displaySlotsList().catch(err => console.error('Erreur rafraîchissement vue liste:', err));
+            } else if (currentView === 'my-bookings' && typeof window.displayMyBookings === 'function') {
+                window.displayMyBookings().catch(err => console.error('Erreur rafraîchissement mes réservations:', err));
+            }
+        }, 300);
+    }
+    
+    // Si on est sur la page admin, rafraîchir les créneaux
+    if (currentPage === 'admin.html' && typeof window.refreshCalendar === 'function') {
+        console.log('🔄 Rafraîchissement de la page admin');
+        setTimeout(() => {
+            window.refreshCalendar().catch(err => console.error('Erreur rafraîchissement admin:', err));
+        }, 300);
     }
 }
 
