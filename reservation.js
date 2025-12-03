@@ -85,26 +85,31 @@ async function generateWeekSlots(startDate) {
         
         console.log('📋 Créneaux récupérés:', dbSlots);
         
+        // Utiliser current_bookings directement depuis booking_slots
+        // Les triggers SQL mettront à jour automatiquement current_bookings lors des réservations
         // Grouper les créneaux par date et heure
         const slotsByDateTime = {};
         if (dbSlots) {
             dbSlots.forEach(slot => {
-                const key = `${slot.booking_date}_${slot.booking_time}`;
+                // Normaliser le format de booking_time (HH:MM:SS -> HH:MM)
+                const timeNormalized = slot.booking_time ? slot.booking_time.substring(0, 5) : slot.booking_time;
+                const key = `${slot.booking_date}_${timeNormalized}`;
                 if (!slotsByDateTime[key]) {
                     slotsByDateTime[key] = {
                         date: slot.booking_date,
-                        time: slot.booking_time.substring(0, 5), // HH:MM
+                        time: timeNormalized, // HH:MM
                         coaching_individuel: { max: 0, current: 0 },
                         coaching_groupe: { max: 0, current: 0 }
                     };
                 }
                 
+                // Utiliser current_bookings directement (mis à jour par les triggers)
                 if (slot.service_type === 'coaching_individuel') {
                     slotsByDateTime[key].coaching_individuel.max = slot.max_capacity;
-                    slotsByDateTime[key].coaching_individuel.current = slot.current_bookings;
+                    slotsByDateTime[key].coaching_individuel.current = slot.current_bookings || 0;
                 } else if (slot.service_type === 'coaching_groupe') {
                     slotsByDateTime[key].coaching_groupe.max = slot.max_capacity;
-                    slotsByDateTime[key].coaching_groupe.current = slot.current_bookings;
+                    slotsByDateTime[key].coaching_groupe.current = slot.current_bookings || 0;
                 }
             });
         }
@@ -153,26 +158,35 @@ async function updateSlotCounter(date, time, serviceType, increment) {
             .single();
         
         if (fetchError) {
-            console.error('Erreur récupération créneau:', fetchError);
+            console.error('❌ Erreur récupération créneau:', fetchError);
+            if (fetchError.code === 'PGRST301' || fetchError.message?.includes('permission denied')) {
+                console.error('🚨 PROBLÈME DE PERMISSIONS RLS: Impossible de lire booking_slots pour mettre à jour le compteur');
+            }
             return;
         }
         
         if (!slot) {
-            console.error('Créneau non trouvé:', { date, time, serviceType });
+            console.error('❌ Créneau non trouvé:', { date, time, serviceType });
             return;
         }
         
         // Mettre à jour le compteur
-        const newCount = slot.current_bookings + increment;
+        const newCount = (slot.current_bookings || 0) + increment;
+        console.log(`🔄 Mise à jour compteur: ${slot.current_bookings} + ${increment} = ${newCount}`);
+        
         const { error: updateError } = await appState.supabase
             .from('booking_slots')
             .update({ current_bookings: newCount })
             .eq('id', slot.id);
         
         if (updateError) {
-            console.error('Erreur mise à jour compteur:', updateError);
+            console.error('❌ Erreur mise à jour compteur:', updateError);
+            if (updateError.code === 'PGRST301' || updateError.message?.includes('permission denied')) {
+                console.error('🚨 PROBLÈME DE PERMISSIONS RLS: Impossible de mettre à jour booking_slots');
+                console.error('🚨 Solution: Créer une politique RLS pour permettre la mise à jour de current_bookings aux utilisateurs authentifiés');
+            }
         } else {
-            console.log('✅ Compteur mis à jour:', newCount);
+            console.log('✅ Compteur mis à jour avec succès:', newCount);
         }
         
     } catch (error) {
@@ -194,50 +208,127 @@ function formatDate(date) {
     });
 }
 
-// Charger les réservations existantes depuis Supabase
-async function loadExistingBookings() {
-    if (!appState.supabase) return {};
+// Synchroniser les compteurs current_bookings avec les réservations réelles
+// Cette fonction compte les réservations dans bookings et met à jour booking_slots
+async function syncBookingCounters() {
+    if (!appState.supabase) return;
     
     try {
-        console.log('🔍 Chargement des réservations depuis Supabase...');
+        console.log('🔄 Synchronisation des compteurs de réservations...');
         
-        // Récupérer les réservations confirmées
+        // Récupérer toutes les réservations confirmées
+        const { data: bookings, error: bookingsError } = await appState.supabase
+            .from('bookings')
+            .select('service_type, booking_date, booking_time, status')
+            .eq('status', 'confirmed');
+        
+        if (bookingsError) {
+            console.error('❌ Erreur récupération réservations pour synchronisation:', bookingsError);
+            return;
+        }
+        
+        if (!bookings || bookings.length === 0) {
+            console.log('📊 Aucune réservation à synchroniser');
+            return;
+        }
+        
+        // Compter les réservations par créneau
+        const countsBySlot = {};
+        bookings.forEach(booking => {
+            const timeNormalized = booking.booking_time ? booking.booking_time.substring(0, 5) : booking.booking_time;
+            const key = `${booking.booking_date}_${timeNormalized}_${booking.service_type}`;
+            countsBySlot[key] = (countsBySlot[key] || 0) + 1;
+        });
+        
+        console.log('📊 Compteurs calculés depuis bookings:', countsBySlot);
+        
+        // Récupérer tous les créneaux pour mettre à jour les compteurs
+        const { data: slots, error: slotsError } = await appState.supabase
+            .from('booking_slots')
+            .select('id, booking_date, booking_time, service_type, current_bookings');
+        
+        if (slotsError) {
+            console.error('❌ Erreur récupération créneaux pour synchronisation:', slotsError);
+            return;
+        }
+        
+        // Mettre à jour les compteurs
+        let updatedCount = 0;
+        for (const slot of slots) {
+            const timeNormalized = slot.booking_time ? slot.booking_time.substring(0, 5) : slot.booking_time;
+            const key = `${slot.booking_date}_${timeNormalized}_${slot.service_type}`;
+            const realCount = countsBySlot[key] || 0;
+            
+            // Mettre à jour seulement si le compteur est différent
+            if (slot.current_bookings !== realCount) {
+                const { error: updateError } = await appState.supabase
+                    .from('booking_slots')
+                    .update({ current_bookings: realCount })
+                    .eq('id', slot.id);
+                
+                if (updateError) {
+                    console.error(`❌ Erreur mise à jour créneau ${slot.id}:`, updateError);
+                } else {
+                    console.log(`✅ Compteur mis à jour: ${slot.id} (${slot.current_bookings} → ${realCount})`);
+                    updatedCount++;
+                }
+            }
+        }
+        
+        console.log(`✅ Synchronisation terminée: ${updatedCount} créneaux mis à jour`);
+        
+    } catch (error) {
+        console.error('❌ Erreur synchronisation compteurs:', error);
+    }
+}
+
+// Charger les réservations de l'utilisateur actuel depuis Supabase
+// (pour savoir s'il a réservé un créneau, pas pour compter toutes les réservations)
+async function loadExistingBookings() {
+    if (!appState.supabase) return { userBookings: {} };
+    
+    try {
+        // Si l'utilisateur n'est pas connecté, retourner un objet vide
+        if (!appState.currentUser || !appState.isLoggedIn) {
+            return { userBookings: {} };
+        }
+        
+        console.log('🔍 Chargement des réservations de l\'utilisateur depuis Supabase...');
+        
+        // Récupérer uniquement les réservations de l'utilisateur actuel (pour éviter les problèmes RLS)
         const { data: bookings, error } = await appState.supabase
             .from('bookings')
             .select('service_type, booking_date, booking_time, user_id')
-            .eq('status', 'confirmed');
+            .eq('status', 'confirmed')
+            .eq('user_id', appState.currentUser.id);  // Filtrer uniquement les réservations de l'utilisateur
         
         if (error) {
             console.error('Erreur chargement réservations:', error);
-            return {};
+            return { userBookings: {} };
         }
         
-        console.log('📋 Réservations trouvées:', bookings);
+        console.log('📋 Réservations de l\'utilisateur trouvées:', bookings);
         
-        // Compter les réservations par créneau et identifier les réservations de l'utilisateur actuel
-        const bookingCounts = {};
+        // Identifier les réservations de l'utilisateur actuel
         const userBookings = {};
         
-        bookings.forEach(booking => {
-            const key = `${booking.booking_date}_${booking.booking_time}`;
-            if (!bookingCounts[key]) {
-                bookingCounts[key] = { coaching_individuel: 0, coaching_groupe: 0 };
-                userBookings[key] = { coaching_individuel: false, coaching_groupe: false };
-            }
-            bookingCounts[key][booking.service_type]++;
-            
-            // Vérifier si c'est une réservation de l'utilisateur actuel
-            if (appState.currentUser && booking.user_id === appState.currentUser.id) {
+        if (bookings) {
+            bookings.forEach(booking => {
+                // Normaliser le format de booking_time (HH:MM:SS -> HH:MM)
+                const timeNormalized = booking.booking_time ? booking.booking_time.substring(0, 5) : booking.booking_time;
+                const key = `${booking.booking_date}_${timeNormalized}`;
+                if (!userBookings[key]) {
+                    userBookings[key] = { coaching_individuel: false, coaching_groupe: false };
+                }
                 userBookings[key][booking.service_type] = true;
-            }
-        });
+            });
+        }
         
-        console.log('📊 Compteurs calculés:', bookingCounts);
         console.log('👤 Réservations utilisateur:', userBookings);
-        return { bookingCounts, userBookings };
+        return { userBookings };
     } catch (error) {
         console.error('Erreur chargement réservations:', error);
-        return {};
+        return { userBookings: {} };
     }
 }
 
@@ -249,23 +340,19 @@ async function displayAvailableSlots() {
     console.log('🔄 Rechargement des créneaux...');
     
     // Générer les créneaux pour la semaine courante
+    // (les compteurs viennent déjà de booking_slots.current_bookings via generateWeekSlots)
     const weekStart = getWeekStart(appState.currentWeek);
     const slots = await generateWeekSlots(weekStart);
     
-    // Charger les réservations existantes
+    // Charger les réservations de l'utilisateur (pour savoir s'il a réservé)
     const bookingData = await loadExistingBookings();
-    const bookingCounts = bookingData.bookingCounts || {};
     const userBookings = bookingData.userBookings || {};
-    console.log('📊 Réservations chargées:', bookingCounts);
     console.log('👤 Réservations utilisateur:', userBookings);
     
-    // Mettre à jour les compteurs et les informations utilisateur
+    // Mettre à jour uniquement les informations utilisateur (les compteurs sont déjà corrects depuis booking_slots)
     slots.forEach(slot => {
-        const counts = bookingCounts[slot.id] || { coaching_individuel: 0, coaching_groupe: 0 };
         const userReservations = userBookings[slot.id] || { coaching_individuel: false, coaching_groupe: false };
         
-        slot.coaching_individuel.current = counts.coaching_individuel;
-        slot.coaching_groupe.current = counts.coaching_groupe;
         slot.coaching_individuel.userReserved = userReservations.coaching_individuel;
         slot.coaching_groupe.userReserved = userReservations.coaching_groupe;
         
@@ -779,13 +866,28 @@ async function initializeReservationPage() {
     appState.currentYear = today.getFullYear();
     appState.showOnlyAvailable = true; // Filtre par défaut activé
     
-    // Afficher la vue calendrier mensuel par défaut
-    console.log('📅 Affichage de la vue calendrier mensuel par défaut...');
-    try {
-        await displayMonthCalendar();
-        console.log('✅ Vue calendrier mensuel affichée avec succès');
-    } catch (error) {
-        console.error('❌ Erreur dans displayMonthCalendar:', error);
+    // Vérifier si on doit ouvrir directement "Mes réservations" (via hash ou paramètre)
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    const hash = window.location.hash;
+    
+    let defaultView = 'month';
+    if (hash === '#my-bookings' || viewParam === 'my-bookings') {
+        defaultView = 'my-bookings';
+    }
+    
+    // Afficher la vue appropriée
+    if (defaultView === 'my-bookings') {
+        console.log('📅 Ouverture directe de la vue "Mes réservations"...');
+        switchReservationView('my-bookings');
+    } else {
+        console.log('📅 Affichage de la vue calendrier mensuel par défaut...');
+        try {
+            await displayMonthCalendar();
+            console.log('✅ Vue calendrier mensuel affichée avec succès');
+        } catch (error) {
+            console.error('❌ Erreur dans displayMonthCalendar:', error);
+        }
     }
     
     console.log('✅ Page de réservation initialisée');
@@ -889,23 +991,63 @@ async function generateMonthSlots(startDate, endDate) {
             .order('booking_time', { ascending: true });
         
         if (error) {
-            console.error('Erreur chargement créneaux mensuels:', error);
+            console.error('❌ Erreur chargement créneaux mensuels:', error);
+            console.error('❌ Détails de l\'erreur:', JSON.stringify(error, null, 2));
+            
+            // Vérifier si c'est une erreur de permissions RLS
+            if (error.code === 'PGRST301' || error.message?.includes('permission denied') || error.message?.includes('row-level security')) {
+                console.error('🚨 PROBLÈME DE PERMISSIONS RLS DÉTECTÉ');
+                console.error('🚨 Les utilisateurs non-admin ne peuvent pas lire la table booking_slots');
+                console.error('🚨 Solution: Créer une politique RLS dans Supabase pour permettre la lecture de booking_slots aux utilisateurs authentifiés');
+                alert('Erreur de permissions: Les utilisateurs non-admin ne peuvent pas accéder aux créneaux. Vérifiez les politiques RLS dans Supabase.');
+            } else {
+                alert('Erreur lors du chargement des créneaux. Vérifiez la console pour plus de détails.');
+            }
             return [];
         }
         
         console.log('📅 Créneaux mensuels récupérés:', dbSlots);
+        console.log('📊 Nombre de créneaux:', dbSlots?.length || 0);
+        if (dbSlots && dbSlots.length > 0) {
+            console.log('📊 Exemple de créneau:', {
+                id: dbSlots[0].id,
+                date: dbSlots[0].booking_date,
+                time: dbSlots[0].booking_time,
+                service_type: dbSlots[0].service_type,
+                max_capacity: dbSlots[0].max_capacity,
+                current_bookings: dbSlots[0].current_bookings
+            });
+        }
         
-        // Charger les réservations existantes
+        // Charger les réservations de l'utilisateur actuel uniquement (pour savoir s'il a réservé)
         const bookingData = await loadExistingBookings();
-        const bookingCounts = bookingData.bookingCounts || {};
         const userBookings = bookingData.userBookings || {};
+        
+        // Utiliser current_bookings depuis booking_slots
+        // Les triggers SQL mettront à jour automatiquement current_bookings lors des réservations
+        // Si current_bookings n'est pas à jour, essayer d'utiliser la fonction SQL get_booking_counts
+        let bookingCounts = {};
+        
+        // D'abord, utiliser current_bookings (plus rapide)
+        dbSlots.forEach(dbSlot => {
+            const timeNormalized = dbSlot.booking_time ? dbSlot.booking_time.substring(0, 5) : dbSlot.booking_time;
+            const key = `${dbSlot.booking_date}_${timeNormalized}_${dbSlot.service_type}`;
+            bookingCounts[key] = dbSlot.current_bookings ?? 0;
+        });
+        
+        // Ne pas appeler get_booking_counts si tous les compteurs sont à 0
+        // (c'est normal s'il n'y a pas de réservations)
+        // On n'appelle la fonction que si on suspecte que current_bookings n'est pas à jour
+        // Pour l'instant, on fait confiance à current_bookings qui est mis à jour par les triggers
+        // La fonction get_booking_counts est disponible en fallback si nécessaire
         
         // Formater les créneaux en regroupant par date/heure
         const slotsByDateTime = {};
         dbSlots.forEach(dbSlot => {
             const slotDate = new Date(dbSlot.booking_date);
-            const slotId = `${dbSlot.booking_date}_${dbSlot.booking_time}`;
-            const counts = bookingCounts[slotId] || { coaching_individuel: 0, coaching_groupe: 0 };
+            // Normaliser le format de booking_time (HH:MM:SS -> HH:MM)
+            const timeNormalized = dbSlot.booking_time ? dbSlot.booking_time.substring(0, 5) : dbSlot.booking_time;
+            const slotId = `${dbSlot.booking_date}_${timeNormalized}`;
             const userReservations = userBookings[slotId] || { coaching_individuel: false, coaching_groupe: false };
             
             // Si c'est le premier créneau pour cette date/heure, créer l'objet
@@ -930,16 +1072,20 @@ async function generateMonthSlots(startDate, endDate) {
             }
             
             // Mettre à jour les données selon le type de service
+            // Utiliser les compteurs calculés en temps réel depuis bookings
+            const countKey = `${dbSlot.booking_date}_${timeNormalized}_${dbSlot.service_type}`;
+            const realCount = bookingCounts[countKey] ?? 0;
+            
             if (dbSlot.service_type === 'coaching_individuel') {
                 slotsByDateTime[slotId].coaching_individuel = {
                     max: dbSlot.max_capacity,
-                    current: counts.coaching_individuel,
+                    current: realCount,
                     userReserved: userReservations.coaching_individuel
                 };
             } else if (dbSlot.service_type === 'coaching_groupe') {
                 slotsByDateTime[slotId].coaching_groupe = {
                     max: dbSlot.max_capacity,
-                    current: counts.coaching_groupe,
+                    current: realCount,
                     userReserved: userReservations.coaching_groupe
                 };
             }
@@ -1175,6 +1321,13 @@ function createDoctolibSlotCard(slot) {
     `;
 }
 
+// Formater l'heure pour l'affichage
+function formatTime(timeString) {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    return `${hours}h${minutes}`;
+}
+
 // Afficher mes réservations
 async function displayMyBookings() {
     const bookingsList = document.getElementById('my-bookings-list');
@@ -1211,19 +1364,45 @@ async function displayMyBookings() {
         bookings.forEach(booking => {
             const date = new Date(booking.booking_date);
             const time = booking.booking_time;
-            const serviceType = booking.service_type === 'coaching_individuel' ? 'Individuel' : 'Collectif';
+            const serviceType = booking.service_type === 'coaching_individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
             const dateStr = booking.booking_date;
             const isPast = date < new Date();
+            const formattedDate = date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const formattedTime = formatTime(time);
+            const reservationDate = booking.created_at ? new Date(booking.created_at).toLocaleDateString('fr-FR') : '';
+            const duration = booking.duration || 60;
             
             html += `
-                <div class="slot-list-item border border-gray-200 rounded-lg p-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <div>
-                            <div class="font-semibold text-gray-800">${serviceType}</div>
-                            <div class="text-sm text-gray-600">${date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à ${time}</div>
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-4">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">${serviceType}</h3>
+                            
+                            <div class="space-y-2 text-sm text-gray-600">
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar-day mr-2 text-primary"></i>
+                                    <span>${formattedDate}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-clock mr-2 text-primary"></i>
+                                    <span>${formattedTime}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <i class="fas fa-stopwatch mr-2 text-primary"></i>
+                                    <span>${duration} minutes</span>
+                                </div>
+                                ${reservationDate ? `
+                                <div class="flex items-center">
+                                    <i class="fas fa-calendar-plus mr-2 text-primary"></i>
+                                    <span>Réservé le ${reservationDate}</span>
+                                </div>
+                                ` : ''}
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <span class="text-sm px-2 py-1 bg-green-100 text-green-800 rounded-full">Confirmé</span>
+                        <div class="mt-4 md:mt-0 md:ml-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                Confirmé
+                            </span>
                         </div>
                     </div>
                     <div class="flex gap-2 ${isPast ? 'opacity-50' : ''}">

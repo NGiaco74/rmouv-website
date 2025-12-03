@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 3) Vérifier l'authentification en arrière-plan
     initializeAuth();
+    
+    // 4) Vérifier si un refresh est nécessaire après connexion
+    checkAndRefreshAfterLogin();
 });
 
 // Navigation
@@ -480,7 +483,7 @@ function updateUI(isLoggedIn, user) {
         
         // S'assurer que les boutons admin sont masqués quand déconnecté
         updateAdminButtonVisibility();
-    }
+}
 }
 
 // Gérer la visibilité du bouton d'administration
@@ -609,10 +612,15 @@ async function signIn(email, password) {
         
         showNotification('Connexion réussie !', 'success');
         
-        // Rafraîchir automatiquement la page si nécessaire
-        setTimeout(() => {
-            refreshPageAfterAuthChange('SIGNED_IN');
-        }, 500);
+        // Mettre à jour l'UI immédiatement
+        const userRole = await loadUserRole(data.user.id);
+        appState.userRole = userRole;
+        appState.isAdmin = userRole === 'admin';
+        updateUI(true, data.user);
+        
+        // Marquer qu'un refresh est nécessaire après la redirection
+        // (la redirection se fait depuis connexion.html vers index.html)
+        sessionStorage.setItem('needsRefreshAfterLogin', 'true');
         
         return { success: true, data };
     } catch (error) {
@@ -636,24 +644,75 @@ async function logout() {
         
         showNotification('Déconnexion réussie', 'info');
         
-        // Rafraîchir automatiquement la page si nécessaire
-        setTimeout(() => {
-            refreshPageAfterAuthChange('SIGNED_OUT');
-        }, 500);
+        // Mettre à jour l'UI immédiatement
+        appState.userRole = null;
+        appState.isAdmin = false;
+        updateUI(false, null);
+        
+        // onAuthStateChange se déclenchera automatiquement et appellera refreshPageAfterAuthChange
+        // Pas besoin d'appeler manuellement pour éviter les doubles appels
     } catch (error) {
         showNotification('Erreur lors de la déconnexion: ' + error.message, 'error');
     }
 }
 
+// Timestamp du dernier rafraîchissement pour éviter les doubles appels
+let lastRefreshTime = 0;
+const REFRESH_COOLDOWN = 1000; // 1 seconde entre les rafraîchissements
+
+// Vérifier et rafraîchir après connexion (quand on arrive sur index.html après la redirection)
+function checkAndRefreshAfterLogin() {
+    const needsRefresh = sessionStorage.getItem('needsRefreshAfterLogin');
+    if (needsRefresh === 'true') {
+        console.log('🔄 Refresh nécessaire après connexion détecté');
+        // Retirer le flag
+        sessionStorage.removeItem('needsRefreshAfterLogin');
+        
+        // Attendre un peu que l'auth soit initialisée, puis rafraîchir
+        setTimeout(() => {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            
+            // Si on est sur reservation.html ou admin.html, utiliser leur logique spécifique
+            if (currentPage === 'reservation.html' && typeof window.switchReservationView === 'function') {
+                const currentView = typeof window.getCurrentView === 'function' ? window.getCurrentView() : 'month';
+                if (currentView === 'month' && typeof window.displayMonthCalendar === 'function') {
+                    window.displayMonthCalendar().catch(err => console.error('Erreur rafraîchissement:', err));
+                } else if (currentView === 'my-bookings' && typeof window.displayMyBookings === 'function') {
+                    window.displayMyBookings().catch(err => console.error('Erreur rafraîchissement:', err));
+                }
+            } else if (currentPage === 'admin.html' && typeof window.refreshCalendar === 'function') {
+                window.refreshCalendar().catch(err => console.error('Erreur rafraîchissement:', err));
+            } else {
+                // Pour les autres pages, recharger complètement
+                console.log('🔄 Rechargement de la page après connexion');
+                window.location.reload();
+            }
+        }, 1000);
+    }
+}
+
 // Fonction pour rafraîchir les pages après changement d'authentification
 function refreshPageAfterAuthChange(event) {
+    // Ignorer les événements qui ne nécessitent pas de rechargement
+    if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        console.log('⏭️ Événement ignoré (pas de rechargement nécessaire):', event);
+        return;
+    }
+    
+    // Éviter les rechargements multiples (cooldown de 1 seconde)
+    const now = Date.now();
+    if (now - lastRefreshTime < REFRESH_COOLDOWN) {
+        console.log('⏭️ Rechargement trop récent, ignoré (cooldown)');
+        return;
+    }
+    
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
     console.log('🔄 Rafraîchissement après changement auth:', event, 'Page:', currentPage);
     
-    // Si on est sur la page de réservation, rafraîchir les vues
+    // Si on est sur la page de réservation, rafraîchir les vues sans recharger la page
     if (currentPage === 'reservation.html' && typeof window.switchReservationView === 'function') {
-        const currentView = typeof window.getCurrentView === 'function' ? window.getCurrentView() : 'week';
+        const currentView = typeof window.getCurrentView === 'function' ? window.getCurrentView() : 'month';
         console.log('🔄 Rafraîchissement de la vue réservation:', currentView);
         
         setTimeout(() => {
@@ -667,14 +726,28 @@ function refreshPageAfterAuthChange(event) {
                 window.displayMyBookings().catch(err => console.error('Erreur rafraîchissement mes réservations:', err));
             }
         }, 300);
+        lastRefreshTime = now;
+        return; // Ne pas recharger la page pour reservation.html
     }
     
-    // Si on est sur la page admin, rafraîchir les créneaux
+    // Si on est sur la page admin, rafraîchir les créneaux sans recharger la page
     if (currentPage === 'admin.html' && typeof window.refreshCalendar === 'function') {
         console.log('🔄 Rafraîchissement de la page admin');
         setTimeout(() => {
             window.refreshCalendar().catch(err => console.error('Erreur rafraîchissement admin:', err));
         }, 300);
+        lastRefreshTime = now;
+        return; // Ne pas recharger la page pour admin.html
+    }
+    
+    // Pour toutes les autres pages, recharger complètement la page
+    // Seulement pour SIGNED_IN et SIGNED_OUT
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        console.log('🔄 Rechargement complet de la page:', currentPage);
+        lastRefreshTime = now;
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
     }
 }
 
