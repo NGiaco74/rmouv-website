@@ -14,6 +14,12 @@ const supabaseAnonKey = window.SUPABASE_ANON_KEY; // ✅ anon/publishable key
 
 export const client = createClient(supabaseUrl, supabaseAnonKey)
 
+// URL du site de production (utilisée pour les redirections d'email)
+// En développement, utilise location.origin, en production utilise rmouv.fr
+const SITE_URL = window.SITE_URL || (location.hostname === 'localhost' || location.hostname.includes('netlify.app') 
+  ? 'https://rmouv.fr' 
+  : location.origin);
+
 // Fonctions utilitaires pour l'authentification
 export const auth = {
   // Inscription
@@ -23,9 +29,9 @@ export const auth = {
       password,
       options: {
         data: userData,
-        // Optionnel mais recommandé si email confirmation activée :
-        // Redirige vers une page de votre site (doit être autorisée dans Supabase)
-        emailRedirectTo: `${location.origin}/auth/callback`
+        // Redirige vers la page de callback de confirmation d'email
+        // Utilise toujours l'URL de production pour éviter les redirections vers .netlify.app
+        emailRedirectTo: `${SITE_URL}/auth/callback.html`
       }
     });
   },

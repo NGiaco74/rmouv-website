@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr-FR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de compte - R'MouV</title>
+    <link rel="icon" type="image/png" href="../Images/Logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Now:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script>
+        window.SUPABASE_URL = "https://unhenqckskgfeytpkpia.supabase.co";
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGVucWNrc2tnZmV5dHBrcGlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNjI4MDEsImV4cCI6MjA3NDYzODgwMX0.JuNjKcw9QuwdiHZO8CYcb_3YrSAFEzAxodIIBZHdAhw";
+    </script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#5A9FD4",
+                        secondary: "#FF8A3E",
+                        neutral: "#37474F"
+                    },
+                    fontFamily: {
+                        sans: ['Now', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .bg-secondary {
+            background-color: #FF8A3E !important;
+        }
+        .hover\:bg-secondary\/90:hover {
+            background-color: rgba(255, 138, 62, 0.9) !important;
+        }
+        .text-secondary {
+            color: #FF8A3E !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full mx-4">
+        <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div id="loading" class="space-y-4">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                <p class="text-gray-600">Confirmation de votre compte en cours...</p>
+            </div>
+            
+            <div id="success" class="hidden space-y-4">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-check text-green-600 text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Compte confirmé !</h2>
+                <p class="text-gray-600">Votre adresse email a été confirmée avec succès.</p>
+                <a href="../connexion.html" class="inline-block bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-colors mt-4">
+                    Se connecter
+                </a>
+            </div>
+            
+            <div id="error" class="hidden space-y-4">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fas fa-times text-red-600 text-2xl"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800">Erreur de confirmation</h2>
+                <p id="error-message" class="text-gray-600"></p>
+                <a href="../inscription.html" class="inline-block bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg transition-colors mt-4">
+                    Réessayer
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        (async () => {
+            try {
+                // Initialiser Supabase
+                const { createClient } = window.supabase;
+                const supabase = createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                
+                // Récupérer les paramètres de l'URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                const token_hash = urlParams.get('token_hash');
+                const type = urlParams.get('type');
+                
+                // Méthode 1 : Token hash (nouvelle méthode Supabase)
+                if (token_hash && type) {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: token_hash,
+                        type: type
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Succès
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('success').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = '../connexion.html';
+                    }, 3000);
+                    return;
+                }
+                
+                // Méthode 2 : Token simple (ancienne méthode)
+                if (token && type === 'signup') {
+                    const { data, error } = await supabase.auth.verifyOtp({
+                        token_hash: token,
+                        type: 'signup'
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Succès
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('success').classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = '../connexion.html';
+                    }, 3000);
+                    return;
+                }
+                
+                // Méthode 3 : Hash dans le fragment (URL avec #)
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const access_token = hashParams.get('access_token');
+                const refresh_token = hashParams.get('refresh_token');
+                
+                if (access_token) {
+                    // Les tokens sont déjà dans l'URL, Supabase les gère automatiquement
+                    // Vérifier la session
+                    const { data: { session }, error } = await supabase.auth.getSession();
+                    
+                    if (error) throw error;
+                    
+                    if (session) {
+                        // Succès
+                        document.getElementById('loading').classList.add('hidden');
+                        document.getElementById('success').classList.remove('hidden');
+                        
+                        setTimeout(() => {
+                            window.location.href = '../connexion.html';
+                        }, 3000);
+                        return;
+                    }
+                }
+                
+                throw new Error('Lien de confirmation invalide ou expiré');
+                
+            } catch (error) {
+                console.error('Erreur de confirmation:', error);
+                
+                // Afficher l'erreur
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+                
+                let errorMessage = 'Une erreur est survenue lors de la confirmation de votre compte.';
+                
+                if (error.message) {
+                    if (error.message.includes('expired')) {
+                        errorMessage = 'Ce lien de confirmation a expiré. Veuillez demander un nouveau lien.';
+                    } else if (error.message.includes('invalid')) {
+                        errorMessage = 'Ce lien de confirmation est invalide. Veuillez vérifier votre email ou demander un nouveau lien.';
+                    } else {
+                        errorMessage = error.message;
+                    }
+                }
+                
+                document.getElementById('error-message').textContent = errorMessage;
+            }
+        })();
+    </script>
+</body>
+</html>
+

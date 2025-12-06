@@ -48,7 +48,7 @@
 - [ ] **Page Contact (contact.html)**
   - [ ] L'adresse est correcte : 400 Rue Barthélemy Thimonnier, 69530 Brignais
   - [ ] Les deux numéros de téléphone sont affichés avec les bons noms
-  - [ ] L'email contact@rmouv.fr est correct
+  - [ ] L'email contact1@rmouv.fr est correct
   - [ ] Le formulaire de contact est fonctionnel
 
 - [ ] **Page Rejoindre (rejoindre.html)**
@@ -400,7 +400,7 @@
 - [ ] L'adresse est correcte : 400 Rue Barthélemy Thimonnier, 69530 Brignais
 - [ ] Le téléphone de Camille : 06 67 33 20 15
 - [ ] Le téléphone de Jéromine : 06 60 35 22 36
-- [ ] L'email : contact@rmouv.fr
+- [ ] L'email : contact1@rmouv.fr
 - [ ] L'email de Camille : camille.simonklein@gmail.com
 
 ### 12.4. Informations légales
