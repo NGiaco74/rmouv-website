@@ -304,7 +304,7 @@
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
                 <p class="flex items-center justify-center gap-3">
                     <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
-                    <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
+                    <span>&copy; <span class="copyright-year">2024</span> R'MouV - Rehab ton MouV. Tous droits réservés.</span>
                 </p>
             </div>
         </div>
@@ -504,6 +504,18 @@
                 }, 300);
             }, 5000);
         }
+    </script>
+    
+    <!-- Script pour mettre à jour automatiquement la date du copyright -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const copyrightElements = document.querySelectorAll('.copyright-year');
+            const currentYear = new Date().getFullYear();
+            const startYear = 2024;
+            copyrightElements.forEach(function(el) {
+                el.textContent = currentYear > startYear ? `${startYear}-${currentYear}` : startYear;
+            });
+        });
     </script>
 </body>
 </html>

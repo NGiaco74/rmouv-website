@@ -19,28 +19,96 @@ Pour personnaliser les emails de confirmation envoyés par Supabase et qu'ils me
    - **Subject** : Sujet de l'email
    - **Body** : Corps de l'email (HTML)
 
-### 3. Template Recommandé pour R'MouV
+### 3. Template Recommandé pour R'MouV (avec Logo HTML)
 
 **Sujet :**
 ```
 Confirmez votre compte R'MouV
 ```
 
-**Corps (HTML) :**
+**Corps (HTML) - Template Professionnel avec Logo (Couleurs R'MouV) :**
 ```html
-<h2>Bienvenue chez R'MouV !</h2>
-<p>Bonjour,</p>
-<p>Merci de vous être inscrit sur R'MouV. Pour finaliser votre inscription, veuillez confirmer votre adresse email en cliquant sur le lien ci-dessous :</p>
-<p><a href="{{ .ConfirmationURL }}">Confirmer mon adresse email</a></p>
-<p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
-<p>{{ .ConfirmationURL }}</p>
-<p>Ce lien est valide pendant 24 heures.</p>
-<p>À bientôt,<br>L'équipe R'MouV</p>
-<p style="color: #5A9FD4; font-size: 12px; margin-top: 20px;">
-    R'MouV - Centre Sport-Santé<br>
-    Reprends ton corps en main. Révèle-toi.
-</p>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="center" style="padding: 40px 20px;">
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <!-- Header avec Logo et accent orange -->
+                    <tr>
+                        <td align="center" style="padding: 40px 20px 20px 20px; background-color: #ffffff; border-radius: 8px 8px 0 0; border-top: 4px solid #FF8A3E;">
+                            <img src="https://rmouv.fr/Images/Logo.png" alt="R'MouV Logo" style="max-width: 200px; height: auto; display: block;">
+                        </td>
+                    </tr>
+                    
+                    <!-- Contenu principal -->
+                    <tr>
+                        <td style="padding: 0 40px 30px 40px;">
+                            <h2 style="color: #37474F; font-size: 24px; font-weight: 600; margin: 0 0 20px 0; text-align: center;">
+                                Bienvenue chez <span style="color: #5A9FD4;">R'</span><span style="color: #FF8A3E;">MouV</span> !
+                            </h2>
+                            
+                            <p style="color: #37474F; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Bonjour,
+                            </p>
+                            
+                            <p style="color: #37474F; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Merci de vous être inscrit sur <strong><span style="color: #5A9FD4;">R'</span><span style="color: #FF8A3E;">MouV</span></strong>. Pour finaliser votre inscription et accéder à tous nos services, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :
+                            </p>
+                            
+                            <!-- Bouton de confirmation (couleur primaire bleue) -->
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a href="{{ .ConfirmationURL }}" style="display: inline-block; background-color: #5A9FD4; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 25px; font-weight: 600; font-size: 16px; text-align: center; box-shadow: 0 2px 4px rgba(90, 159, 212, 0.3);">
+                                            Confirmer mon adresse email
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="color: #37474F; font-size: 14px; line-height: 1.6; margin: 30px 0 20px 0; opacity: 0.8;">
+                                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :
+                            </p>
+                            
+                            <p style="color: #5A9FD4; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0; word-break: break-all;">
+                                {{ .ConfirmationURL }}
+                            </p>
+                            
+                            <p style="color: #37474F; font-size: 12px; line-height: 1.6; margin: 20px 0 0 0; opacity: 0.7;">
+                                ⏰ Ce lien est valide pendant 24 heures.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer avec couleurs R'MouV -->
+                    <tr>
+                        <td style="padding: 30px 40px; background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); border-radius: 0 0 8px 8px; border-top: 2px solid #5A9FD4;">
+                            <p style="font-size: 16px; font-weight: 600; margin: 0 0 8px 0; text-align: center;">
+                                <span style="color: #5A9FD4;">R'</span><span style="color: #FF8A3E;">MouV</span> - Centre Sport-Santé
+                            </p>
+                            <p style="color: #FF8A3E; font-size: 13px; margin: 0 0 12px 0; text-align: center; font-style: italic; font-weight: 500;">
+                                Reprends ton corps en main. Révèle-toi.
+                            </p>
+                            <p style="color: #37474F; font-size: 11px; margin: 0; text-align: center; opacity: 0.6;">
+                                © <span style="color: #5A9FD4;">R'</span><span style="color: #FF8A3E;">MouV</span> - Tous droits réservés
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
 ```
+
+**Note importante :** Le logo utilise l'URL absolue `https://rmouv.fr/Images/Logo.png`. Assurez-vous que cette URL est accessible publiquement pour que le logo s'affiche correctement dans les emails.
 
 ### 4. Variables Disponibles
 

@@ -62,3 +62,4 @@ Après avoir mis à jour les paramètres SMTP dans Supabase :
 **Date de modification** : 6 décembre 2025  
 **Email mis à jour** : `contact@rmouv.fr` → `contact1@rmouv.fr`
 
+
