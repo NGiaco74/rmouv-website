@@ -22,27 +22,50 @@ let adminState = {
 // Initialisation Supabase
 async function initializeSupabase() {
     try {
+        // Si déjà initialisé, retourner true
+        if (adminState.supabase) {
+            return true;
+        }
+        
+        // Attendre que window.supabase soit disponible
         await waitForSupabase();
-        adminState.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-        console.log('Supabase initialisé pour l\'administration');
+        
+        // Vérifier que les clés sont disponibles
+        if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+            console.error('❌ SUPABASE_URL ou SUPABASE_ANON_KEY non définis');
+            return false;
+        }
+        
+        // Créer le client seulement s'il n'existe pas déjà
+        if (!adminState.supabase) {
+            adminState.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+            console.log('✅ Supabase initialisé pour l\'administration');
+        }
+        
         return true;
     } catch (error) {
-        console.error('Erreur initialisation Supabase:', error);
+        console.error('❌ Erreur initialisation Supabase:', error);
         return false;
     }
 }
 
-// Attendre que Supabase soit disponible
+// Attendre que Supabase soit disponible (améliorée avec timeout)
 function waitForSupabase() {
     return new Promise((resolve, reject) => {
-        if (window.supabase) {
+        if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
             resolve();
             return;
         }
         
+        let attempts = 0;
+        const maxAttempts = 50; // 5 secondes max (50 * 100ms)
+        
         const checkSupabase = () => {
-            if (window.supabase) {
+            attempts++;
+            if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
                 resolve();
+            } else if (attempts >= maxAttempts) {
+                reject(new Error('Timeout: Supabase CDN n\'a pas été chargé dans les 5 secondes'));
             } else {
                 setTimeout(checkSupabase, 100);
             }
@@ -1301,13 +1324,15 @@ async function displayToday(forceReload = false) {
     console.log('📋 Réservations finales avec profils:', bookings);
     
     const bookingsList = bookings || [];
+    // Utiliser le nombre réel de réservations au lieu de current_bookings
+    const actualBookings = bookingsList.length;
     const slotDate = new Date(nextSlot.booking_date);
     const dayName = slotDate.toLocaleDateString('fr-FR', { weekday: 'long' });
     const formattedDate = slotDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     const slotTime = nextSlot.booking_time.substring(0, 5);
     const typeName = nextSlot.service_type === 'coaching_individuel' ? 'Coaching Individuel' : 'Coaching Groupe';
-    const isFull = nextSlot.current_bookings >= nextSlot.max_capacity;
-    const availableSpots = nextSlot.max_capacity - nextSlot.current_bookings;
+    const isFull = actualBookings >= nextSlot.max_capacity;
+    const availableSpots = nextSlot.max_capacity - actualBookings;
     
     let html = `
         <div class="mb-6">
@@ -1341,7 +1366,7 @@ async function displayToday(forceReload = false) {
                         ${isFull ? 'Complet' : `${availableSpots} place${availableSpots > 1 ? 's' : ''} disponible${availableSpots > 1 ? 's' : ''}`}
                     </div>
                     <div class="text-sm text-gray-600">
-                        ${nextSlot.current_bookings}/${nextSlot.max_capacity} réservé${nextSlot.current_bookings > 1 ? 's' : ''}
+                        ${actualBookings}/${nextSlot.max_capacity} réservé${actualBookings > 1 ? 's' : ''}
                     </div>
                 </div>
             </div>
@@ -1411,7 +1436,7 @@ async function displayToday(forceReload = false) {
                     <select id="add-participant-today-${nextSlot.id}" class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="">Sélectionner un utilisateur...</option>
                     </select>
-                    <button onclick="addParticipantToSlot('${nextSlot.id}', '${nextSlot.booking_date}', '${nextSlot.booking_time}', '${nextSlot.service_type}', ${nextSlot.max_capacity}, ${nextSlot.current_bookings})" 
+                    <button onclick="addParticipantToSlot('${nextSlot.id}', '${nextSlot.booking_date}', '${nextSlot.booking_time}', '${nextSlot.service_type}', ${nextSlot.max_capacity}, ${actualBookings})" 
                             class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md transition-colors font-medium">
                         <i class="fas fa-plus mr-2"></i>Ajouter
                     </button>
@@ -1435,7 +1460,7 @@ async function displayToday(forceReload = false) {
                     <select id="add-participant-today-${nextSlot.id}" class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                         <option value="">Sélectionner un utilisateur...</option>
                     </select>
-                    <button onclick="addParticipantToSlot('${nextSlot.id}', '${nextSlot.booking_date}', '${nextSlot.booking_time}', '${nextSlot.service_type}', ${nextSlot.max_capacity}, ${nextSlot.current_bookings})" 
+                    <button onclick="addParticipantToSlot('${nextSlot.id}', '${nextSlot.booking_date}', '${nextSlot.booking_time}', '${nextSlot.service_type}', ${nextSlot.max_capacity}, ${actualBookings})" 
                             class="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-md transition-colors font-medium">
                         <i class="fas fa-plus mr-2"></i>Ajouter
                     </button>
@@ -1505,8 +1530,10 @@ async function displayToday(forceReload = false) {
             for (const slot of todaySlots) {
                 const time = slot.booking_time.substring(0, 5);
                 const type = slot.service_type === 'coaching_individuel' ? 'Individuel' : 'Groupe';
-                const full = slot.current_bookings >= slot.max_capacity;
                 const slotBookings = bookingsBySlot[slot.id] || [];
+                // Utiliser le nombre réel de réservations au lieu de current_bookings
+                const actualBookings = slotBookings.length;
+                const full = actualBookings >= slot.max_capacity;
                 
                 html += `
                     <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
@@ -1517,7 +1544,7 @@ async function displayToday(forceReload = false) {
                             </div>
                             <span class="text-xs px-2 py-1 rounded-full ${full ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'} self-start sm:self-auto">${full ? 'Complet' : 'Disponible'}</span>
                         </div>
-                        <div class="text-xs sm:text-sm text-gray-500 mb-3">${slot.current_bookings}/${slot.max_capacity} places</div>
+                        <div class="text-xs sm:text-sm text-gray-500 mb-3">${actualBookings}/${slot.max_capacity} places</div>
                 `;
                 
                 if (slotBookings.length > 0) {
@@ -1617,13 +1644,41 @@ async function displaySlotsList(forceReload = false) {
     
     // Charger uniquement 1 mois initialement (standard industrie)
     // Utiliser le cache si disponible et pas de force reload
-    const slots = forceReload ? await loadFutureSlots(1, false) : 
+    let slots = forceReload ? await loadFutureSlots(1, false) : 
                   (adminState.slotsCache.data.length > 0 && adminState.slotsCache.timestamp && 
                    (Date.now() - adminState.slotsCache.timestamp) < adminState.slotsCache.maxAge) ?
                   adminState.slotsCache.data : await loadFutureSlots(1, false);
     
     if (!slots || slots.length === 0) {
         slotsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun créneau créé</div>';
+        return;
+    }
+    
+    // Filtrer les créneaux passés (date passée OU date d'aujourd'hui mais heure passée)
+    const now = new Date();
+    const todayStr = formatDateForInput(now);
+    const currentTime = now.toTimeString().substring(0, 5); // Format HH:MM
+    
+    slots = slots.filter(slot => {
+        const slotDate = slot.booking_date;
+        const slotTime = slot.booking_time.substring(0, 5); // Format HH:MM
+        
+        // Si la date est dans le futur, garder le créneau
+        if (slotDate > todayStr) {
+            return true;
+        }
+        
+        // Si la date est aujourd'hui, vérifier que l'heure n'est pas passée
+        if (slotDate === todayStr) {
+            return slotTime >= currentTime;
+        }
+        
+        // Sinon, c'est une date passée, exclure
+        return false;
+    });
+    
+    if (slots.length === 0) {
+        slotsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun créneau futur disponible</div>';
         return;
     }
     
@@ -1753,10 +1808,16 @@ async function displaySlotsList(forceReload = false) {
                             <span class="text-xs sm:text-sm text-gray-500">${dateSlots.length} créneau${dateSlots.length > 1 ? 'x' : ''}</span>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            ${dateSlots.filter(s => s.current_bookings >= s.max_capacity).length > 0 ? 
-                                '<span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">Complet</span>' : ''}
-                            ${dateSlots.filter(s => s.current_bookings < s.max_capacity).length > 0 ? 
-                                '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Disponible</span>' : ''}
+                            ${(() => {
+                                const slotsWithBookings = dateSlots.map(s => {
+                                    const bookings = bookingsBySlot[s.id] || [];
+                                    return { ...s, actualBookings: bookings.length };
+                                });
+                                const hasFull = slotsWithBookings.some(s => s.actualBookings >= s.max_capacity);
+                                const hasAvailable = slotsWithBookings.some(s => s.actualBookings < s.max_capacity);
+                                return (hasFull ? '<span class="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">Complet</span>' : '') +
+                                       (hasAvailable ? '<span class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">Disponible</span>' : '');
+                            })()}
                         </div>
                     </button>
                 </div>
@@ -1767,11 +1828,13 @@ async function displaySlotsList(forceReload = false) {
         dateSlots.sort((a, b) => a.booking_time.localeCompare(b.booking_time)).forEach(slot => {
             const time = slot.booking_time.substring(0, 5);
             const typeName = slot.service_type === 'coaching_individuel' ? 'Individuel' : 'Groupe';
-            const isFull = slot.current_bookings >= slot.max_capacity;
+            const slotBookings = bookingsBySlot[slot.id] || [];
+            // Utiliser le nombre réel de réservations au lieu de current_bookings
+            const actualBookings = slotBookings.length;
+            const isFull = actualBookings >= slot.max_capacity;
             const statusClass = isFull ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800';
             const statusText = isFull ? 'Complet' : 'Disponible';
             const isSelected = adminState.selectedSlots.includes(slot.id);
-            const slotBookings = bookingsBySlot[slot.id] || [];
             
             html += `
                 <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border ${isSelected ? 'border-2 border-blue-500 bg-blue-50' : 'border-gray-200'}">
@@ -1791,13 +1854,13 @@ async function displaySlotsList(forceReload = false) {
                                     <i class="fas fa-users mr-1"></i>${typeName}
                                 </span>
                                 <span class="text-xs sm:text-sm text-gray-500">
-                                    ${slot.current_bookings}/${slot.max_capacity} places
+                                    ${actualBookings}/${slot.max_capacity} places
                                 </span>
                             </div>
             `;
             
             // Afficher les participants
-            console.log(`📋 Créneau ${slot.id} - current_bookings: ${slot.current_bookings}, Réservations trouvées:`, slotBookings);
+            console.log(`📋 Créneau ${slot.id} - Réservations réelles: ${actualBookings}, Réservations trouvées:`, slotBookings);
             if (slotBookings.length > 0) {
                 html += `
                             <div class="mt-3 pt-3 border-t border-gray-300">
@@ -1845,17 +1908,10 @@ async function displaySlotsList(forceReload = false) {
                                 </div>
                             </div>
                 `;
-            } else if (slot.current_bookings === 0) {
+            } else {
                 html += `
                             <div class="mt-3 pt-3 border-t border-gray-300">
                                 <p class="text-xs sm:text-sm text-gray-500 mb-2">Aucune réservation</p>
-                            </div>
-                `;
-            } else {
-                // Il y a des réservations selon current_bookings mais elles ne sont pas chargées
-                html += `
-                            <div class="mt-3 pt-3 border-t border-gray-300">
-                                <p class="text-xs sm:text-sm text-yellow-600 mb-2">⚠️ ${slot.current_bookings} réservation(s) mais détails non disponibles</p>
                             </div>
                 `;
             }
@@ -1868,7 +1924,7 @@ async function displaySlotsList(forceReload = false) {
                                     <select id="add-participant-${slot.id}" class="flex-1 text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
                                         <option value="">Sélectionner un utilisateur...</option>
                                     </select>
-                                    <button onclick="addParticipantToSlot('${slot.id}', '${slot.booking_date}', '${slot.booking_time}', '${slot.service_type}', ${slot.max_capacity}, ${slot.current_bookings})" 
+                                    <button onclick="addParticipantToSlot('${slot.id}', '${slot.booking_date}', '${slot.booking_time}', '${slot.service_type}', ${slot.max_capacity}, ${actualBookings})" 
                                             class="text-xs sm:text-sm bg-primary hover:bg-primary/90 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md transition-colors">
                                         <i class="fas fa-plus mr-1"></i><span class="hidden sm:inline">Ajouter</span>
                                     </button>
@@ -2112,12 +2168,16 @@ async function addParticipantToSlot(slotId, bookingDate, bookingTime, serviceTyp
         // Recharger uniquement la vue active (pas toutes les vues) avec force reload
         const listView = document.getElementById('list-view');
         const todayView = document.getElementById('today-view');
+        const bookingsView = document.getElementById('bookings-view');
         
         if (listView && !listView.classList.contains('hidden')) {
             await displaySlotsList(true);
         }
         if (todayView && !todayView.classList.contains('hidden')) {
             await displayToday(true);
+        }
+        if (bookingsView && !bookingsView.classList.contains('hidden')) {
+            await displayBookingsList();
         }
         
         alert(willExceed ? 
@@ -2137,6 +2197,19 @@ async function cancelParticipantBooking(bookingId, slotId) {
     }
     
     try {
+        // Récupérer les informations de la réservation avant de la supprimer
+        const { data: booking, error: fetchError } = await adminState.supabase
+            .from('bookings')
+            .select('booking_date, booking_time, service_type, status')
+            .eq('id', bookingId)
+            .single();
+        
+        if (fetchError) {
+            console.error('Erreur récupération réservation:', fetchError);
+            alert('Erreur lors de la récupération de la réservation.');
+            return;
+        }
+        
         // Supprimer la réservation
         const { error } = await adminState.supabase
             .from('bookings')
@@ -2151,18 +2224,63 @@ async function cancelParticipantBooking(bookingId, slotId) {
         
         console.log('✅ Réservation annulée:', bookingId);
         
+        // Mettre à jour le compteur current_bookings dans booking_slots
+        // Seulement si la réservation était confirmée
+        if (booking && booking.status === 'confirmed') {
+            // Si slotId est fourni, l'utiliser directement, sinon chercher le créneau
+            if (slotId) {
+                // Récupérer le créneau actuel
+                const { data: slot, error: slotError } = await adminState.supabase
+                    .from('booking_slots')
+                    .select('current_bookings')
+                    .eq('id', slotId)
+                    .single();
+                
+                if (!slotError && slot) {
+                    const newCount = Math.max((slot.current_bookings || 0) - 1, 0);
+                    await adminState.supabase
+                        .from('booking_slots')
+                        .update({ current_bookings: newCount })
+                        .eq('id', slotId);
+                    console.log(`✅ Compteur mis à jour pour slot ${slotId}: ${slot.current_bookings} -> ${newCount}`);
+                }
+            } else if (booking) {
+                // Chercher le créneau par date, heure et type de service
+                const { data: slot, error: slotError } = await adminState.supabase
+                    .from('booking_slots')
+                    .select('id, current_bookings')
+                    .eq('booking_date', booking.booking_date)
+                    .eq('booking_time', booking.booking_time)
+                    .eq('service_type', booking.service_type)
+                    .maybeSingle();
+                
+                if (!slotError && slot) {
+                    const newCount = Math.max((slot.current_bookings || 0) - 1, 0);
+                    await adminState.supabase
+                        .from('booking_slots')
+                        .update({ current_bookings: newCount })
+                        .eq('id', slot.id);
+                    console.log(`✅ Compteur mis à jour pour slot ${slot.id}: ${slot.current_bookings} -> ${newCount}`);
+                }
+            }
+        }
+        
         // Invalider le cache des créneaux pour forcer le rechargement
         adminState.slotsCache.timestamp = null;
         
         // Recharger uniquement la vue active (pas toutes les vues) avec force reload
         const listView = document.getElementById('list-view');
         const todayView = document.getElementById('today-view');
+        const bookingsView = document.getElementById('bookings-view');
         
         if (listView && !listView.classList.contains('hidden')) {
             await displaySlotsList(true);
         }
         if (todayView && !todayView.classList.contains('hidden')) {
             await displayToday(true);
+        }
+        if (bookingsView && !bookingsView.classList.contains('hidden')) {
+            await displayBookingsList();
         }
         
         alert('Réservation annulée avec succès.');
@@ -2214,6 +2332,19 @@ async function cancelParticipantBooking(bookingId, slotId) {
     }
     
     try {
+        // Récupérer les informations de la réservation avant de la supprimer
+        const { data: booking, error: fetchError } = await adminState.supabase
+            .from('bookings')
+            .select('booking_date, booking_time, service_type, status')
+            .eq('id', bookingId)
+            .single();
+        
+        if (fetchError) {
+            console.error('Erreur récupération réservation:', fetchError);
+            alert('Erreur lors de la récupération de la réservation.');
+            return;
+        }
+        
         // Supprimer la réservation
         const { error } = await adminState.supabase
             .from('bookings')
@@ -2228,18 +2359,63 @@ async function cancelParticipantBooking(bookingId, slotId) {
         
         console.log('✅ Réservation annulée:', bookingId);
         
+        // Mettre à jour le compteur current_bookings dans booking_slots
+        // Seulement si la réservation était confirmée
+        if (booking && booking.status === 'confirmed') {
+            // Si slotId est fourni, l'utiliser directement, sinon chercher le créneau
+            if (slotId) {
+                // Récupérer le créneau actuel
+                const { data: slot, error: slotError } = await adminState.supabase
+                    .from('booking_slots')
+                    .select('current_bookings')
+                    .eq('id', slotId)
+                    .single();
+                
+                if (!slotError && slot) {
+                    const newCount = Math.max((slot.current_bookings || 0) - 1, 0);
+                    await adminState.supabase
+                        .from('booking_slots')
+                        .update({ current_bookings: newCount })
+                        .eq('id', slotId);
+                    console.log(`✅ Compteur mis à jour pour slot ${slotId}: ${slot.current_bookings} -> ${newCount}`);
+                }
+            } else if (booking) {
+                // Chercher le créneau par date, heure et type de service
+                const { data: slot, error: slotError } = await adminState.supabase
+                    .from('booking_slots')
+                    .select('id, current_bookings')
+                    .eq('booking_date', booking.booking_date)
+                    .eq('booking_time', booking.booking_time)
+                    .eq('service_type', booking.service_type)
+                    .maybeSingle();
+                
+                if (!slotError && slot) {
+                    const newCount = Math.max((slot.current_bookings || 0) - 1, 0);
+                    await adminState.supabase
+                        .from('booking_slots')
+                        .update({ current_bookings: newCount })
+                        .eq('id', slot.id);
+                    console.log(`✅ Compteur mis à jour pour slot ${slot.id}: ${slot.current_bookings} -> ${newCount}`);
+                }
+            }
+        }
+        
         // Invalider le cache des créneaux pour forcer le rechargement
         adminState.slotsCache.timestamp = null;
         
         // Recharger uniquement la vue active (pas toutes les vues) avec force reload
         const listView = document.getElementById('list-view');
         const todayView = document.getElementById('today-view');
+        const bookingsView = document.getElementById('bookings-view');
         
         if (listView && !listView.classList.contains('hidden')) {
             await displaySlotsList(true);
         }
         if (todayView && !todayView.classList.contains('hidden')) {
             await displayToday(true);
+        }
+        if (bookingsView && !bookingsView.classList.contains('hidden')) {
+            await displayBookingsList();
         }
         
         alert('Réservation annulée avec succès.');
@@ -2295,6 +2471,16 @@ async function displayBookingsList() {
     const bookingsList = document.getElementById('bookings-list');
     if (!bookingsList) return;
     
+    // Vérifier que Supabase est initialisé
+    if (!adminState.supabase) {
+        console.error('❌ Supabase non initialisé, tentative d\'initialisation...');
+        const initialized = await initializeSupabase();
+        if (!initialized) {
+            bookingsList.innerHTML = '<div class="text-center text-red-500 py-8">Erreur: Impossible de se connecter à la base de données</div>';
+            return;
+        }
+    }
+    
     console.log('📋 Affichage de la liste des réservations');
     
     // Charger les réservations depuis la base de données
@@ -2318,15 +2504,43 @@ async function displayBookingsList() {
         return;
     }
     
+    // Filtrer les réservations passées (date passée OU date d'aujourd'hui mais heure passée)
+    const now = new Date();
+    const todayStr = formatDateForInput(now);
+    const currentTime = now.toTimeString().substring(0, 5); // Format HH:MM
+    
+    const futureBookings = bookings.filter(booking => {
+        const bookingDate = booking.booking_date;
+        const bookingTime = booking.booking_time.substring(0, 5); // Format HH:MM
+        
+        // Si la date est dans le futur, garder la réservation
+        if (bookingDate > todayStr) {
+            return true;
+        }
+        
+        // Si la date est aujourd'hui, vérifier que l'heure n'est pas passée
+        if (bookingDate === todayStr) {
+            return bookingTime >= currentTime;
+        }
+        
+        // Sinon, c'est une date passée, exclure
+        return false;
+    });
+    
+    if (futureBookings.length === 0) {
+        bookingsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucune réservation future</div>';
+        return;
+    }
+    
     // Générer le HTML
-    let html = '';
+    let html = '<div class="space-y-3 sm:space-y-4">';
     
     // Récupérer les informations utilisateur pour chaque réservation
-    for (const booking of bookings) {
+    for (const booking of futureBookings) {
         const userInfo = await getUserInfo(booking.user_id);
         
         const date = new Date(booking.booking_date);
-        const formattedDate = date.toLocaleDateString('fr-FR');
+        const formattedDate = date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const time = booking.booking_time.substring(0, 5);
         const typeName = booking.service_type === 'coaching_individuel' ? 'Individuel' : 'Groupe';
         
@@ -2355,33 +2569,62 @@ async function displayBookingsList() {
             'completed': 'Terminée'
         }[booking.status] || booking.status;
         
+        // Ne pas afficher le bouton annuler si la réservation est déjà annulée
+        const canCancel = booking.status === 'confirmed';
+        
         html += `
-            <div class="bg-white border border-gray-200 rounded-lg p-4">
-                <div class="flex justify-between items-start mb-3">
-                    <div>
-                        <h3 class="font-semibold text-gray-800">${userName}</h3>
-                        <p class="text-sm text-gray-600">${formattedDate} à ${time}</p>
+            <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
+                <div class="flex items-start gap-3 sm:gap-4">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all" onclick="showPatientDetails('${booking.user_id}'); event.stopPropagation();">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0 hover:scale-110 transition-transform">
+                            ${userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-semibold text-gray-800 text-base sm:text-lg group-hover:text-primary transition-colors">${userName}</h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <i class="fas fa-calendar mr-1"></i>${formattedDate}
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-clock mr-1"></i>${time}
+                            </p>
+                            <div class="flex items-center gap-2 mt-2">
+                                <span class="text-xs sm:text-sm text-gray-600">
+                                    <i class="fas fa-users mr-1"></i>${typeName}
+                                </span>
+                                <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
+                            </div>
+                            ${booking.notes ? `<p class="text-xs sm:text-sm text-gray-500 mt-2"><i class="fas fa-sticky-note mr-1"></i>${booking.notes}</p>` : ''}
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-xs hover:text-primary hover:translate-x-1 transition-all flex-shrink-0 mt-2"></i>
                     </div>
-                    <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <div class="text-sm text-gray-600">
-                        <span class="font-medium">Type:</span> ${typeName}
-                        ${booking.notes ? `<br><span class="font-medium">Notes:</span> ${booking.notes}` : ''}
-                    </div>
-                    <div class="text-xs text-gray-500">
-                        Créée le ${new Date(booking.created_at).toLocaleDateString('fr-FR')}
-                    </div>
+                    ${canCancel ? `
+                        <button onclick="cancelParticipantBooking('${booking.id}', null); event.stopPropagation();" 
+                                class="text-xs sm:text-sm bg-red-500 hover:bg-red-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded transition-colors flex-shrink-0 self-start" 
+                                title="Annuler la réservation">
+                            <i class="fas fa-times mr-1"></i><span class="hidden sm:inline">Annuler</span>
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
     }
     
+    html += '</div>';
     bookingsList.innerHTML = html;
 }
 
 // Afficher les statistiques
 async function displayStats() {
+    // Vérifier que Supabase est initialisé
+    if (!adminState.supabase) {
+        console.error('❌ Supabase non initialisé, tentative d\'initialisation...');
+        const initialized = await initializeSupabase();
+        if (!initialized) {
+            console.error('❌ Impossible d\'initialiser Supabase pour les statistiques');
+            return;
+        }
+    }
+    
     console.log('📊 Affichage des statistiques');
     
     // Charger les données
@@ -3061,6 +3304,16 @@ async function displayPatients() {
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     
     console.log('🔍 Filtres appliqués:', { role: selectedRole, status: selectedStatus, search: searchTerm });
+    
+    // Vérifier que Supabase est initialisé
+    if (!adminState.supabase) {
+        console.error('❌ Supabase non initialisé, tentative d\'initialisation...');
+        const initialized = await initializeSupabase();
+        if (!initialized) {
+            patientsList.innerHTML = '<div class="text-center text-red-500 py-8">Erreur: Impossible de se connecter à la base de données</div>';
+            return;
+        }
+    }
     
     try {
         // Récupérer tous les profils (tous les utilisateurs)

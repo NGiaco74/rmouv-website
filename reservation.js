@@ -85,8 +85,29 @@ async function generateWeekSlots(startDate) {
         
         console.log('📋 Créneaux récupérés:', dbSlots);
         
-        // Utiliser current_bookings directement depuis booking_slots
-        // Les triggers SQL mettront à jour automatiquement current_bookings lors des réservations
+        // Charger les réservations réelles pour calculer le nombre exact de places occupées
+        // Cela garantit que l'affichage est toujours à jour, même si current_bookings n'est pas synchronisé
+        const { data: allBookings, error: bookingsError } = await appState.supabase
+            .from('bookings')
+            .select('booking_date, booking_time, service_type')
+            .eq('status', 'confirmed')
+            .gte('booking_date', startDate.toISOString().split('T')[0])
+            .lte('booking_date', endDate.toISOString().split('T')[0]);
+        
+        if (bookingsError) {
+            console.error('Erreur chargement réservations:', bookingsError);
+        }
+        
+        // Compter les réservations réelles par créneau
+        let bookingCounts = {};
+        if (allBookings) {
+            allBookings.forEach(booking => {
+                const timeNormalized = booking.booking_time ? booking.booking_time.substring(0, 5) : booking.booking_time;
+                const key = `${booking.booking_date}_${timeNormalized}_${booking.service_type}`;
+                bookingCounts[key] = (bookingCounts[key] || 0) + 1;
+            });
+        }
+        
         // Grouper les créneaux par date et heure
         const slotsByDateTime = {};
         if (dbSlots) {
@@ -103,13 +124,16 @@ async function generateWeekSlots(startDate) {
                     };
                 }
                 
-                // Utiliser current_bookings directement (mis à jour par les triggers)
+                // Utiliser le nombre réel de réservations, ou current_bookings comme fallback
+                const countKey = `${slot.booking_date}_${timeNormalized}_${slot.service_type}`;
+                const realCount = bookingCounts[countKey] !== undefined ? bookingCounts[countKey] : (slot.current_bookings || 0);
+                
                 if (slot.service_type === 'coaching_individuel') {
                     slotsByDateTime[key].coaching_individuel.max = slot.max_capacity;
-                    slotsByDateTime[key].coaching_individuel.current = slot.current_bookings || 0;
+                    slotsByDateTime[key].coaching_individuel.current = realCount;
                 } else if (slot.service_type === 'coaching_groupe') {
                     slotsByDateTime[key].coaching_groupe.max = slot.max_capacity;
-                    slotsByDateTime[key].coaching_groupe.current = slot.current_bookings || 0;
+                    slotsByDateTime[key].coaching_groupe.current = realCount;
                 }
             });
         }
@@ -1023,23 +1047,39 @@ async function generateMonthSlots(startDate, endDate) {
         const bookingData = await loadExistingBookings();
         const userBookings = bookingData.userBookings || {};
         
-        // Utiliser current_bookings depuis booking_slots
-        // Les triggers SQL mettront à jour automatiquement current_bookings lors des réservations
-        // Si current_bookings n'est pas à jour, essayer d'utiliser la fonction SQL get_booking_counts
-        let bookingCounts = {};
+        // Charger les réservations réelles pour calculer le nombre exact de places occupées
+        // Cela garantit que l'affichage est toujours à jour, même si current_bookings n'est pas synchronisé
+        const { data: allBookings, error: bookingsError } = await appState.supabase
+            .from('bookings')
+            .select('booking_date, booking_time, service_type')
+            .eq('status', 'confirmed')
+            .gte('booking_date', startDate.toISOString().split('T')[0])
+            .lte('booking_date', endDate.toISOString().split('T')[0]);
         
-        // D'abord, utiliser current_bookings (plus rapide)
+        if (bookingsError) {
+            console.error('Erreur chargement réservations:', bookingsError);
+        }
+        
+        // Compter les réservations réelles par créneau
+        let bookingCounts = {};
+        if (allBookings) {
+            allBookings.forEach(booking => {
+                const timeNormalized = booking.booking_time ? booking.booking_time.substring(0, 5) : booking.booking_time;
+                const key = `${booking.booking_date}_${timeNormalized}_${booking.service_type}`;
+                bookingCounts[key] = (bookingCounts[key] || 0) + 1;
+            });
+        }
+        
+        // Utiliser les compteurs réels calculés depuis les réservations
+        // Si pas de réservation trouvée pour un créneau, utiliser current_bookings comme fallback
         dbSlots.forEach(dbSlot => {
             const timeNormalized = dbSlot.booking_time ? dbSlot.booking_time.substring(0, 5) : dbSlot.booking_time;
             const key = `${dbSlot.booking_date}_${timeNormalized}_${dbSlot.service_type}`;
-            bookingCounts[key] = dbSlot.current_bookings ?? 0;
+            // Utiliser le nombre réel de réservations, ou current_bookings comme fallback
+            if (bookingCounts[key] === undefined) {
+                bookingCounts[key] = dbSlot.current_bookings ?? 0;
+            }
         });
-        
-        // Ne pas appeler get_booking_counts si tous les compteurs sont à 0
-        // (c'est normal s'il n'y a pas de réservations)
-        // On n'appelle la fonction que si on suspecte que current_bookings n'est pas à jour
-        // Pour l'instant, on fait confiance à current_bookings qui est mis à jour par les triggers
-        // La fonction get_booking_counts est disponible en fallback si nécessaire
         
         // Formater les créneaux en regroupant par date/heure
         const slotsByDateTime = {};
