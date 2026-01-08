@@ -169,7 +169,7 @@
                                     Se souvenir de moi
                                 </label>
                             </div>
-                            <a href="#" class="text-sm text-primary hover:underline">
+                            <a href="#" id="forgot-password-link" class="text-sm text-primary hover:underline">
                                 Mot de passe oublié ?
                             </a>
                         </div>
@@ -191,6 +191,42 @@
             </div>
         </section>
     </main>
+    
+    <!-- Modal Mot de passe oublié -->
+    <div id="forgot-password-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-neutral-800">Mot de passe oublié</h3>
+                <button id="close-forgot-modal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <p class="text-gray-600 mb-6">
+                Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+            </p>
+            <form id="forgot-password-form" class="space-y-4">
+                <div>
+                    <label for="reset-email" class="block text-sm font-medium text-gray-700 mb-2">Adresse email *</label>
+                    <input type="email" id="reset-email" name="reset-email" required
+                           class="form-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                           placeholder="votre@email.com">
+                </div>
+                <div id="reset-message" class="hidden text-sm"></div>
+                <div class="flex gap-3">
+                    <button type="button" id="cancel-reset" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-3 px-4 rounded-lg transition-colors">
+                        Annuler
+                    </button>
+                    <button type="submit" id="reset-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center">
+                        <span id="reset-text">Envoyer</span>
+                        <svg id="reset-loading" class="animate-spin h-5 w-5 text-white hidden ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <!-- Footer -->
     <footer class="bg-neutral-800 text-white py-12">
@@ -356,6 +392,85 @@
                 });
             }, 5000);
         }
+        
+        // Gestion du mot de passe oublié
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const forgotPasswordModal = document.getElementById('forgot-password-modal');
+        const closeForgotModal = document.getElementById('close-forgot-modal');
+        const cancelReset = document.getElementById('cancel-reset');
+        const forgotPasswordForm = document.getElementById('forgot-password-form');
+        const resetBtn = document.getElementById('reset-btn');
+        const resetText = document.getElementById('reset-text');
+        const resetLoading = document.getElementById('reset-loading');
+        const resetMessage = document.getElementById('reset-message');
+        
+        // Ouvrir la modal
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.classList.remove('hidden');
+            forgotPasswordModal.classList.add('flex');
+        });
+        
+        // Fermer la modal
+        const closeModal = () => {
+            forgotPasswordModal.classList.add('hidden');
+            forgotPasswordModal.classList.remove('flex');
+            forgotPasswordForm.reset();
+            resetMessage.classList.add('hidden');
+        };
+        
+        closeForgotModal.addEventListener('click', closeModal);
+        cancelReset.addEventListener('click', closeModal);
+        
+        // Fermer en cliquant en dehors de la modal
+        forgotPasswordModal.addEventListener('click', (e) => {
+            if (e.target === forgotPasswordModal) {
+                closeModal();
+            }
+        });
+        
+        // Gestion du formulaire de réinitialisation
+        forgotPasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('reset-email').value;
+            
+            // Afficher le loading
+            resetBtn.disabled = true;
+            resetText.classList.add('hidden');
+            resetLoading.classList.remove('hidden');
+            resetMessage.classList.add('hidden');
+            
+            try {
+                const { error } = await auth.resetPassword(email);
+                
+                if (error) {
+                    resetMessage.textContent = 'Erreur: ' + error.message;
+                    resetMessage.className = 'text-sm text-red-600';
+                    resetMessage.classList.remove('hidden');
+                } else {
+                    resetMessage.textContent = 'Un email de réinitialisation a été envoyé à ' + email + '. Vérifiez votre boîte de réception.';
+                    resetMessage.className = 'text-sm text-green-600';
+                    resetMessage.classList.remove('hidden');
+                    forgotPasswordForm.reset();
+                    
+                    // Fermer la modal après 3 secondes
+                    setTimeout(() => {
+                        closeModal();
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Erreur lors de la réinitialisation:', error);
+                resetMessage.textContent = 'Erreur: ' + error.message;
+                resetMessage.className = 'text-sm text-red-600';
+                resetMessage.classList.remove('hidden');
+            } finally {
+                // Masquer le loading
+                resetBtn.disabled = false;
+                resetText.classList.remove('hidden');
+                resetLoading.classList.add('hidden');
+            }
+        });
     </script>
     
     <!-- Script pour mettre à jour automatiquement la date du copyright -->
@@ -368,6 +483,7 @@
                 el.textContent = currentYear > startYear ? `${startYear}-${currentYear}` : startYear;
             });
         });
+        
     </script>
 </body>
 </html>

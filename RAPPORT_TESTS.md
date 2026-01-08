@@ -38,7 +38,7 @@
 
 ### 1.5 Contenu
 - ✅ **5 cartes d'équipements** : Toutes présentes (Huber 360, Méthode Allyane, RV, Stendo, Vibramoov)
-- ✅ **2 cartes d'équipe** : Jéromine et Camille présentes
+- ✅ **2 cartes d'équipe** : Jérômine et Camille présentes
 - ✅ **Liens "Plus d'informations"** : Présents et fonctionnels
 
 ---
@@ -58,7 +58,7 @@
 ### 2.2 Contenu
 - ✅ **Vidéo MÁS YouTube** : Intégrée correctement (iframe YouTube détectée)
 - ✅ **Liens internes** : Présents (vers equipements.html, contact.html, rejoindre.html, inscription.html)
-- ✅ **Photos de Camille et Jéromine** : Absentes (comme demandé)
+- ✅ **Photos de Camille et Jérômine** : Absentes (comme demandé)
 - ✅ **Tarifs** : Coaching individuel (60€) et groupe (70€) affichés
 
 ### 2.3 Navigation
@@ -92,8 +92,8 @@
 
 ### 4.1 Structure
 - ✅ **Hero section** : Présente (sans logo, comme demandé)
-- ✅ **Membres de l'équipe** : Jéromine et Camille présents
-- ✅ **Informations Jéromine** : 
+- ✅ **Membres de l'équipe** : Jérômine et Camille présents
+- ✅ **Informations Jérômine** : 
   - ✅ Téléphone : 06 60 35 22 36
   - ✅ Doctolib : Lien présent
   - ✅ Note Doctolib : "(prise de RDV non disponible)" présente
@@ -111,7 +111,7 @@
 - ✅ **Adresse** : 400 Rue Barthélemy Thimonnier, 69530 Brignais, France
 - ✅ **Téléphones** :
   - ✅ Camille Simonklein : 06 67 33 20 15 (coach)
-  - ✅ Jéromine Paso : 06 60 35 22 36 (kiné)
+  - ✅ Jérômine Paso : 06 60 35 22 36 (kiné)
 - ✅ **Formulaire de contact** : Présent et fonctionnel
 - ✅ **Checkbox confidentialité** : Présente avec lien vers politique
 - ✅ **Métadonnées SEO** : Title, Canonical, Open Graph URL présents
@@ -228,7 +228,7 @@
    - ✅ Liens croisés entre pages légales
 10. **Informations équipe** :
     - ✅ Tous les contacts présents (téléphones, emails)
-    - ✅ Note Doctolib pour Jéromine
+    - ✅ Note Doctolib pour Jérômine
 
 ### Tests Nécessitant Vérification Manuelle ⚠️
 1. **Responsive Design** : Vérifier l'affichage sur différentes tailles d'écran

@@ -14,6 +14,9 @@ const supabaseAnonKey = window.SUPABASE_ANON_KEY; // ✅ anon/publishable key
 
 export const client = createClient(supabaseUrl, supabaseAnonKey)
 
+// Exporter aussi le client pour les cas où on a besoin d'accéder directement à l'API
+export { client as default }
+
 // URL du site de production (utilisée pour les redirections d'email)
 // En développement, utilise location.origin, en production utilise rmouv.fr
 const SITE_URL = window.SITE_URL || (location.hostname === 'localhost' || location.hostname.includes('netlify.app') 
@@ -54,6 +57,20 @@ export const auth = {
   // Écouter les changements d'authentification
   onAuthStateChange(callback) {
     return client.auth.onAuthStateChange(callback);
+  },
+
+  // Réinitialiser le mot de passe (envoie un email avec le lien)
+  async resetPassword(email) {
+    return client.auth.resetPasswordForEmail(email, {
+      redirectTo: `${SITE_URL}/auth/reset-password.html`
+    });
+  },
+
+  // Mettre à jour le mot de passe avec le token
+  async updatePassword(newPassword) {
+    return client.auth.updateUser({
+      password: newPassword
+    });
   }
 }
 

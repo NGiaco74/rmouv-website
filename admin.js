@@ -3632,7 +3632,7 @@ async function showPatientDetails(patientId) {
                         <div><strong>Date de naissance:</strong> ${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('fr-FR') : 'N/A'}</div>
                         <div><strong>Genre:</strong> ${patient.gender || 'N/A'}</div>
                         <div class="md:col-span-2"><strong>Pathologies:</strong> ${pathologies}</div>
-                        ${patient.contraindications ? `<div class="md:col-span-2"><strong>Contre-indications:</strong> ${patient.contraindications}</div>` : ''}
+                        ${patient.contraindications ? `<div class="md:col-span-2 text-red-600"><strong>Contre-indications:</strong> ${patient.contraindications}</div>` : ''}
                         ${patient.emergency_contact_name ? `<div><strong>Contact d'urgence:</strong> ${patient.emergency_contact_name}</div>` : ''}
                         ${patient.emergency_contact_phone ? `<div><strong>Tél. urgence:</strong> ${patient.emergency_contact_phone}</div>` : ''}
                     </div>
