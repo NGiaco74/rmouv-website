@@ -8,11 +8,15 @@ let appState = {
     selectedService: null,
     selectedSlot: null,
     selectedSlotService: null,
+    selectedPatientId: null, // ID du patient pour qui réserver (null = pour soi-même, ou linked_patient_id)
+    selectedPatientIsLinked: false, // true si c'est un patient lié
+    linkedPatients: [], // Liste des patients liés de l'utilisateur
     currentSlots: [],
     currentWeek: new Date(),
     currentMonth: new Date().getMonth(),
     currentYear: new Date().getFullYear(),
-    supabase: null
+    supabase: null,
+    showOnlyAvailable: true // Filtre par défaut activé
 };
 
 // Initialisation Supabase
@@ -307,8 +311,99 @@ async function syncBookingCounters() {
 }
 
 // Charger les réservations de l'utilisateur actuel depuis Supabase
+// Charger les patients liés de l'utilisateur connecté
+async function loadLinkedPatients() {
+    if (!appState.supabase || !appState.currentUser || !appState.isLoggedIn) {
+        return [];
+    }
+    
+    try {
+        console.log('🔍 Chargement des patients liés de l\'utilisateur...');
+        
+        const { data: linkedPatients, error } = await appState.supabase
+            .from('linked_patients')
+            .select('id, first_name, last_name, email')
+            .eq('linked_to_user_id', appState.currentUser.id)
+            .eq('patient_status', 'active')
+            .order('first_name', { ascending: true })
+            .order('last_name', { ascending: true });
+        
+        if (error) {
+            console.error('Erreur chargement patients liés:', error);
+            return [];
+        }
+        
+        console.log('👥 Patients liés trouvés:', linkedPatients);
+        appState.linkedPatients = linkedPatients || [];
+        return appState.linkedPatients;
+    } catch (error) {
+        console.error('Erreur loadLinkedPatients:', error);
+        return [];
+    }
+}
+
+// Mettre à jour le sélecteur de patient dans l'interface
+function updatePatientSelector() {
+    const container = document.getElementById('patient-selector-container');
+    const selector = document.getElementById('patient-selector');
+    
+    if (!container || !selector) return;
+    
+    // Si l'utilisateur a des patients liés, afficher le sélecteur
+    if (appState.linkedPatients && Array.isArray(appState.linkedPatients) && appState.linkedPatients.length > 0) {
+        container.classList.remove('hidden');
+        
+        // Vider le sélecteur (garder seulement "Moi-même")
+        selector.innerHTML = '<option value="self">Moi-même</option>';
+        
+        // Ajouter les patients liés
+        appState.linkedPatients.forEach(patient => {
+            const option = document.createElement('option');
+            const patientName = `${patient.first_name || ''} ${patient.last_name || ''}`.trim() || patient.email || 'Patient';
+            option.value = patient.id;
+            option.textContent = patientName;
+            selector.appendChild(option);
+        });
+        
+        // Ajouter l'écouteur d'événement
+        selector.addEventListener('change', async function() {
+            const selectedValue = this.value;
+            if (selectedValue === 'self') {
+                appState.selectedPatientId = null;
+                appState.selectedPatientIsLinked = false;
+            } else {
+                appState.selectedPatientId = selectedValue;
+                appState.selectedPatientIsLinked = true;
+            }
+            console.log('👤 Patient sélectionné pour réservation:', {
+                patientId: appState.selectedPatientId,
+                isLinked: appState.selectedPatientIsLinked
+            });
+            
+            // Recharger les créneaux pour mettre à jour la disponibilité selon le patient sélectionné
+            const currentView = getCurrentView();
+            if (currentView === 'month') {
+                console.log('🔄 Rechargement des créneaux avec le nouveau patient sélectionné...');
+                await displayMonthCalendar();
+            } else if (currentView === 'week') {
+                await displayWeekSlots();
+            } else if (currentView === 'list') {
+                await displaySlotsList();
+            }
+        });
+        
+        // Réinitialiser la sélection
+        appState.selectedPatientId = null;
+        appState.selectedPatientIsLinked = false;
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
 // (pour savoir s'il a réservé un créneau, pas pour compter toutes les réservations)
-async function loadExistingBookings() {
+// patientId: ID du patient pour qui vérifier les réservations (null = utilisateur connecté, ou linked_patient_id)
+// isLinkedPatient: true si c'est un patient lié
+async function loadExistingBookings(patientId = null, isLinkedPatient = false) {
     if (!appState.supabase) return { userBookings: {} };
     
     try {
@@ -317,23 +412,49 @@ async function loadExistingBookings() {
             return { userBookings: {} };
         }
         
-        console.log('🔍 Chargement des réservations de l\'utilisateur depuis Supabase...');
+        // Utiliser le patient sélectionné si fourni, sinon utiliser celui de l'état
+        const selectedPatientId = patientId !== null ? patientId : appState.selectedPatientId;
+        const selectedIsLinked = patientId !== null ? isLinkedPatient : appState.selectedPatientIsLinked;
         
-        // Récupérer uniquement les réservations de l'utilisateur actuel (pour éviter les problèmes RLS)
-        const { data: bookings, error } = await appState.supabase
-            .from('bookings')
-            .select('service_type, booking_date, booking_time, user_id')
-            .eq('status', 'confirmed')
-            .eq('user_id', appState.currentUser.id);  // Filtrer uniquement les réservations de l'utilisateur
+        console.log('🔍 Chargement des réservations pour:', {
+            patientId: selectedPatientId,
+            isLinked: selectedIsLinked,
+            forUser: selectedPatientId === null ? 'utilisateur connecté' : 'patient lié'
+        });
         
-        if (error) {
-            console.error('Erreur chargement réservations:', error);
-            return { userBookings: {} };
+        let bookings = [];
+        
+        if (selectedIsLinked && selectedPatientId) {
+            // Récupérer les réservations du patient lié sélectionné
+            const { data: linkedBookingsData, error: linkedError } = await appState.supabase
+                .from('bookings')
+                .select('service_type, booking_date, booking_time, user_id, linked_patient_id')
+                .eq('status', 'confirmed')
+                .eq('linked_patient_id', selectedPatientId);
+            
+            if (linkedError) {
+                console.error('Erreur chargement réservations patient lié:', linkedError);
+            } else if (linkedBookingsData) {
+                bookings = linkedBookingsData;
+            }
+        } else {
+            // Récupérer les réservations de l'utilisateur connecté
+            const { data: userBookingsData, error: userError } = await appState.supabase
+                .from('bookings')
+                .select('service_type, booking_date, booking_time, user_id, linked_patient_id')
+                .eq('status', 'confirmed')
+                .eq('user_id', appState.currentUser.id);
+            
+            if (userError) {
+                console.error('Erreur chargement réservations utilisateur:', userError);
+            } else if (userBookingsData) {
+                bookings = userBookingsData;
+            }
         }
         
-        console.log('📋 Réservations de l\'utilisateur trouvées:', bookings);
+        console.log('📋 Réservations trouvées:', bookings.length);
         
-        // Identifier les réservations de l'utilisateur actuel
+        // Identifier les réservations du patient sélectionné
         const userBookings = {};
         
         if (bookings) {
@@ -348,7 +469,7 @@ async function loadExistingBookings() {
             });
         }
         
-        console.log('👤 Réservations utilisateur:', userBookings);
+        console.log('👤 Réservations pour le patient sélectionné:', userBookings);
         return { userBookings };
     } catch (error) {
         console.error('Erreur chargement réservations:', error);
@@ -368,10 +489,13 @@ async function displayAvailableSlots() {
     const weekStart = getWeekStart(appState.currentWeek);
     const slots = await generateWeekSlots(weekStart);
     
-    // Charger les réservations de l'utilisateur (pour savoir s'il a réservé)
-    const bookingData = await loadExistingBookings();
+    // Charger les réservations du patient sélectionné (pour savoir s'il a réservé)
+    const bookingData = await loadExistingBookings(
+        appState.selectedPatientId, 
+        appState.selectedPatientIsLinked
+    );
     const userBookings = bookingData.userBookings || {};
-    console.log('👤 Réservations utilisateur:', userBookings);
+    console.log('👤 Réservations pour le patient sélectionné:', userBookings);
     
     // Mettre à jour uniquement les informations utilisateur (les compteurs sont déjà corrects depuis booking_slots)
     slots.forEach(slot => {
@@ -786,17 +910,33 @@ async function makeReservation() {
     }
     
     try {
+        // Préparer les données de réservation
+        const bookingData = {
+            service_type: serviceKey,
+            booking_date: slot.date,
+            booking_time: slot.time,
+            duration: 60,
+            status: 'confirmed'
+        };
+        
+        // Si un patient lié est sélectionné, utiliser linked_patient_id
+        if (appState.selectedPatientId && appState.selectedPatientIsLinked) {
+            bookingData.linked_patient_id = appState.selectedPatientId;
+            // S'assurer que user_id est explicitement null
+            bookingData.user_id = null;
+        } else {
+            // Sinon, réserver pour l'utilisateur connecté
+            bookingData.user_id = appState.currentUser.id;
+            // S'assurer que linked_patient_id est explicitement null
+            bookingData.linked_patient_id = null;
+        }
+        
+        console.log('📝 Données de réservation à insérer:', bookingData);
+        
         // Créer la réservation
         const { data, error } = await appState.supabase
             .from('bookings')
-            .insert([{
-                user_id: appState.currentUser.id,
-                service_type: serviceKey,
-                booking_date: slot.date,
-                booking_time: slot.time,
-                duration: 60,
-                status: 'confirmed'
-            }])
+            .insert([bookingData])
             .select();
         
         if (error) {
@@ -807,8 +947,8 @@ async function makeReservation() {
         
         console.log('✅ Réservation créée:', data);
         
-        // Mettre à jour le compteur dans booking_slots
-        await updateSlotCounter(slot.date, slot.time, serviceKey, 1);
+        // Note: Le compteur dans booking_slots est mis à jour automatiquement par le trigger
+        // Pas besoin d'appeler updateSlotCounter manuellement
         
         // Succès
         alert('Réservation confirmée !');
@@ -874,6 +1014,12 @@ async function initializeReservationPage() {
     await initializeAuth();
     
     console.log('✅ Authentification initialisée');
+    
+    // Charger les patients liés si l'utilisateur est connecté
+    if (appState.isLoggedIn && appState.currentUser) {
+        await loadLinkedPatients();
+        updatePatientSelector();
+    }
     
     // Configurer les événements
     handleCalendarNavigation();
@@ -1043,8 +1189,12 @@ async function generateMonthSlots(startDate, endDate) {
             });
         }
         
-        // Charger les réservations de l'utilisateur actuel uniquement (pour savoir s'il a réservé)
-        const bookingData = await loadExistingBookings();
+        // Charger les réservations du patient sélectionné (pour savoir s'il a réservé)
+        // Utiliser le patient sélectionné dans appState
+        const bookingData = await loadExistingBookings(
+            appState.selectedPatientId, 
+            appState.selectedPatientIsLinked
+        );
         const userBookings = bookingData.userBookings || {};
         
         // Charger les réservations réelles pour calculer le nombre exact de places occupées
@@ -1081,12 +1231,31 @@ async function generateMonthSlots(startDate, endDate) {
             }
         });
         
+        // Filtrer les créneaux passés avant de les formater
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const currentTime = now.toTimeString().substring(0, 5); // Format HH:MM
+        
         // Formater les créneaux en regroupant par date/heure
         const slotsByDateTime = {};
         dbSlots.forEach(dbSlot => {
+            // Filtrer les créneaux passés
+            const slotDateStr = dbSlot.booking_date;
+            const slotTime = dbSlot.booking_time ? dbSlot.booking_time.substring(0, 5) : dbSlot.booking_time;
+            
+            // Si la date est passée, ignorer
+            if (slotDateStr < todayStr) {
+                return;
+            }
+            
+            // Si c'est aujourd'hui et que l'heure est passée, ignorer
+            if (slotDateStr === todayStr && slotTime < currentTime) {
+                return;
+            }
+            
             const slotDate = new Date(dbSlot.booking_date);
             // Normaliser le format de booking_time (HH:MM:SS -> HH:MM)
-            const timeNormalized = dbSlot.booking_time ? dbSlot.booking_time.substring(0, 5) : dbSlot.booking_time;
+            const timeNormalized = slotTime;
             const slotId = `${dbSlot.booking_date}_${timeNormalized}`;
             const userReservations = userBookings[slotId] || { coaching_individuel: false, coaching_groupe: false };
             
@@ -1133,6 +1302,17 @@ async function generateMonthSlots(startDate, endDate) {
         
         // Convertir en tableau
         const formattedSlots = Object.values(slotsByDateTime);
+        
+        console.log('📊 Créneaux formatés générés:', formattedSlots.length);
+        if (formattedSlots.length > 0) {
+            console.log('📊 Exemple de créneau formaté:', {
+                id: formattedSlots[0].id,
+                date: formattedSlots[0].date,
+                time: formattedSlots[0].time,
+                individuel: formattedSlots[0].coaching_individuel,
+                groupe: formattedSlots[0].coaching_groupe
+            });
+        }
         
         // Stocker les créneaux dans l'état global
         appState.currentSlots = formattedSlots;
@@ -1381,13 +1561,53 @@ async function displayMyBookings() {
     }
     
     try {
-        const { data: bookings, error } = await appState.supabase
+        // Récupérer les réservations de l'utilisateur ET de ses patients liés
+        const linkedPatientIds = (appState.linkedPatients && Array.isArray(appState.linkedPatients)) 
+            ? appState.linkedPatients.map(p => p && p.id ? p.id : null).filter(id => id !== null) 
+            : [];
+        
+        let bookings = [];
+        
+        // Récupérer les réservations de l'utilisateur
+        const { data: userBookings, error: userError } = await appState.supabase
             .from('bookings')
             .select('*')
-            .eq('user_id', appState.currentUser.id)
             .eq('status', 'confirmed')
+            .eq('user_id', appState.currentUser.id)
             .order('booking_date', { ascending: true })
             .order('booking_time', { ascending: true });
+        
+        if (userError) {
+            console.error('Erreur chargement réservations utilisateur:', userError);
+        } else if (userBookings) {
+            bookings = [...bookings, ...userBookings];
+        }
+        
+        // Récupérer les réservations des patients liés
+        if (linkedPatientIds.length > 0) {
+            const { data: linkedBookings, error: linkedError } = await appState.supabase
+                .from('bookings')
+                .select('*')
+                .eq('status', 'confirmed')
+                .in('linked_patient_id', linkedPatientIds)
+                .order('booking_date', { ascending: true })
+                .order('booking_time', { ascending: true });
+            
+            if (linkedError) {
+                console.error('Erreur chargement réservations patients liés:', linkedError);
+            } else if (linkedBookings) {
+                bookings = [...bookings, ...linkedBookings];
+            }
+        }
+        
+        // Trier toutes les réservations par date et heure
+        bookings.sort((a, b) => {
+            const dateCompare = a.booking_date.localeCompare(b.booking_date);
+            if (dateCompare !== 0) return dateCompare;
+            return a.booking_time.localeCompare(b.booking_time);
+        });
+        
+        const error = userError || (linkedPatientIds.length > 0 ? null : null);
         
         if (error) {
             console.error('Erreur chargement réservations:', error);
@@ -1398,6 +1618,16 @@ async function displayMyBookings() {
         if (!bookings || bookings.length === 0) {
             bookingsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucune réservation trouvée</div>';
             return;
+        }
+        
+        // Créer un map pour trouver rapidement les noms des patients liés
+        const linkedPatientsMap = {};
+        if (appState.linkedPatients && Array.isArray(appState.linkedPatients)) {
+            appState.linkedPatients.forEach(p => {
+                if (p && p.id) {
+                    linkedPatientsMap[p.id] = `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || 'Patient lié';
+                }
+            });
         }
         
         let html = '';
@@ -1412,11 +1642,18 @@ async function displayMyBookings() {
             const reservationDate = booking.created_at ? new Date(booking.created_at).toLocaleDateString('fr-FR') : '';
             const duration = booking.duration || 60;
             
+            // Déterminer pour qui est la réservation
+            const isForLinkedPatient = booking.linked_patient_id !== null;
+            const patientName = isForLinkedPatient ? linkedPatientsMap[booking.linked_patient_id] : null;
+            
             html += `
                 <div class="bg-white rounded-lg border border-gray-200 p-6 mb-4">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">${serviceType}</h3>
+                            <div class="flex items-center gap-2 mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800">${serviceType}</h3>
+                                ${isForLinkedPatient ? `<span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">Pour ${patientName}</span>` : ''}
+                            </div>
                             
                             <div class="space-y-2 text-sm text-gray-600">
                                 <div class="flex items-center">
@@ -1703,10 +1940,18 @@ async function displayMonthCalendar() {
         monthTitle.textContent = `${monthNames[currentMonth]} ${currentYear}`;
     }
     
+    // S'assurer que les patients liés sont chargés avant de générer les créneaux
+    if (appState.isLoggedIn && appState.currentUser && (!appState.linkedPatients || appState.linkedPatients.length === 0)) {
+        console.log('🔄 Chargement des patients liés avant génération des créneaux...');
+        await loadLinkedPatients();
+    }
+    
     // Récupérer les créneaux du mois
     const monthStart = new Date(currentYear, currentMonth, 1);
     const monthEnd = new Date(currentYear, currentMonth + 1, 0);
+    console.log('📅 Génération des créneaux pour:', monthStart.toISOString().split('T')[0], 'à', monthEnd.toISOString().split('T')[0]);
     const slots = await generateMonthSlots(monthStart, monthEnd);
+    console.log('📅 Créneaux générés:', slots.length);
     
     // Grouper les créneaux par date
     const slotsByDate = {};
@@ -1722,11 +1967,42 @@ async function displayMonthCalendar() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    console.log('📅 Date d\'aujourd\'hui (pour filtrage):', today.toISOString().split('T')[0]);
+    console.log('📅 Nombre de dates avec créneaux:', Object.keys(slotsByDate).length);
+    
     Object.keys(slotsByDate).sort().forEach(date => {
-        const dateObj = new Date(date);
-        if (dateObj < today) return; // Ignorer les dates passées
+        const dateObj = new Date(date + 'T00:00:00'); // S'assurer que la date est à minuit
+        dateObj.setHours(0, 0, 0, 0);
         
-        const daySlots = slotsByDate[date];
+        // Vérifier si la date est passée
+        if (dateObj < today) {
+            console.log('⏭️ Date passée ignorée:', date);
+            return; // Ignorer les dates passées
+        }
+        
+        // Si c'est aujourd'hui, filtrer les créneaux avec des heures passées
+        const isToday = dateObj.getTime() === today.getTime();
+        const now = new Date();
+        const currentTime = now.toTimeString().substring(0, 5); // Format HH:MM
+        
+        // Filtrer les créneaux passés pour aujourd'hui
+        let daySlots = slotsByDate[date];
+        if (isToday) {
+            daySlots = daySlots.filter(slot => {
+                const slotTime = slot.time ? slot.time.substring(0, 5) : slot.time;
+                const isPast = slotTime < currentTime;
+                if (isPast) {
+                    console.log(`⏭️ Créneau passé ignoré pour aujourd'hui: ${date} ${slotTime}`);
+                }
+                return !isPast;
+            });
+            
+            // Si tous les créneaux du jour sont passés, ignorer ce jour
+            if (daySlots.length === 0) {
+                console.log('⏭️ Tous les créneaux de ce jour sont passés:', date);
+                return;
+            }
+        }
         
         // Vérifier si l'utilisateur a déjà réservé un créneau ce jour
         const hasUserReservation = daySlots.some(slot => 
@@ -1735,14 +2011,36 @@ async function displayMonthCalendar() {
         
         // Vérifier s'il y a des créneaux disponibles (non réservés par l'utilisateur)
         const hasAvailable = daySlots.some(slot => {
+            // Pour individuel : disponible si max > 0, pas encore réservé par l'utilisateur, et pas de réservation groupe
             const hasIndividuel = slot.coaching_individuel.max > 0 && 
                                  slot.coaching_individuel.current < slot.coaching_individuel.max &&
-                                 !slot.coaching_individuel.userReserved;
+                                 !slot.coaching_individuel.userReserved &&
+                                 slot.coaching_groupe.current === 0; // Pas de réservation groupe
+            // Pour groupe : disponible si max > 0, pas encore réservé par l'utilisateur, et pas de réservation individuel
             const hasGroupe = slot.coaching_groupe.max > 0 && 
                              slot.coaching_groupe.current < slot.coaching_groupe.max &&
-                             !slot.coaching_groupe.userReserved;
+                             !slot.coaching_groupe.userReserved &&
+                             slot.coaching_individuel.current === 0; // Pas de réservation individuel
+            
+            // Log pour débogage
+            if (slot.coaching_individuel.max > 0 || slot.coaching_groupe.max > 0) {
+                console.log(`  Slot ${slot.time}: hasIndividuel=${hasIndividuel}, hasGroupe=${hasGroupe}`, {
+                    individuel: { max: slot.coaching_individuel.max, current: slot.coaching_individuel.current, userReserved: slot.coaching_individuel.userReserved },
+                    groupe: { max: slot.coaching_groupe.max, current: slot.coaching_groupe.current, userReserved: slot.coaching_groupe.userReserved }
+                });
+            }
+            
             return hasIndividuel || hasGroupe;
         });
+        
+        console.log(`📅 Date ${date}: hasAvailable=${hasAvailable}, hasUserReservation=${hasUserReservation}, slots=${daySlots.length}`);
+        if (daySlots.length > 0) {
+            console.log(`📅 Exemple slot pour ${date}:`, {
+                time: daySlots[0].time,
+                individuel: daySlots[0].coaching_individuel,
+                groupe: daySlots[0].coaching_groupe
+            });
+        }
         
         // Si le filtre est activé, n'afficher que les jours avec créneaux disponibles
         // (exclure les jours où l'utilisateur a déjà réservé, car il ne peut réserver qu'1 par jour)
@@ -1772,8 +2070,21 @@ async function displayMonthCalendar() {
         }
     });
     
+    console.log('📊 Créneaux générés:', slots.length);
+    console.log('📊 Créneaux groupés par date:', Object.keys(slotsByDate).length);
+    console.log('📊 Dates disponibles après filtrage:', availableDates.length);
+    console.log('📊 Filtre "showOnlyAvailable" activé:', appState.showOnlyAvailable);
+    
     if (availableDates.length === 0) {
-        daysListContainer.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun créneau disponible ce mois</div>';
+        let message = 'Aucun créneau disponible ce mois';
+        if (slots.length === 0) {
+            message = 'Aucun créneau trouvé dans la base de données pour ce mois';
+        } else if (Object.keys(slotsByDate).length === 0) {
+            message = 'Aucun créneau trouvé pour ce mois';
+        } else if (appState.showOnlyAvailable) {
+            message = 'Aucun créneau disponible ce mois (tous les créneaux sont complets ou déjà réservés)';
+        }
+        daysListContainer.innerHTML = `<div class="text-center text-gray-500 py-8">${message}</div>`;
         appState.monthSlots = slots;
         appState.slotsByDate = slotsByDate;
         return;
@@ -2006,8 +2317,15 @@ async function selectSlotForDay(slotId, serviceType, dateStr) {
         return;
     }
     
+    // Vérifier la disponibilité : s'assurer qu'il reste au moins une place
     if (slot[serviceKey].current >= slot[serviceKey].max) {
-        alert('Ce créneau est complet.');
+        alert('Ce créneau est complet. Veuillez rafraîchir la page pour voir les disponibilités à jour.');
+        return;
+    }
+    
+    // Vérification supplémentaire : s'assurer qu'on ne dépasse pas la capacité
+    if (slot[serviceKey].current + 1 > slot[serviceKey].max) {
+        alert('Ce créneau est complet. Veuillez rafraîchir la page pour voir les disponibilités à jour.');
         return;
     }
     
@@ -2021,19 +2339,35 @@ async function selectSlotForDay(slotId, serviceType, dateStr) {
         return;
     }
     
-    // Effectuer la réservation
-    try {
-        const { data, error } = await appState.supabase
-            .from('bookings')
-            .insert([{
-                user_id: appState.currentUser.id,
+        // Effectuer la réservation
+        try {
+            // Préparer les données de réservation
+            const bookingData = {
                 service_type: serviceKey,
                 booking_date: dateStr,
                 booking_time: slot.time,
                 duration: 60,
                 status: 'confirmed'
-            }])
-            .select();
+            };
+            
+            // Si un patient lié est sélectionné, utiliser linked_patient_id
+            if (appState.selectedPatientId && appState.selectedPatientIsLinked) {
+                bookingData.linked_patient_id = appState.selectedPatientId;
+                // S'assurer que user_id est explicitement null
+                bookingData.user_id = null;
+            } else {
+                // Sinon, réserver pour l'utilisateur connecté
+                bookingData.user_id = appState.currentUser.id;
+                // S'assurer que linked_patient_id est explicitement null
+                bookingData.linked_patient_id = null;
+            }
+            
+            console.log('📝 Données de réservation à insérer:', bookingData);
+            
+            const { data, error } = await appState.supabase
+                .from('bookings')
+                .insert([bookingData])
+                .select();
         
         if (error) {
             console.error('Erreur réservation:', error);
@@ -2043,8 +2377,8 @@ async function selectSlotForDay(slotId, serviceType, dateStr) {
         
         console.log('✅ Réservation créée:', data);
         
-        // Mettre à jour le compteur dans booking_slots
-        await updateSlotCounter(dateStr, slot.time, serviceKey, 1);
+        // Note: Le compteur dans booking_slots est mis à jour automatiquement par le trigger
+        // Pas besoin d'appeler updateSlotCounter manuellement
         
         // Succès
         alert('Réservation confirmée !');
@@ -2082,8 +2416,8 @@ async function cancelBooking(bookingId, dateStr, time, serviceType) {
             return;
         }
         
-        // Mettre à jour le compteur dans booking_slots
-        await updateSlotCounter(dateStr, time, serviceType, -1);
+        // Note: Le compteur dans booking_slots est mis à jour automatiquement par le trigger
+        // Pas besoin d'appeler updateSlotCounter manuellement
         
         alert('Réservation annulée avec succès.');
         
@@ -2120,8 +2454,8 @@ async function modifyBooking(bookingId, dateStr, time, serviceType) {
             return;
         }
         
-        // Mettre à jour le compteur
-        await updateSlotCounter(dateStr, time, serviceType, -1);
+        // Note: Le compteur dans booking_slots est mis à jour automatiquement par le trigger
+        // Pas besoin d'appeler updateSlotCounter manuellement
         
         // Basculer vers la vue liste mensuelle
         switchReservationView('month');

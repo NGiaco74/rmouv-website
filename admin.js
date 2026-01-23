@@ -1254,17 +1254,15 @@ async function displayToday(forceReload = false) {
         return;
     }
     
-    // Trouver le prochain créneau (le premier qui n'est pas encore passé)
-    let nextSlot = null;
-    for (const slot of slots) {
+    // Filtrer les créneaux passés
+    slots = slots.filter(slot => {
         const slotDate = slot.booking_date;
-        const slotTime = slot.booking_time.substring(0, 5);
-        
-        if (slotDate > todayStr || (slotDate === todayStr && slotTime >= currentTime)) {
-            nextSlot = slot;
-            break;
-        }
-    }
+        const slotTime = slot.booking_time ? slot.booking_time.substring(0, 5) : '00:00';
+        return slotDate > todayStr || (slotDate === todayStr && slotTime >= currentTime);
+    });
+    
+    // Trouver le prochain créneau (le premier après filtrage)
+    const nextSlot = slots.length > 0 ? slots[0] : null;
     
     if (!nextSlot) {
         todayContent.innerHTML = `
@@ -1297,27 +1295,65 @@ async function displayToday(forceReload = false) {
     
     // Si on a des réservations, charger les profils séparément
     if (bookingsData && bookingsData.length > 0) {
-        const userIds = [...new Set(bookingsData.map(b => b.user_id))];
+        // Séparer les user_id et linked_patient_id (filtrer les null)
+        const userIds = [...new Set(bookingsData.filter(b => b.user_id && b.user_id !== null).map(b => b.user_id))];
+        const linkedPatientIds = [...new Set(bookingsData.filter(b => b.linked_patient_id && b.linked_patient_id !== null).map(b => b.linked_patient_id))];
+        
         console.log('👥 IDs utilisateurs à charger:', userIds);
+        console.log('👥 IDs patients liés à charger:', linkedPatientIds);
         
-        const { data: profilesData, error: profilesError } = await adminState.supabase
-            .from('profiles')
-            .select('id, first_name, last_name, email')
-            .in('id', userIds);
+        // Charger les profils (comptes personnels)
+        let profilesData = [];
+        if (userIds.length > 0) {
+            const { data, error: profilesError } = await adminState.supabase
+                .from('profiles')
+                .select('id, first_name, last_name, email')
+                .in('id', userIds);
+            
+            if (profilesError) {
+                console.error('Erreur chargement profils:', profilesError);
+            } else {
+                profilesData = data || [];
+            }
+        }
         
-        if (profilesError) {
-            console.error('Erreur chargement profils:', profilesError);
+        // Charger les patients liés
+        let linkedPatientsData = [];
+        if (linkedPatientIds.length > 0) {
+            const { data, error: linkedError } = await adminState.supabase
+                .from('linked_patients')
+                .select('id, first_name, last_name, email')
+                .in('id', linkedPatientIds);
+            
+            if (linkedError) {
+                console.error('Erreur chargement patients liés:', linkedError);
+            } else {
+                linkedPatientsData = data || [];
+            }
         }
         
         console.log('👤 Profils chargés:', profilesData);
+        console.log('👤 Patients liés chargés:', linkedPatientsData);
         
         // Fusionner les données
         bookings = bookingsData.map(booking => {
-            const profile = profilesData?.find(p => p.id === booking.user_id) || null;
-            return {
-                ...booking,
-                profiles: profile
-            };
+            if (booking.linked_patient_id) {
+                // C'est un patient lié
+                const linkedPatient = linkedPatientsData?.find(p => p.id === booking.linked_patient_id) || null;
+                return {
+                    ...booking,
+                    profiles: null,
+                    linkedPatient: linkedPatient
+                };
+            } else {
+                // C'est un compte personnel
+                const profile = profilesData?.find(p => p.id === booking.user_id) || null;
+                return {
+                    ...booking,
+                    profiles: profile,
+                    linkedPatient: null
+                };
+            }
         });
     }
     
@@ -1382,34 +1418,50 @@ async function displayToday(forceReload = false) {
         
         for (const booking of bookingsList) {
             console.log('📋 Réservation:', booking);
-            // profiles peut être un objet ou null
-            const profile = booking.profiles || null;
-            console.log('👤 Profil:', profile);
             
             let userName = 'Utilisateur inconnu';
-            if (profile) {
+            let patientId = null;
+            let isLinkedPatient = false;
+            
+            if (booking.linked_patient_id && booking.linkedPatient) {
+                // C'est un patient lié
+                isLinkedPatient = true;
+                const linkedPatient = booking.linkedPatient;
+                if (linkedPatient.first_name && linkedPatient.last_name) {
+                    userName = `${linkedPatient.first_name} ${linkedPatient.last_name}`;
+                } else if (linkedPatient.email) {
+                    userName = linkedPatient.email;
+                }
+                patientId = booking.linked_patient_id;
+            } else if (booking.user_id && booking.profiles) {
+                // C'est un compte personnel
+                const profile = booking.profiles;
                 if (profile.first_name && profile.last_name) {
                     userName = `${profile.first_name} ${profile.last_name}`;
                 } else if (profile.email) {
                     userName = profile.email;
                 }
+                patientId = booking.user_id;
             } else if (booking.user_id) {
-                // Si pas de profil, essayer de charger depuis l'email de l'utilisateur
-                userName = booking.user_id;
+                // Pas de profil chargé, utiliser l'ID
+                userName = `Utilisateur ${booking.user_id.substring(0, 8)}...`;
+                patientId = booking.user_id;
+            } else if (booking.linked_patient_id) {
+                // Pas de patient lié chargé, utiliser l'ID
+                userName = `Patient lié ${booking.linked_patient_id.substring(0, 8)}...`;
+                patientId = booking.linked_patient_id;
+                isLinkedPatient = true;
             }
-            
-            const userId = booking.user_id;
-            const userEmail = profile?.email || booking.user_id;
             
             html += `
                 <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-transparent hover:border-primary/30 transition-all group">
                     <div class="flex items-center justify-between gap-2">
-                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2" onclick="showPatientDetails('${userId}'); event.stopPropagation();">
+                        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2" onclick="showPatientDetails('${patientId}', ${isLinkedPatient}); event.stopPropagation();">
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0 group-hover:scale-110 transition-transform">
                                 ${userName.charAt(0).toUpperCase()}
                             </div>
                             <div class="min-w-0 flex-1">
-                                <p class="font-medium text-gray-800 text-sm sm:text-base truncate group-hover:text-primary transition-colors">${userName}</p>
+                                <p class="font-medium text-gray-800 text-sm sm:text-base truncate group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</p>
                             </div>
                             <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                         </div>
@@ -1471,7 +1523,12 @@ async function displayToday(forceReload = false) {
     
     // Afficher les autres créneaux du jour si c'est aujourd'hui
     if (nextSlot.booking_date === todayStr) {
-        const todaySlots = slots.filter(s => s.booking_date === todayStr && s.id !== nextSlot.id);
+        // Filtrer les créneaux d'aujourd'hui qui ne sont pas encore passés (exclure le prochain créneau)
+        const todaySlots = slots.filter(s => {
+            if (s.booking_date !== todayStr || s.id === nextSlot.id) return false;
+            const slotTime = s.booking_time ? s.booking_time.substring(0, 5) : '00:00';
+            return slotTime >= currentTime; // Seulement les créneaux futurs
+        });
         if (todaySlots.length > 0) {
             // Charger les réservations pour tous les créneaux d'aujourd'hui
             // Construire les conditions pour chaque créneau (date, time, service_type)
@@ -1491,18 +1548,58 @@ async function displayToday(forceReload = false) {
             
             let allBookingsToday = [];
             if (bookingsDataToday && bookingsDataToday.length > 0) {
-                const userIds = [...new Set(bookingsDataToday.map(b => b.user_id))];
-                const { data: profilesDataToday } = await adminState.supabase
-                    .from('profiles')
-                    .select('id, first_name, last_name, email')
-                    .in('id', userIds);
+                // Séparer les user_id et linked_patient_id (filtrer les null)
+                const userIds = [...new Set(bookingsDataToday.filter(b => b.user_id && b.user_id !== null).map(b => b.user_id))];
+                const linkedPatientIds = [...new Set(bookingsDataToday.filter(b => b.linked_patient_id && b.linked_patient_id !== null).map(b => b.linked_patient_id))];
+                
+                // Charger les profils (comptes personnels)
+                let profilesDataToday = [];
+                if (userIds.length > 0) {
+                    const { data, error: profilesError } = await adminState.supabase
+                        .from('profiles')
+                        .select('id, first_name, last_name, email')
+                        .in('id', userIds);
+                    
+                    if (profilesError) {
+                        console.error('Erreur chargement profils pour créneaux aujourd\'hui:', profilesError);
+                    } else {
+                        profilesDataToday = data || [];
+                    }
+                }
+                
+                // Charger les patients liés
+                let linkedPatientsDataToday = [];
+                if (linkedPatientIds.length > 0) {
+                    const { data, error: linkedError } = await adminState.supabase
+                        .from('linked_patients')
+                        .select('id, first_name, last_name, email')
+                        .in('id', linkedPatientIds);
+                    
+                    if (linkedError) {
+                        console.error('Erreur chargement patients liés pour créneaux aujourd\'hui:', linkedError);
+                    } else {
+                        linkedPatientsDataToday = data || [];
+                    }
+                }
                 
                 allBookingsToday = bookingsDataToday.map(booking => {
-                    const profile = profilesDataToday?.find(p => p.id === booking.user_id) || null;
-                    return {
-                        ...booking,
-                        profiles: profile
-                    };
+                    if (booking.linked_patient_id) {
+                        // C'est un patient lié
+                        const linkedPatient = linkedPatientsDataToday?.find(p => p.id === booking.linked_patient_id) || null;
+                        return {
+                            ...booking,
+                            profiles: null,
+                            linkedPatient: linkedPatient
+                        };
+                    } else {
+                        // C'est un compte personnel
+                        const profile = profilesDataToday?.find(p => p.id === booking.user_id) || null;
+                        return {
+                            ...booking,
+                            profiles: profile,
+                            linkedPatient: null
+                        };
+                    }
                 });
             }
             
@@ -1555,19 +1652,47 @@ async function displayToday(forceReload = false) {
                     `;
                     
                     for (const booking of slotBookings) {
-                        const profile = booking.profiles || {};
-                        const userName = profile.first_name && profile.last_name 
-                            ? `${profile.first_name} ${profile.last_name}`
-                            : profile.email || booking.user_id || 'Utilisateur inconnu';
-                        const userId = booking.user_id;
+                        let userName = 'Utilisateur inconnu';
+                        let patientId = null;
+                        let isLinkedPatient = false;
+                        
+                        if (booking.linked_patient_id && booking.linkedPatient) {
+                            // C'est un patient lié
+                            isLinkedPatient = true;
+                            const linkedPatient = booking.linkedPatient;
+                            if (linkedPatient.first_name && linkedPatient.last_name) {
+                                userName = `${linkedPatient.first_name} ${linkedPatient.last_name}`;
+                            } else if (linkedPatient.email) {
+                                userName = linkedPatient.email;
+                            }
+                            patientId = booking.linked_patient_id;
+                        } else if (booking.user_id && booking.profiles) {
+                            // C'est un compte personnel
+                            const profile = booking.profiles;
+                            if (profile.first_name && profile.last_name) {
+                                userName = `${profile.first_name} ${profile.last_name}`;
+                            } else if (profile.email) {
+                                userName = profile.email;
+                            }
+                            patientId = booking.user_id;
+                        } else if (booking.user_id) {
+                            // Pas de profil chargé, utiliser l'ID
+                            userName = `Utilisateur ${booking.user_id.substring(0, 8)}...`;
+                            patientId = booking.user_id;
+                        } else if (booking.linked_patient_id) {
+                            // Pas de patient lié chargé, utiliser l'ID
+                            userName = `Patient lié ${booking.linked_patient_id.substring(0, 8)}...`;
+                            patientId = booking.linked_patient_id;
+                            isLinkedPatient = true;
+                        }
                         
                         html += `
                             <div class="flex items-center gap-2 sm:gap-3 text-sm">
-                                <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 p-2 sm:p-2.5 rounded-lg transition-all border border-transparent hover:border-primary/30 group" onclick="showPatientDetails('${userId}'); event.stopPropagation();">
+                                <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 p-2 sm:p-2.5 rounded-lg transition-all border border-transparent hover:border-primary/30 group" onclick="showPatientDetails('${patientId}', ${isLinkedPatient}); event.stopPropagation();">
                                     <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0 group-hover:scale-110 transition-transform">
                                         ${userName.charAt(0).toUpperCase()}
                                     </div>
-                                    <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}</span>
+                                    <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</span>
                                     <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                                 </div>
                                 <button onclick="cancelParticipantBooking('${booking.id}', '${slot.id}'); event.stopPropagation();" 
@@ -1619,10 +1744,17 @@ async function displayToday(forceReload = false) {
             
             // Ajouter les utilisateurs
             allUsers.forEach(user => {
+                // Vérifier que l'utilisateur a un ID valide
+                if (!user.id) {
+                    console.warn('⚠️ Utilisateur sans ID ignoré:', user);
+                    return;
+                }
+                
                 const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Utilisateur inconnu';
                 const option = document.createElement('option');
-                option.value = user.id;
-                option.textContent = userName;
+                // Utiliser le préfixe "linked_" pour les patients liés
+                option.value = user.isLinked ? `linked_${user.id}` : user.id;
+                option.textContent = user.isLinked ? `${userName} (Patient lié)` : userName;
                 selectElement.appendChild(option);
             });
             
@@ -1708,29 +1840,67 @@ async function displaySlotsList(forceReload = false) {
     
     let allBookings = [];
     
-    // Si on a des réservations, charger les profils séparément
+    // Si on a des réservations, charger les profils et patients liés séparément
     if (bookingsData && bookingsData.length > 0) {
-        const userIds = [...new Set(bookingsData.map(b => b.user_id))];
+        // Séparer les user_id et linked_patient_id (filtrer les null)
+        const userIds = [...new Set(bookingsData.filter(b => b.user_id && b.user_id !== null).map(b => b.user_id))];
+        const linkedPatientIds = [...new Set(bookingsData.filter(b => b.linked_patient_id && b.linked_patient_id !== null).map(b => b.linked_patient_id))];
+        
         console.log('👥 IDs utilisateurs à charger pour liste:', userIds);
+        console.log('👥 IDs patients liés à charger pour liste:', linkedPatientIds);
         
-        const { data: profilesData, error: profilesError } = await adminState.supabase
-            .from('profiles')
-            .select('id, first_name, last_name, email')
-            .in('id', userIds);
+        // Charger les profils (comptes personnels)
+        let profilesData = [];
+        if (userIds.length > 0) {
+            const { data, error: profilesError } = await adminState.supabase
+                .from('profiles')
+                .select('id, first_name, last_name, email')
+                .in('id', userIds);
+            
+            if (profilesError) {
+                console.error('Erreur chargement profils pour liste:', profilesError);
+            } else {
+                profilesData = data || [];
+            }
+        }
         
-        if (profilesError) {
-            console.error('Erreur chargement profils pour liste:', profilesError);
+        // Charger les patients liés
+        let linkedPatientsData = [];
+        if (linkedPatientIds.length > 0) {
+            const { data, error: linkedError } = await adminState.supabase
+                .from('linked_patients')
+                .select('id, first_name, last_name, email')
+                .in('id', linkedPatientIds);
+            
+            if (linkedError) {
+                console.error('Erreur chargement patients liés pour liste:', linkedError);
+            } else {
+                linkedPatientsData = data || [];
+            }
         }
         
         console.log('👤 Profils chargés pour liste:', profilesData);
+        console.log('👤 Patients liés chargés pour liste:', linkedPatientsData);
         
         // Fusionner les données
         allBookings = bookingsData.map(booking => {
-            const profile = profilesData?.find(p => p.id === booking.user_id) || null;
-            return {
-                ...booking,
-                profiles: profile
-            };
+            if (booking.linked_patient_id) {
+                // C'est un patient lié
+                const linkedPatient = linkedPatientsData?.find(p => p.id === booking.linked_patient_id) || null;
+                return {
+                    ...booking,
+                    profiles: null,
+                    linkedPatient: linkedPatient
+                };
+            } else {
+                // C'est un compte personnel
+                const profile = profilesData?.find(p => p.id === booking.user_id) || null;
+                return {
+                    ...booking,
+                    profiles: profile,
+                    linkedPatient: null
+                };
+            }
         });
     }
     
@@ -1870,29 +2040,53 @@ async function displaySlotsList(forceReload = false) {
                 
                 for (const booking of slotBookings) {
                     console.log('📋 Réservation dans liste:', booking);
-                    const profile = booking.profiles || null;
-                    console.log('👤 Profil dans liste:', profile);
                     
                     let userName = 'Utilisateur inconnu';
-                    if (profile) {
+                    let patientId = null;
+                    let isLinkedPatient = false;
+                    
+                    if (booking.linked_patient_id && booking.linkedPatient) {
+                        // C'est un patient lié
+                        isLinkedPatient = true;
+                        const linkedPatient = booking.linkedPatient;
+                        if (linkedPatient.first_name && linkedPatient.last_name) {
+                            userName = `${linkedPatient.first_name} ${linkedPatient.last_name}`;
+                        } else if (linkedPatient.email) {
+                            userName = linkedPatient.email;
+                        }
+                        patientId = booking.linked_patient_id;
+                    } else if (booking.user_id && booking.profiles) {
+                        // C'est un compte personnel
+                        const profile = booking.profiles;
                         if (profile.first_name && profile.last_name) {
                             userName = `${profile.first_name} ${profile.last_name}`;
                         } else if (profile.email) {
                             userName = profile.email;
                         }
+                        patientId = booking.user_id;
+                    } else if (booking.linked_patient_id) {
+                        // Patient lié mais pas de données chargées, utiliser l'ID
+                        userName = `Patient lié ${booking.linked_patient_id.substring(0, 8)}...`;
+                        patientId = booking.linked_patient_id;
+                        isLinkedPatient = true;
                     } else if (booking.user_id) {
-                        userName = booking.user_id;
+                        // Pas de profil chargé, utiliser l'ID
+                        userName = `Utilisateur ${booking.user_id.substring(0, 8)}...`;
+                        patientId = booking.user_id;
+                    } else if (booking.linked_patient_id) {
+                        // Pas de patient lié chargé, utiliser l'ID
+                        userName = `Patient lié ${booking.linked_patient_id.substring(0, 8)}...`;
+                        patientId = booking.linked_patient_id;
+                        isLinkedPatient = true;
                     }
-                    
-                    const userId = booking.user_id;
                     
                     html += `
                         <div class="flex items-center gap-2 sm:gap-3 text-sm p-2 sm:p-2.5 rounded-lg transition-all border border-transparent hover:border-primary/30 group">
-                            <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2" onclick="showPatientDetails('${userId}'); event.stopPropagation();">
+                            <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2" onclick="showPatientDetails('${patientId}', ${isLinkedPatient}); event.stopPropagation();">
                                 <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0 group-hover:scale-110 transition-transform">
                                     ${userName.charAt(0).toUpperCase()}
                                 </div>
-                                <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}</span>
+                                <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</span>
                                 <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                             </div>
                             <button onclick="cancelParticipantBooking('${booking.id}', '${slot.id}'); event.stopPropagation();" 
@@ -1974,10 +2168,17 @@ async function displaySlotsList(forceReload = false) {
             
             // Ajouter les utilisateurs
             allUsers.forEach(user => {
+                // Vérifier que l'utilisateur a un ID valide
+                if (!user.id) {
+                    console.warn('⚠️ Utilisateur sans ID ignoré:', user);
+                    return;
+                }
+                
                 const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Utilisateur inconnu';
                 const option = document.createElement('option');
-                option.value = user.id;
-                option.textContent = userName;
+                // Utiliser le préfixe "linked_" pour les patients liés
+                option.value = user.isLinked ? `linked_${user.id}` : user.id;
+                option.textContent = user.isLinked ? `${userName} (Patient lié)` : userName;
                 selectElement.appendChild(option);
             });
         }
@@ -2043,6 +2244,7 @@ async function loadAllUsersForDropdown() {
     if (!adminState.supabase) return [];
     
     try {
+        // Charger les profils (comptes personnels)
         const { data: profiles, error } = await adminState.supabase
             .from('profiles')
             .select('id, first_name, last_name, email')
@@ -2051,12 +2253,29 @@ async function loadAllUsersForDropdown() {
         
         if (error) {
             console.error('Erreur chargement utilisateurs:', error);
-            return [];
         }
         
-        return profiles || [];
+        // Charger les patients liés
+        const { data: linkedPatients, error: linkedError } = await adminState.supabase
+            .from('linked_patients')
+            .select('id, first_name, last_name, email, linked_to_user_id')
+            .eq('patient_status', 'active')
+            .order('last_name', { ascending: true })
+            .order('first_name', { ascending: true });
+        
+        if (linkedError) {
+            console.error('Erreur chargement patients liés:', linkedError);
+        }
+        
+        // Combiner les deux listes avec un préfixe pour distinguer les patients liés
+        const allUsers = [
+            ...(profiles || []).map(u => ({ ...u, isLinked: false })),
+            ...(linkedPatients || []).map(p => ({ ...p, isLinked: true }))
+        ];
+        
+        return allUsers || [];
     } catch (error) {
-        console.error('Erreur chargement utilisateurs:', error);
+        console.error('Erreur loadAllUsersForDropdown:', error);
         return [];
     }
 }
@@ -2083,36 +2302,82 @@ async function addParticipantToSlot(slotId, bookingDate, bookingTime, serviceTyp
         console.log(`  Option ${i}: value="${opt.value}", text="${opt.text}", selected=${opt.selected}`);
     }
     
-    const userId = selectElement.value;
-    if (!userId || userId === '' || userId === null || userId === undefined) {
+    const selectedValue = selectElement.value;
+    const selectedIndex = selectElement.selectedIndex;
+    const selectedOption = selectElement.options[selectedIndex];
+    
+    console.log('📋 Valeur sélectionnée brute:', selectedValue);
+    console.log('📋 Index sélectionné:', selectedIndex);
+    console.log('📋 Option sélectionnée:', selectedOption ? { value: selectedOption.value, text: selectedOption.text } : 'null');
+    
+    // Vérifier si une option valide est sélectionnée (index > 0 car index 0 est "Sélectionner un utilisateur...")
+    if (!selectedValue || selectedValue === '' || selectedValue === null || selectedValue === undefined || selectedIndex === 0 || !selectedOption) {
         console.error('❌ Aucun utilisateur sélectionné');
-        console.error('❌ Valeur du select:', userId);
-        console.error('❌ Index sélectionné:', selectElement.selectedIndex);
+        console.error('❌ Valeur du select:', selectedValue);
+        console.error('❌ Index sélectionné:', selectedIndex);
+        console.error('❌ Option sélectionnée:', selectedOption);
         alert('Veuillez sélectionner un utilisateur');
         return;
     }
     
-    console.log('✅ Utilisateur sélectionné:', userId);
+    // Détecter si c'est un patient lié (format: "linked_<id>") ou un compte personnel
+    const isLinkedPatient = selectedValue.startsWith('linked_');
+    const userId = isLinkedPatient ? null : selectedValue;
+    const linkedPatientId = isLinkedPatient ? selectedValue.replace('linked_', '') : null;
     
-    // Vérifier si l'utilisateur a déjà une réservation pour ce créneau
-    // Utiliser .maybeSingle() au lieu de .single() pour éviter l'erreur 406 quand il n'y a pas de résultat
-    const { data: existingBooking, error: checkError } = await adminState.supabase
-        .from('bookings')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('booking_date', bookingDate)
-        .eq('booking_time', bookingTime)
-        .eq('service_type', serviceType)
-        .eq('status', 'confirmed')
-        .maybeSingle();
+    // Validation supplémentaire
+    if (isLinkedPatient && !linkedPatientId) {
+        console.error('❌ Patient lié détecté mais ID manquant');
+        alert('Erreur: ID du patient lié manquant');
+        return;
+    }
     
-    if (checkError) {
-        console.error('Erreur vérification réservation existante:', checkError);
-        // Ne pas bloquer si c'est juste une erreur de requête, continuer quand même
+    if (!isLinkedPatient && !userId) {
+        console.error('❌ Compte personnel détecté mais ID manquant');
+        alert('Erreur: ID utilisateur manquant');
+        return;
+    }
+    
+    console.log('✅ Utilisateur sélectionné:', { userId, linkedPatientId, isLinkedPatient });
+    
+    // Vérifier si l'utilisateur/patient a déjà une réservation pour ce créneau
+    let existingBooking = null;
+    if (isLinkedPatient) {
+        const { data, error: checkError } = await adminState.supabase
+            .from('bookings')
+            .select('id')
+            .eq('linked_patient_id', linkedPatientId)
+            .eq('booking_date', bookingDate)
+            .eq('booking_time', bookingTime)
+            .eq('service_type', serviceType)
+            .eq('status', 'confirmed')
+            .maybeSingle();
+        
+        if (checkError) {
+            console.error('Erreur vérification réservation existante:', checkError);
+        } else {
+            existingBooking = data;
+        }
+    } else {
+        const { data, error: checkError } = await adminState.supabase
+            .from('bookings')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('booking_date', bookingDate)
+            .eq('booking_time', bookingTime)
+            .eq('service_type', serviceType)
+            .eq('status', 'confirmed')
+            .maybeSingle();
+        
+        if (checkError) {
+            console.error('Erreur vérification réservation existante:', checkError);
+        } else {
+            existingBooking = data;
+        }
     }
     
     if (existingBooking) {
-        alert('Cet utilisateur a déjà une réservation pour ce créneau');
+        alert('Cet utilisateur/patient a déjà une réservation pour ce créneau');
         return;
     }
     
@@ -2127,15 +2392,24 @@ async function addParticipantToSlot(slotId, bookingDate, bookingTime, serviceTyp
     
     try {
         // Créer la réservation
+        const bookingData = {
+            booking_date: bookingDate,
+            booking_time: bookingTime,
+            service_type: serviceType,
+            status: 'confirmed'
+        };
+        
+        if (isLinkedPatient) {
+            bookingData.linked_patient_id = linkedPatientId;
+            bookingData.user_id = null;
+        } else {
+            bookingData.user_id = userId;
+            bookingData.linked_patient_id = null;
+        }
+        
         const { data: booking, error: bookingError } = await adminState.supabase
             .from('bookings')
-            .insert({
-                user_id: userId,
-                booking_date: bookingDate,
-                booking_time: bookingTime,
-                service_type: serviceType,
-                status: 'confirmed'
-            })
+            .insert(bookingData)
             .select()
             .single();
         
@@ -2428,6 +2702,11 @@ async function cancelParticipantBooking(bookingId, slotId) {
 
 // Récupérer les informations utilisateur
 async function getUserInfo(userId) {
+    if (!userId) {
+        console.log('⚠️ getUserInfo appelé avec userId null');
+        return null;
+    }
+    
     try {
         // Essayer d'abord la table profiles si elle existe
         const { data: profile, error: profileError } = await adminState.supabase
@@ -2466,6 +2745,33 @@ async function getUserInfo(userId) {
     }
 }
 
+// Récupérer les informations d'un patient lié
+async function getLinkedPatientInfo(linkedPatientId) {
+    if (!linkedPatientId) {
+        console.log('⚠️ getLinkedPatientInfo appelé avec linkedPatientId null');
+        return null;
+    }
+    
+    try {
+        const { data: linkedPatient, error: linkedPatientError } = await adminState.supabase
+            .from('linked_patients')
+            .select('first_name, last_name, email')
+            .eq('id', linkedPatientId)
+            .single();
+        
+        if (!linkedPatientError && linkedPatient) {
+            console.log('✅ Patient lié trouvé:', linkedPatient);
+            return linkedPatient;
+        }
+        
+        console.log('⚠️ Patient lié non trouvé, erreur:', linkedPatientError);
+        return null;
+    } catch (error) {
+        console.error('Erreur récupération patient lié:', error);
+        return null;
+    }
+}
+
 // Afficher la liste des réservations
 async function displayBookingsList() {
     const bookingsList = document.getElementById('bookings-list');
@@ -2487,6 +2793,7 @@ async function displayBookingsList() {
     const { data: bookings, error } = await adminState.supabase
         .from('bookings')
         .select('*')
+        .eq('status', 'confirmed')
         .order('booking_date', { ascending: true })
         .order('booking_time', { ascending: true });
     
@@ -2496,9 +2803,12 @@ async function displayBookingsList() {
         return;
     }
     
-    console.log('📋 Réservations récupérées:', bookings);
+    // Filtrer les réservations null (ne devrait pas arriver, mais sécurité)
+    const validBookings = bookings ? bookings.filter(b => b.user_id || b.linked_patient_id) : [];
     
-    if (!bookings || bookings.length === 0) {
+    console.log('📋 Réservations récupérées:', validBookings);
+    
+    if (!validBookings || validBookings.length === 0) {
         console.log('📋 Aucune réservation trouvée');
         bookingsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucune réservation</div>';
         return;
@@ -2509,7 +2819,7 @@ async function displayBookingsList() {
     const todayStr = formatDateForInput(now);
     const currentTime = now.toTimeString().substring(0, 5); // Format HH:MM
     
-    const futureBookings = bookings.filter(booking => {
+    const futureBookings = validBookings.filter(booking => {
         const bookingDate = booking.booking_date;
         const bookingTime = booking.booking_time.substring(0, 5); // Format HH:MM
         
@@ -2537,7 +2847,18 @@ async function displayBookingsList() {
     
     // Récupérer les informations utilisateur pour chaque réservation
     for (const booking of futureBookings) {
-        const userInfo = await getUserInfo(booking.user_id);
+        let userInfo = null;
+        let isLinkedPatient = false;
+        
+        // Vérifier si c'est un patient lié ou un utilisateur normal
+        if (booking.linked_patient_id) {
+            // C'est un patient lié
+            isLinkedPatient = true;
+            userInfo = await getLinkedPatientInfo(booking.linked_patient_id);
+        } else if (booking.user_id) {
+            // C'est un utilisateur normal
+            userInfo = await getUserInfo(booking.user_id);
+        }
         
         const date = new Date(booking.booking_date);
         const formattedDate = date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -2546,16 +2867,20 @@ async function displayBookingsList() {
         
         let userName;
         if (userInfo && userInfo.first_name && userInfo.last_name) {
-            userName = `${userInfo.first_name} ${userInfo.last_name}`;
+            userName = `${userInfo.first_name} ${userInfo.last_name}${isLinkedPatient ? ' (Patient lié)' : ''}`;
         } else if (userInfo && userInfo.email) {
-            userName = userInfo.email;
+            userName = `${userInfo.email}${isLinkedPatient ? ' (Patient lié)' : ''}`;
         } else if (userInfo && (userInfo.first_name || userInfo.last_name)) {
-            userName = `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim();
-        } else {
+            userName = `${userInfo.first_name || ''} ${userInfo.last_name || ''}`.trim() + (isLinkedPatient ? ' (Patient lié)' : '');
+        } else if (booking.user_id) {
             userName = `Utilisateur ${booking.user_id.substring(0, 8)}...`;
+        } else if (booking.linked_patient_id) {
+            userName = `Patient lié ${booking.linked_patient_id.substring(0, 8)}...`;
+        } else {
+            userName = 'Utilisateur inconnu';
         }
         
-        console.log('👤 Nom utilisateur généré:', userName, 'pour user_id:', booking.user_id);
+        console.log('👤 Nom utilisateur généré:', userName, 'pour user_id:', booking.user_id, 'linked_patient_id:', booking.linked_patient_id);
         
         const statusClass = {
             'confirmed': 'bg-green-100 text-green-800',
@@ -3330,10 +3655,25 @@ async function displayPatients() {
             return;
         }
         
-        console.log('✅ Profils récupérés:', profiles?.length || 0);
+        // Récupérer tous les patients liés
+        const { data: linkedPatients, error: linkedError } = await adminState.supabase
+            .from('linked_patients')
+            .select(`
+                *,
+                linked_account:profiles!linked_to_user_id(id, email, first_name, last_name)
+            `)
+            .order('last_name', { ascending: true })
+            .order('first_name', { ascending: true });
         
-        if (!profiles || profiles.length === 0) {
-            patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun utilisateur enregistré</div>';
+        if (linkedError) {
+            console.error('❌ Erreur chargement patients liés:', linkedError);
+        }
+        
+        console.log('✅ Profils récupérés:', profiles?.length || 0);
+        console.log('✅ Patients liés récupérés:', linkedPatients?.length || 0);
+        
+        if ((!profiles || profiles.length === 0) && (!linkedPatients || linkedPatients.length === 0)) {
+            patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun utilisateur ou patient enregistré</div>';
             // Mettre à jour les statistiques à 0
             document.getElementById('total-users').textContent = '0';
             document.getElementById('active-users').textContent = '0';
@@ -3345,20 +3685,24 @@ async function displayPatients() {
         // Récupérer les réservations pour calculer les statistiques
         const { data: bookings, error: bookingsError } = await adminState.supabase
             .from('bookings')
-            .select('user_id')
+            .select('user_id, linked_patient_id')
             .eq('status', 'confirmed');
         
         if (bookingsError) {
             console.error('Erreur chargement réservations:', bookingsError);
         }
         
-        // Calculer les statistiques (sur tous les profils)
-        const totalUsers = profiles.length;
+        // Calculer les statistiques (sur tous les profils + patients liés)
+        const totalUsers = (profiles?.length || 0) + (linkedPatients?.length || 0);
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const activeUsers = profiles.filter(p => new Date(p.created_at) > thirtyDaysAgo).length;
-        const adminUsers = profiles.filter(p => p.role === 'admin').length;
-        const usersWithBookings = bookings ? new Set(bookings.map(b => b.user_id)).size : 0;
+        const activeUsers = (profiles?.filter(p => new Date(p.created_at) > thirtyDaysAgo).length || 0) +
+                           (linkedPatients?.filter(p => new Date(p.created_at) > thirtyDaysAgo).length || 0);
+        const adminUsers = profiles?.filter(p => p.role === 'admin').length || 0;
+        const usersWithBookings = bookings ? new Set([
+            ...bookings.filter(b => b.user_id).map(b => b.user_id),
+            ...bookings.filter(b => b.linked_patient_id).map(b => b.linked_patient_id)
+        ]).size : 0;
         
         // Mettre à jour les cartes de statistiques
         document.getElementById('total-users').textContent = totalUsers;
@@ -3366,54 +3710,73 @@ async function displayPatients() {
         document.getElementById('admin-users').textContent = adminUsers;
         document.getElementById('users-with-bookings').textContent = usersWithBookings;
         
+        // Combiner profils et patients liés pour le filtrage
+        const allPatients = [
+            ...(profiles || []).map(p => ({ ...p, isLinked: false })),
+            ...(linkedPatients || []).map(p => ({ ...p, isLinked: true }))
+        ];
+        
         // Appliquer les filtres
-        let filteredProfiles = profiles;
+        let filteredPatients = allPatients;
         
         // Filtre par recherche
         if (searchTerm) {
-            filteredProfiles = filteredProfiles.filter(p => 
-                `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase().includes(searchTerm) ||
-                p.email?.toLowerCase().includes(searchTerm)
-            );
+            filteredPatients = filteredPatients.filter(p => {
+                const name = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase();
+                const email = p.email?.toLowerCase() || '';
+                const linkedAccountEmail = p.linked_account?.email?.toLowerCase() || '';
+                return name.includes(searchTerm) || email.includes(searchTerm) || linkedAccountEmail.includes(searchTerm);
+            });
         }
         
-        // Filtre par rôle
+        // Filtre par rôle (uniquement pour les comptes personnels)
         if (selectedRole) {
-            filteredProfiles = filteredProfiles.filter(p => p.role === selectedRole);
+            filteredPatients = filteredPatients.filter(p => {
+                if (p.isLinked) return false; // Les patients liés n'ont pas de rôle
+                return p.role === selectedRole;
+            });
         }
         
         // Filtre par statut
         if (selectedStatus) {
             if (selectedStatus === 'active') {
-                filteredProfiles = filteredProfiles.filter(p => new Date(p.created_at) > thirtyDaysAgo);
+                filteredPatients = filteredPatients.filter(p => new Date(p.created_at) > thirtyDaysAgo);
             } else if (selectedStatus === 'inactive') {
-                filteredProfiles = filteredProfiles.filter(p => new Date(p.created_at) <= thirtyDaysAgo);
+                filteredPatients = filteredPatients.filter(p => new Date(p.created_at) <= thirtyDaysAgo);
             }
         }
         
-        console.log('👥 Profils filtrés:', filteredProfiles.length);
+        console.log('👥 Patients filtrés:', filteredPatients.length);
         
         // Vérifier s'il y a des résultats après filtrage
-        if (filteredProfiles.length === 0) {
+        if (filteredPatients.length === 0) {
             patientsList.innerHTML = '<div class="text-center text-gray-500 py-8">Aucun résultat ne correspond aux filtres sélectionnés</div>';
             return;
         }
         
         // Générer le HTML
         let html = '';
-        filteredProfiles.forEach(profile => {
-            const pathologies = profile.pathologies && Array.isArray(profile.pathologies) 
-                ? profile.pathologies.join(', ') 
+        filteredPatients.forEach(patient => {
+            const pathologies = patient.pathologies && Array.isArray(patient.pathologies) 
+                ? patient.pathologies.join(', ') 
                 : '';
             
-            const userName = profile.first_name && profile.last_name ? 
-                `${profile.first_name} ${profile.last_name}` : 
-                profile.email || `Utilisateur ${profile.id.substring(0, 8)}...`;
+            const userName = patient.first_name && patient.last_name ? 
+                `${patient.first_name} ${patient.last_name}` : 
+                patient.email || `Patient ${patient.id.substring(0, 8)}...`;
             
-            const roleClass = profile.role === 'admin' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
-            const roleText = profile.role === 'admin' ? 'Admin' : 'User';
+            const roleClass = patient.role === 'admin' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
+            const roleText = patient.role === 'admin' ? 'Admin' : 'User';
             
-            const userBookings = bookings ? bookings.filter(b => b.user_id === profile.id).length : 0;
+            // Compter les réservations
+            const patientBookings = bookings ? bookings.filter(b => 
+                (patient.isLinked && b.linked_patient_id === patient.id) ||
+                (!patient.isLinked && b.user_id === patient.id)
+            ).length : 0;
+            
+            // Informations du compte lié (si patient lié)
+            const linkedAccountInfo = patient.isLinked && patient.linked_account ? 
+                `<div class="mt-2 text-xs md:text-sm text-gray-500"><i class="fas fa-link mr-1"></i><strong>Lié au compte:</strong> ${patient.linked_account.first_name || ''} ${patient.linked_account.last_name || ''} (${patient.linked_account.email || ''})</div>` : '';
             
             html += `
                 <div class="bg-gray-50 rounded-lg p-3 md:p-4 border border-gray-200 hover:shadow-md transition-shadow">
@@ -3423,23 +3786,25 @@ async function displayPatients() {
                                 <h3 class="text-base md:text-lg font-semibold text-gray-800 break-words">
                                     ${userName}
                                 </h3>
-                                <span class="text-xs px-2 py-1 rounded-full ${roleClass} whitespace-nowrap">${roleText}</span>
+                                ${!patient.isLinked ? `<span class="text-xs px-2 py-1 rounded-full ${roleClass} whitespace-nowrap">${roleText}</span>` : ''}
+                                ${patient.isLinked ? `<span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 whitespace-nowrap">Patient lié</span>` : ''}
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
-                                <div class="break-words"><i class="fas fa-envelope mr-1 md:mr-2"></i><span class="break-all">${profile.email || 'N/A'}</span></div>
-                                ${profile.phone ? `<div class="break-words"><i class="fas fa-phone mr-1 md:mr-2"></i>${profile.phone}</div>` : ''}
-                                ${profile.date_of_birth ? `<div><i class="fas fa-birthday-cake mr-1 md:mr-2"></i>${new Date(profile.date_of_birth).toLocaleDateString('fr-FR')}</div>` : ''}
-                                ${profile.gender ? `<div><i class="fas fa-venus-mars mr-1 md:mr-2"></i>${profile.gender}</div>` : ''}
-                                <div><i class="fas fa-calendar-check mr-1 md:mr-2"></i>${userBookings} réservation(s)</div>
+                                <div class="break-words"><i class="fas fa-envelope mr-1 md:mr-2"></i><span class="break-all">${patient.email || patient.linked_account?.email || 'N/A'}</span></div>
+                                ${patient.phone ? `<div class="break-words"><i class="fas fa-phone mr-1 md:mr-2"></i>${patient.phone}</div>` : ''}
+                                ${patient.date_of_birth ? `<div><i class="fas fa-birthday-cake mr-1 md:mr-2"></i>${new Date(patient.date_of_birth).toLocaleDateString('fr-FR')}</div>` : ''}
+                                ${patient.gender ? `<div><i class="fas fa-venus-mars mr-1 md:mr-2"></i>${patient.gender}</div>` : ''}
+                                <div><i class="fas fa-calendar-check mr-1 md:mr-2"></i>${patientBookings} réservation(s)</div>
                             </div>
+                            ${linkedAccountInfo}
                             ${pathologies ? `<div class="mt-2 text-xs md:text-sm break-words"><strong>Pathologies:</strong> ${pathologies}</div>` : ''}
-                            ${profile.contraindications ? `<div class="mt-2 text-xs md:text-sm text-red-600 break-words"><strong>Contre-indications:</strong> ${profile.contraindications}</div>` : ''}
+                            ${patient.contraindications ? `<div class="mt-2 text-xs md:text-sm text-red-600 break-words"><strong>Contre-indications:</strong> ${patient.contraindications}</div>` : ''}
                         </div>
                         <div class="flex flex-row md:flex-col gap-2 md:ml-4 flex-shrink-0">
-                            <button onclick="showPatientDetails('${profile.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
+                            <button onclick="showPatientDetails('${patient.id}', ${patient.isLinked})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
                                 <i class="fas fa-eye mr-1"></i><span class="hidden sm:inline">Voir détails</span><span class="sm:hidden">Détails</span>
                             </button>
-                            <button onclick="editPatient('${profile.id}')" class="bg-gray-500 hover:bg-gray-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
+                            <button onclick="editPatient('${patient.id}', ${patient.isLinked})" class="bg-gray-500 hover:bg-gray-600 text-white px-3 md:px-4 py-2 rounded-md text-xs md:text-sm whitespace-nowrap flex-1 md:flex-none">
                                 <i class="fas fa-edit mr-1"></i>Modifier
                             </button>
                         </div>
@@ -3457,35 +3822,191 @@ async function displayPatients() {
 }
 
 
+// Ouvrir le modal pour ajouter un nouveau patient
+function showAddPatientModal() {
+    const modal = document.getElementById('patient-modal');
+    const title = document.getElementById('patient-modal-title');
+    const form = document.getElementById('patient-form');
+    
+    if (!modal || !title || !form) return;
+    
+    // Réinitialiser le formulaire
+    form.reset();
+    form.dataset.patientId = ''; // Pas d'ID = création
+    
+    // Afficher le champ type de patient
+    const typeContainer = document.getElementById('patient-type-container');
+    if (typeContainer) typeContainer.classList.remove('hidden');
+    
+    // Masquer le champ compte lié par défaut
+    const linkedAccountField = document.getElementById('linked-account-field');
+    if (linkedAccountField) linkedAccountField.classList.add('hidden');
+    
+    // Afficher le champ rôle par défaut
+    const roleContainer = document.getElementById('patient-role-container');
+    if (roleContainer) roleContainer.classList.remove('hidden');
+    
+    // Rendre l'email requis par défaut
+    const emailInput = document.getElementById('patient-email');
+    const emailRequired = document.getElementById('email-required-indicator');
+    const emailHelp = document.getElementById('email-help-text');
+    if (emailInput) {
+        emailInput.required = true;
+        if (emailRequired) emailRequired.classList.remove('hidden');
+        if (emailHelp) emailHelp.classList.add('hidden');
+    }
+    
+    title.textContent = 'Ajouter un patient';
+    modal.classList.add('show');
+    
+    // Ajouter l'écouteur sur le changement de type de patient
+    const patientTypeSelect = document.getElementById('patient-type');
+    if (patientTypeSelect) {
+        patientTypeSelect.addEventListener('change', handlePatientTypeChange);
+    }
+}
+
+// Gérer le changement de type de patient
+async function handlePatientTypeChange() {
+    const patientType = document.getElementById('patient-type')?.value || 'account';
+    const linkedAccountField = document.getElementById('linked-account-field');
+    const linkedAccountSelect = document.getElementById('linked-account-select');
+    const roleContainer = document.getElementById('patient-role-container');
+    const emailInput = document.getElementById('patient-email');
+    const emailRequired = document.getElementById('email-required-indicator');
+    const emailHelp = document.getElementById('email-help-text');
+    
+    if (patientType === 'linked') {
+        // Afficher le champ compte lié
+        if (linkedAccountField) linkedAccountField.classList.remove('hidden');
+        
+        // Charger les utilisateurs dans le menu déroulant (profiles uniquement, pas les patients liés)
+        if (linkedAccountSelect) {
+            await loadUsersForLinkedPatientDropdown(linkedAccountSelect);
+        }
+        
+        // Masquer le champ rôle (pas de rôle pour les patients liés)
+        if (roleContainer) roleContainer.classList.add('hidden');
+        // Rendre l'email optionnel
+        if (emailInput) {
+            emailInput.required = false;
+            if (emailRequired) emailRequired.classList.add('hidden');
+            if (emailHelp) emailHelp.classList.remove('hidden');
+        }
+    } else {
+        // Masquer le champ compte lié
+        if (linkedAccountField) linkedAccountField.classList.add('hidden');
+        // Afficher le champ rôle
+        if (roleContainer) roleContainer.classList.remove('hidden');
+        // Rendre l'email requis
+        if (emailInput) {
+            emailInput.required = true;
+            if (emailRequired) emailRequired.classList.remove('hidden');
+            if (emailHelp) emailHelp.classList.add('hidden');
+        }
+    }
+}
+
+// Charger les utilisateurs (profiles uniquement) pour le menu déroulant de liaison
+async function loadUsersForLinkedPatientDropdown(selectElement) {
+    if (!adminState.supabase || !selectElement) return;
+    
+    try {
+        // Vider le select (garder seulement l'option par défaut)
+        selectElement.innerHTML = '<option value="">Sélectionner un utilisateur...</option>';
+        
+        // Charger uniquement les profiles (comptes personnels), pas les patients liés
+        const { data: profiles, error } = await adminState.supabase
+            .from('profiles')
+            .select('id, first_name, last_name, email')
+            .order('last_name', { ascending: true })
+            .order('first_name', { ascending: true });
+        
+        if (error) {
+            console.error('Erreur chargement utilisateurs pour menu déroulant:', error);
+            return;
+        }
+        
+        if (profiles && profiles.length > 0) {
+            profiles.forEach(profile => {
+                const option = document.createElement('option');
+                const userName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email || 'Utilisateur inconnu';
+                option.value = profile.id;
+                option.textContent = `${userName} (${profile.email || 'sans email'})`;
+                selectElement.appendChild(option);
+            });
+        }
+        
+        console.log('✅ Utilisateurs chargés pour menu déroulant:', profiles?.length || 0);
+    } catch (error) {
+        console.error('Erreur loadUsersForLinkedPatientDropdown:', error);
+    }
+}
+
 // Fermer le modal de patient
 function closePatientModal() {
     const modal = document.getElementById('patient-modal');
     if (modal) {
         modal.classList.remove('show');
+        // Réinitialiser le formulaire
+        const form = document.getElementById('patient-form');
+        if (form) {
+            form.reset();
+            form.dataset.patientId = '';
+        }
     }
 }
 
-// Modifier un patient existant
-async function editPatient(patientId) {
+// Modifier un patient existant (compte personnel ou patient lié)
+async function editPatient(patientId, isLinkedPatient = false) {
     try {
-        const { data: patient, error } = await adminState.supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', patientId)
-            .single();
-        
-        if (error || !patient) {
-            alert('Erreur lors du chargement du patient');
-            return;
-        }
-        
         const modal = document.getElementById('patient-modal');
         const title = document.getElementById('patient-modal-title');
         const form = document.getElementById('patient-form');
         
         if (!modal || !title || !form) return;
         
+        let patient;
+        
+        if (isLinkedPatient) {
+            // Charger un patient lié
+            const { data, error } = await adminState.supabase
+                .from('linked_patients')
+                .select('*')
+                .eq('id', patientId)
+                .single();
+            
+            if (error || !data) {
+                alert('Erreur lors du chargement du patient lié');
+                return;
+            }
+            
+            patient = data;
+        } else {
+            // Charger un profil (compte personnel)
+            const { data, error } = await adminState.supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', patientId)
+                .single();
+            
+            if (error || !data) {
+                alert('Erreur lors du chargement du patient');
+                return;
+            }
+            
+            patient = data;
+        }
+        
         title.textContent = `Modifier le patient: ${patient.first_name} ${patient.last_name}`;
+        
+        // Masquer le champ type de patient en mode édition
+        const typeContainer = document.getElementById('patient-type-container');
+        if (typeContainer) typeContainer.classList.add('hidden');
+        
+        // Masquer le champ compte lié en mode édition
+        const linkedAccountField = document.getElementById('linked-account-field');
+        if (linkedAccountField) linkedAccountField.classList.add('hidden');
         
         // Remplir le formulaire
         document.getElementById('patient-first-name').value = patient.first_name || '';
@@ -3494,7 +4015,16 @@ async function editPatient(patientId) {
         document.getElementById('patient-phone').value = patient.phone || '';
         document.getElementById('patient-date-of-birth').value = patient.date_of_birth || '';
         document.getElementById('patient-gender').value = patient.gender || '';
-        document.getElementById('patient-role').value = patient.role || 'user';
+        
+        // Rôle uniquement pour les comptes personnels
+        if (!isLinkedPatient) {
+            const roleContainer = document.getElementById('patient-role-container');
+            if (roleContainer) roleContainer.classList.remove('hidden');
+            document.getElementById('patient-role').value = patient.role || 'user';
+        } else {
+            const roleContainer = document.getElementById('patient-role-container');
+            if (roleContainer) roleContainer.classList.add('hidden');
+        }
         
         // Pathologies
         if (patient.pathologies && Array.isArray(patient.pathologies)) {
@@ -3505,8 +4035,9 @@ async function editPatient(patientId) {
         document.getElementById('patient-emergency-name').value = patient.emergency_contact_name || '';
         document.getElementById('patient-emergency-phone').value = patient.emergency_contact_phone || '';
         
-        // Stocker l'ID du patient
+        // Stocker l'ID du patient et le type
         form.dataset.patientId = patientId;
+        form.dataset.isLinkedPatient = isLinkedPatient ? 'true' : 'false';
         
         modal.classList.add('show');
         
@@ -3516,17 +4047,14 @@ async function editPatient(patientId) {
     }
 }
 
-// Gérer la soumission du formulaire patient (édition uniquement)
+// Gérer la soumission du formulaire patient (création ou édition)
 async function handlePatientFormSubmit(event) {
     event.preventDefault();
     
     const form = event.target;
     const patientId = form.dataset.patientId;
-    
-    if (!patientId) {
-        alert('Erreur: ID patient manquant');
-        return;
-    }
+    const isLinkedPatient = form.dataset.isLinkedPatient === 'true';
+    const isCreation = !patientId;
     
     // Récupérer les données
     const firstName = document.getElementById('patient-first-name').value;
@@ -3535,7 +4063,7 @@ async function handlePatientFormSubmit(event) {
     const phone = document.getElementById('patient-phone').value;
     const dateOfBirth = document.getElementById('patient-date-of-birth').value;
     const gender = document.getElementById('patient-gender').value;
-    const role = document.getElementById('patient-role').value;
+    const role = document.getElementById('patient-role')?.value || 'user';
     const pathologiesText = document.getElementById('patient-pathologies').value;
     const contraindications = document.getElementById('patient-contraindications').value;
     const emergencyName = document.getElementById('patient-emergency-name').value;
@@ -3545,31 +4073,122 @@ async function handlePatientFormSubmit(event) {
     const pathologies = pathologiesText ? pathologiesText.split(',').map(p => p.trim()).filter(p => p) : null;
     
     try {
-        // Mise à jour du profil patient
-        const updateData = {
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            phone: phone || null,
-            date_of_birth: dateOfBirth || null,
-            gender: gender || null,
-            role: role || 'user',
-            pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
-            contraindications: contraindications || null,
-            emergency_contact_name: emergencyName || null,
-            emergency_contact_phone: emergencyPhone || null,
-            patient_status: 'active',
-            updated_at: new Date().toISOString()
-        };
+        if (isCreation) {
+            // CRÉATION D'UN NOUVEAU PATIENT
+            const patientType = document.getElementById('patient-type')?.value || 'account';
+            
+            if (patientType === 'linked') {
+                // Créer un patient lié
+                const linkedAccountSelect = document.getElementById('linked-account-select');
+                const linkedToUserId = linkedAccountSelect?.value;
+                
+                if (!linkedToUserId) {
+                    alert('Erreur: Veuillez sélectionner un compte utilisateur');
+                    return;
+                }
+                
+                // Vérifier que le compte parent existe
+                const { data: parentProfile, error: parentError } = await adminState.supabase
+                    .from('profiles')
+                    .select('id, email, first_name, last_name')
+                    .eq('id', linkedToUserId)
+                    .single();
+                
+                if (parentError || !parentProfile) {
+                    alert('Erreur: Compte parent introuvable.');
+                    return;
+                }
+                
+                // Récupérer l'admin actuel
+                const { data: { user: currentUser } } = await adminState.supabase.auth.getUser();
+                
+                // Créer le patient lié
+                const { data, error } = await adminState.supabase
+                    .from('linked_patients')
+                    .insert({
+                        linked_to_user_id: linkedToUserId,
+                        first_name: firstName,
+                        last_name: lastName,
+                        email: email || parentProfile.email, // Utiliser l'email du parent si non fourni
+                        phone: phone || null,
+                        date_of_birth: dateOfBirth || null,
+                        gender: gender || null,
+                        pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
+                        contraindications: contraindications || null,
+                        emergency_contact_name: emergencyName || null,
+                        emergency_contact_phone: emergencyPhone || null,
+                        patient_status: 'active',
+                        created_by: currentUser?.id || null
+                    })
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                alert('Patient lié créé avec succès !');
+            } else {
+                // Créer un compte personnel (nécessite une inscription via Supabase Auth)
+                // Pour l'instant, on ne peut créer que des patients liés depuis l'admin
+                // Les comptes personnels doivent être créés via l'inscription normale
+                alert('Pour créer un compte personnel, veuillez utiliser la page d\'inscription. Vous pouvez créer un patient lié à un compte existant.');
+                return;
+            }
+        } else {
+            // ÉDITION D'UN PATIENT EXISTANT
+            if (isLinkedPatient) {
+                // Mise à jour d'un patient lié
+                const updateData = {
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email || null,
+                    phone: phone || null,
+                    date_of_birth: dateOfBirth || null,
+                    gender: gender || null,
+                    pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
+                    contraindications: contraindications || null,
+                    emergency_contact_name: emergencyName || null,
+                    emergency_contact_phone: emergencyPhone || null,
+                    patient_status: 'active',
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { error } = await adminState.supabase
+                    .from('linked_patients')
+                    .update(updateData)
+                    .eq('id', patientId);
+                
+                if (error) throw error;
+                
+                alert('Patient lié mis à jour avec succès !');
+            } else {
+                // Mise à jour d'un profil (compte personnel)
+                const updateData = {
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email,
+                    phone: phone || null,
+                    date_of_birth: dateOfBirth || null,
+                    gender: gender || null,
+                    role: role || 'user',
+                    pathologies: pathologies && pathologies.length > 0 ? pathologies : null,
+                    contraindications: contraindications || null,
+                    emergency_contact_name: emergencyName || null,
+                    emergency_contact_phone: emergencyPhone || null,
+                    patient_status: 'active',
+                    updated_at: new Date().toISOString()
+                };
+                
+                const { error } = await adminState.supabase
+                    .from('profiles')
+                    .update(updateData)
+                    .eq('id', patientId);
+                
+                if (error) throw error;
+                
+                alert('Fiche patient mise à jour avec succès !');
+            }
+        }
         
-        const { error } = await adminState.supabase
-            .from('profiles')
-            .update(updateData)
-            .eq('id', patientId);
-        
-        if (error) throw error;
-        
-        alert('Fiche patient mise à jour avec succès !');
         closePatientModal();
         await displayPatients();
         
@@ -3580,7 +4199,7 @@ async function handlePatientFormSubmit(event) {
 }
 
 // Afficher les détails d'un patient avec commentaires
-async function showPatientDetails(patientId) {
+async function showPatientDetails(patientId, isLinkedPatient = false) {
     const modal = document.getElementById('patient-details-modal');
     const title = document.getElementById('patient-details-title');
     const content = document.getElementById('patient-details-content');
@@ -3588,49 +4207,91 @@ async function showPatientDetails(patientId) {
     if (!modal || !title || !content) return;
     
     try {
-        // Charger le patient
-        const { data: patient, error: patientError } = await adminState.supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', patientId)
-            .single();
+        let patient;
         
-        if (patientError || !patient) {
-            alert('Erreur lors du chargement du patient');
-            return;
+        if (isLinkedPatient) {
+            // Charger un patient lié avec les infos du compte parent
+            const { data, error: patientError } = await adminState.supabase
+                .from('linked_patients')
+                .select(`
+                    *,
+                    linked_account:profiles!linked_to_user_id(id, email, first_name, last_name)
+                `)
+                .eq('id', patientId)
+                .single();
+            
+            if (patientError || !data) {
+                alert('Erreur lors du chargement du patient lié');
+                return;
+            }
+            
+            patient = data;
+        } else {
+            // Charger un profil (compte personnel)
+            const { data, error: patientError } = await adminState.supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', patientId)
+                .single();
+            
+            if (patientError || !data) {
+                alert('Erreur lors du chargement du patient');
+                return;
+            }
+            
+            patient = data;
         }
         
-        // Charger les commentaires
-        const { data: comments, error: commentsError } = await adminState.supabase
-            .from('patient_comments')
-            .select('*')
-            .eq('patient_id', patientId)
-            .order('created_at', { ascending: false });
-        
-        if (commentsError) {
-            console.error('Erreur chargement commentaires:', commentsError);
+        // Charger les commentaires (pour les patients liés, on utilise aussi patient_comments mais avec patient_id = linked_patient.id)
+        // Note: Il faudrait peut-être créer une table séparée pour les commentaires des patients liés
+        // Pour l'instant, on ne charge les commentaires que pour les comptes personnels
+        let comments = [];
+        if (!isLinkedPatient) {
+            const { data: commentsData, error: commentsError } = await adminState.supabase
+                .from('patient_comments')
+                .select('*')
+                .eq('patient_id', patientId)
+                .order('created_at', { ascending: false });
+            
+            if (commentsError) {
+                console.error('Erreur chargement commentaires:', commentsError);
+            } else {
+                comments = commentsData || [];
+            }
         }
         
         // Récupérer l'utilisateur actuel pour vérifier les permissions
         const { data: { user: currentUser } } = await adminState.supabase.auth.getUser();
         
-        title.textContent = `Détails: ${patient.first_name} ${patient.last_name}`;
+        title.textContent = `Détails: ${patient.first_name} ${patient.last_name}${isLinkedPatient ? ' (Patient lié)' : ''}`;
         
         const pathologies = patient.pathologies && Array.isArray(patient.pathologies) 
             ? patient.pathologies.join(', ') 
             : 'Aucune';
         
+        // Informations du compte lié (si patient lié)
+        const linkedAccountInfo = isLinkedPatient && patient.linked_account ? 
+            `<div class="bg-purple-50 rounded-lg p-4 mb-4 border border-purple-200">
+                <h5 class="font-semibold text-purple-800 mb-2"><i class="fas fa-link mr-2"></i>Compte parent</h5>
+                <div class="text-sm">
+                    <div><strong>Nom:</strong> ${patient.linked_account.first_name || ''} ${patient.linked_account.last_name || ''}</div>
+                    <div><strong>Email:</strong> ${patient.linked_account.email || 'N/A'}</div>
+                </div>
+            </div>` : '';
+        
         // Générer le contenu
         content.innerHTML = `
             <div class="space-y-6">
+                ${linkedAccountInfo}
                 <!-- Informations patient -->
                 <div class="bg-gray-50 rounded-lg p-6">
                     <h4 class="text-lg font-semibold mb-4">Informations du patient</h4>
                     <div class="grid md:grid-cols-2 gap-4 text-sm">
-                        <div><strong>Email:</strong> ${patient.email || 'N/A'}</div>
+                        <div><strong>Email:</strong> ${patient.email || patient.linked_account?.email || 'N/A'}</div>
                         <div><strong>Téléphone:</strong> ${patient.phone || 'N/A'}</div>
                         <div><strong>Date de naissance:</strong> ${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('fr-FR') : 'N/A'}</div>
                         <div><strong>Genre:</strong> ${patient.gender || 'N/A'}</div>
+                        ${!isLinkedPatient ? `<div><strong>Rôle:</strong> ${patient.role || 'user'}</div>` : ''}
                         <div class="md:col-span-2"><strong>Pathologies:</strong> ${pathologies}</div>
                         ${patient.contraindications ? `<div class="md:col-span-2 text-red-600"><strong>Contre-indications:</strong> ${patient.contraindications}</div>` : ''}
                         ${patient.emergency_contact_name ? `<div><strong>Contact d'urgence:</strong> ${patient.emergency_contact_name}</div>` : ''}
@@ -3638,7 +4299,8 @@ async function showPatientDetails(patientId) {
                     </div>
                 </div>
                 
-                <!-- Section commentaires -->
+                <!-- Section commentaires (uniquement pour les comptes personnels) -->
+                ${!isLinkedPatient ? `
                 <div class="border-t pt-6">
                     <h4 class="text-lg font-semibold mb-4">Commentaires</h4>
                     
@@ -3702,6 +4364,7 @@ async function showPatientDetails(patientId) {
                         }
                     </div>
                 </div>
+                ` : '<div class="border-t pt-6"><p class="text-gray-500 text-center py-4">Les commentaires ne sont pas disponibles pour les patients liés.</p></div>'}
             </div>
         `;
         
@@ -3954,6 +4617,7 @@ async function deletePatientComment(commentId, patientId) {
 
 // Exposer les fonctions globalement
 window.closePatientModal = closePatientModal;
+window.showAddPatientModal = showAddPatientModal;
 window.editPatient = editPatient;
 window.showPatientDetails = showPatientDetails;
 window.closePatientDetailsModal = closePatientDetailsModal;
