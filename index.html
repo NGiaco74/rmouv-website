@@ -8,10 +8,22 @@
     <meta name="keywords" content="rmouv, rééducation, kinésithérapeute, coach sportif, réathlétisation, cours collectifs, rééducation neurologique, traumatologie sportive, centre sport santé, rééducation post-blessure">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="R'MouV – Rehab ton MouV">
-    <meta property="og:description" content="Reprends ton corps en main. Révèle-toi.">
+    <meta property="og:title" content="R'MouV – Centre sport santé (kiné & coaching)">
+    <meta property="og:description" content="R'MouV - Centre de rééducation et sport-santé. Kinésithérapeutes spécialisés, coachs sportifs, réathlétisation, cours collectifs. Rééducation neurologique et traumatologie sportive.">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="Images/Logo.png">
+    <meta property="og:url" content="https://rmouv.fr/">
+    <meta property="og:image" content="https://rmouv.fr/Images/Logo.png">
+    <meta property="og:site_name" content="R'MouV">
+    <meta property="og:locale" content="fr_FR">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="R'MouV – Centre sport santé (kiné & coaching)">
+    <meta name="twitter:description" content="R'MouV - Centre de rééducation et sport-santé. Kinésithérapeutes spécialisés, coachs sportifs, réathlétisation, cours collectifs.">
+    <meta name="twitter:image" content="https://rmouv.fr/Images/Logo.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://rmouv.fr/">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="Images/Logo.png">
@@ -22,36 +34,89 @@
         "@context": "https://schema.org",
         "@type": "MedicalBusiness",
         "name": "R'MouV",
-        "description": "Centre de rééducation et sport-santé pluridisciplinaire",
-        "url": "https://rmouv-rehabtonmouv.netlify.app",
-        "telephone": "+33-XX-XX-XX-XX",
+        "alternateName": "Rehab ton MouV",
+        "description": "Centre de rééducation et sport-santé pluridisciplinaire à Brignais. Kinésithérapie, coaching sportif, réathlétisation et rééducation neurologique.",
+        "url": "https://rmouv.fr",
+        "logo": "https://rmouv.fr/Images/Logo.png",
+        "image": "https://rmouv.fr/Images/Logo.png",
+        "telephone": "+33667332015",
+        "email": "contact1@rmouv.fr",
         "address": {
             "@type": "PostalAddress",
-            "addressLocality": "Votre ville",
-            "addressRegion": "Votre région",
+            "streetAddress": "400 Rue Barthélemy Thimonnier",
+            "addressLocality": "Brignais",
+            "postalCode": "69530",
+            "addressRegion": "Auvergne-Rhône-Alpes",
             "addressCountry": "FR"
         },
-        "medicalSpecialty": ["Physical Therapy", "Sports Medicine", "Neurological Rehabilitation"],
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "45.6736",
+            "longitude": "4.7547"
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "19:00"
+            }
+        ],
+        "medicalSpecialty": [
+            "Physical Therapy",
+            "Sports Medicine",
+            "Neurological Rehabilitation",
+            "Sports Rehabilitation",
+            "Perineology"
+        ],
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
-            "name": "Services de rééducation",
+            "name": "Services de rééducation et sport-santé",
             "itemListElement": [
                 {
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
-                        "name": "Kinésithérapie"
+                        "name": "Kinésithérapie",
+                        "description": "Bilan kinésithérapique complet et rééducation personnalisée"
                     }
                 },
                 {
                     "@type": "Offer",
                     "itemOffered": {
                         "@type": "Service",
-                        "name": "Coaching sportif"
+                        "name": "Coaching sportif",
+                        "description": "Coaching personnalisé et réathlétisation"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Cours collectifs",
+                        "description": "Espace cours collectifs pour la rééducation"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Rééducation neurologique",
+                        "description": "Rééducation spécialisée pour les troubles neurologiques"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Réathlétisation",
+                        "description": "Retour à la pratique sportive après blessure"
                     }
                 }
             ]
-        }
+        },
+        "hasMap": "https://www.google.com/maps/search/?api=1&query=400+Rue+Barthélemy+Thimonnier,+69530+Brignais",
+        "sameAs": []
     }
     </script>
     
@@ -303,6 +368,7 @@
             </div>
             
             <div class="hidden xl:flex items-center space-x-8">
+                <a href="#cagnotte" class="font-medium text-neutral-600 hover:text-secondary transition-colors inline-flex items-center gap-1"><i class="fas fa-heart text-secondary text-sm"></i> Cagnotte</a>
                 <a href="#projet" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Projet</a>
                 <a href="#equipements" class="font-medium text-neutral-600 hover:text-primary transition-colors">Nos Équipements</a>
                 <a href="#equipe" class="font-medium text-neutral-600 hover:text-primary transition-colors">Notre Équipe</a>
@@ -357,6 +423,7 @@
         <!-- Mobile Menu -->
         <div class="xl:hidden hidden bg-white border-t" id="mobile-menu">
             <div class="container mx-auto px-4 py-4 space-y-4">
+                <a href="#cagnotte" class="block font-medium hover:text-secondary transition-colors"><i class="fas fa-heart text-secondary mr-2"></i>Cagnotte</a>
                 <a href="#projet" class="block font-medium hover:text-primary transition-colors">Notre Projet</a>
                 <a href="#equipements" class="block font-medium hover:text-primary transition-colors">Nos Équipements</a>
                 <a href="#equipe" class="block font-medium hover:text-primary transition-colors">Notre Équipe</a>
@@ -425,6 +492,29 @@
                     Rejoindre R'MouV
                 </a>
             </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cagnotte MÁS - Appel à soutien -->
+    <section id="cagnotte" class="relative py-12 md:py-16 bg-gradient-to-r from-secondary/15 via-primary/10 to-secondary/15 border-y-2 border-secondary/30">
+        <div class="container mx-auto px-4">
+            <div class="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+                <div class="flex-1 text-center md:text-left">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-secondary/20 text-secondary mb-4">
+                        <i class="fas fa-heart text-2xl"></i>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-neutral-800 mb-2">Aidez-nous à acquérir le MÁS</h2>
+                    <p class="text-neutral-700 text-lg">
+                        Le <strong>Mobility Activation Station</strong> est une aide unique à la verticalisation et à la marche. Nous avons ouvert une <strong>cagnotte participative</strong> pour l'importer en France et le rendre accessible à tous. À plusieurs, nous sommes plus forts&nbsp;!
+                    </p>
+                </div>
+                <div class="flex-shrink-0 flex flex-col items-center md:items-end gap-3">
+                    <a href="https://www.onparticipe.fr/c/1oQzXy7e" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/90 text-white font-bold py-4 px-8 rounded-full transition-all shadow-lg text-lg whitespace-nowrap">
+                        <i class="fas fa-hand-holding-heart"></i> Je participe à la cagnotte
+                    </a>
+                    <a href="projet.html#mas" class="text-primary font-semibold text-sm hover:underline">En savoir plus sur le MÁS</a>
+                </div>
             </div>
         </div>
     </section>
@@ -528,7 +618,7 @@
                 <!-- Huber 360 -->
                 <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
                     <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360" class="w-20 h-20 object-contain rounded-full">
+                        <img src="Images/Huber 360.png.png?v=2" alt="Huber 360 - Plateforme de rééducation de la posture et de l'équilibre à R'MouV Brignais" class="w-20 h-20 object-contain rounded-full" loading="lazy">
                     </div>
                     <h3 class="text-xl font-bold mb-2">Huber 360</h3>
                     <p class="text-neutral-600">Plateforme de rééducation de la posture, de l'équilibre, de la souplesse et de la mobilité</p>
@@ -537,7 +627,7 @@
                 <!-- Méthode Allyane -->
                 <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
                     <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane" class="w-20 h-20 object-contain rounded-full">
+                        <img src="Images/Méthode Allyane.png?v=2" alt="Méthode Allyane - Reprogrammation neuromusculaire par imagerie mentale à R'MouV" class="w-20 h-20 object-contain rounded-full" loading="lazy">
                     </div>
                     <h3 class="text-xl font-bold mb-2">Méthode Allyane</h3>
                     <p class="text-neutral-600">Reprogrammation neuromusculaire par imagerie mentale et sons basse fréquence pour traiter les inhibitions motrices</p>
@@ -546,7 +636,7 @@
                 <!-- Réalité Virtuelle Thérapeutique -->
                 <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
                     <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique" class="w-20 h-20 object-contain rounded-full">
+                        <img src="Images/Réalité Virtuelle Thérapeutique.png?v=2" alt="Réalité Virtuelle Thérapeutique - Rééducation musculaire ludique favorisant l'équilibre" class="w-20 h-20 object-contain rounded-full" loading="lazy">
                     </div>
                     <h3 class="text-xl font-bold mb-2">Réalité virtuelle thérapeutique</h3>
                     <p class="text-neutral-600">Rééducation musculaire ludique favorisant l'équilibre et lutte contre la kinésiophobie</p>
@@ -555,7 +645,7 @@
                 <!-- Stendo -->
                 <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
                     <div class="w-24 h-24 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Stendo.png?v=2" alt="Stendo" class="w-20 h-20 object-contain rounded-full">
+                        <img src="Images/Stendo.png?v=2" alt="Stendo - Pulsothérapie cardio-synchronisée pour mobilisation tissulaire" class="w-20 h-20 object-contain rounded-full" loading="lazy">
                     </div>
                     <h3 class="text-xl font-bold mb-2">Stendo</h3>
                     <p class="text-neutral-600">Pulsothérapie : mobilisation tissulaire cardio-synchronisée, stimulation endothéliale, amélioration de la circulation sanguine</p>
@@ -564,7 +654,7 @@
                 <!-- Vibra Moov -->
                 <div class="bg-white p-6 rounded-xl shadow-sm text-center w-full card-hover transition-all">
                     <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
-                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov" class="w-20 h-20 object-contain rounded-full">
+                        <img src="Images/Vibra Moov.png?v=2" alt="Vibra Moov - Stimulateur proprioceptif par vibration pour mobilité et antalgie" class="w-20 h-20 object-contain rounded-full" loading="lazy">
                         </div>
                     <h3 class="text-xl font-bold mb-2">Vibramoov</h3>
                     <p class="text-neutral-600">Stimulateur proprioceptif par vibration, agit sur la mobilité, l'antalgie, la spasticité et la tonicité, accélère la récupération</p>
@@ -591,7 +681,7 @@
             <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all text-center">
                     <div class="w-full h-48 md:h-56 overflow-hidden">
-                        <img src="Images/Jeromine.jpg" alt="Jérômine Paso" class="h-full w-full object-cover" style="object-position: 50% 26%;">
+                        <img src="Images/Jeromine.jpg" alt="Jérômine Paso - Kinésithérapeute DU périnéologie à R'MouV Brignais" class="h-full w-full object-cover" style="object-position: 50% 26%;" loading="lazy">
                     </div>
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-neutral-800">Jérômine Paso</h3>
@@ -601,7 +691,7 @@
                 
                 <div class="bg-white rounded-xl overflow-hidden shadow-md card-hover transition-all text-center">
                     <div class="w-full h-48 md:h-56 overflow-hidden">
-                        <img src="Images/Camille.jpg" alt="Camille Simonklein" class="h-full w-full object-cover" style="object-position: 50% 35%;">
+                        <img src="Images/Camille.jpg" alt="Camille Simonklein - Coach sportive et réathlétisation à R'MouV Brignais" class="h-full w-full object-cover" style="object-position: 50% 35%;" loading="lazy">
                     </div>
                     <div class="p-6">
                         <h3 class="text-xl font-bold text-neutral-800">Camille Simonklein</h3>
@@ -642,7 +732,7 @@
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
                     <div class="flex items-center space-x-3 mb-4">
-                        <img src="Images/Logo.png" alt="Logo R'MouV" class="h-12 w-12 object-contain">
+                        <img src="Images/Logo.png" alt="Logo R'MouV - Centre sport-santé Brignais" class="h-12 w-12 object-contain" loading="lazy">
                         <div>
                             <h3 class="text-xl font-bold"><span class="text-primary">R'</span><span class="text-secondary">MouV</span></h3>
                             <p class="text-sm text-neutral-400">Rehab ton MouV</p>
@@ -683,7 +773,7 @@
             
             <div class="border-t border-neutral-700 mt-12 pt-8 text-center text-neutral-400">
                 <p class="flex items-center justify-center gap-3">
-                    <img src="Images/Logo.png" alt="Logo R'MouV" class="h-6 w-6 object-contain">
+                    <img src="Images/Logo.png" alt="Logo R'MouV - Centre sport-santé Brignais" class="h-6 w-6 object-contain" loading="lazy">
                     <span>&copy; 2024 R'MouV - Rehab ton MouV. Tous droits réservés.</span>
                 </p>
             </div>

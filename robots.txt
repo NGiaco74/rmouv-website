@@ -1,10 +1,18 @@
+# robots.txt pour R'MouV - Centre sport-santé
+# https://rmouv.fr
+
 User-agent: *
 Allow: /
+
+# Pages d'administration et de test - Ne pas indexer
+Disallow: /admin.html
+Disallow: /admin-login.html
+Disallow: /test.html
+Disallow: /test-form.html
+Disallow: /auth/
 
 # Sitemap
 Sitemap: https://rmouv.fr/sitemap.xml
 
-# Disallow admin pages
-Disallow: /admin.html
-Disallow: /admin-login.html
-Disallow: /test.html
+# Crawl-delay (optionnel - pour éviter de surcharger le serveur)
+# Crawl-delay: 1
