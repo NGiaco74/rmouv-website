@@ -1359,6 +1359,14 @@ async function displayToday(forceReload = false) {
     
     console.log('📋 Réservations finales avec profils:', bookings);
     
+    // Patients ayant au moins un commentaire (pour icône dans la vue Aujourd'hui)
+    const allPatientIdsToday = [...new Set(bookings.map(b => b.user_id || b.linked_patient_id).filter(Boolean))];
+    let patientIdsWithCommentsToday = new Set();
+    if (allPatientIdsToday.length > 0) {
+        const { data: commentsRows } = await adminState.supabase.from('patient_comments').select('patient_id').in('patient_id', allPatientIdsToday);
+        if (commentsRows && commentsRows.length > 0) patientIdsWithCommentsToday = new Set(commentsRows.map(r => r.patient_id));
+    }
+    
     const bookingsList = bookings || [];
     // Utiliser le nombre réel de réservations au lieu de current_bookings
     const actualBookings = bookingsList.length;
@@ -1460,8 +1468,9 @@ async function displayToday(forceReload = false) {
                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0 group-hover:scale-110 transition-transform">
                                 ${userName.charAt(0).toUpperCase()}
                             </div>
-                            <div class="min-w-0 flex-1">
+                            <div class="min-w-0 flex-1 flex items-center gap-1.5">
                                 <p class="font-medium text-gray-800 text-sm sm:text-base truncate group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</p>
+                                ${patientIdsWithCommentsToday.has(patientId) ? '<i class="fas fa-comment text-primary flex-shrink-0" title="A des commentaires"></i>' : ''}
                             </div>
                             <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                         </div>
@@ -1693,6 +1702,7 @@ async function displayToday(forceReload = false) {
                                         ${userName.charAt(0).toUpperCase()}
                                     </div>
                                     <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</span>
+                                    ${patientIdsWithCommentsToday.has(patientId) ? '<i class="fas fa-comment text-primary flex-shrink-0" title="A des commentaires"></i>' : ''}
                                     <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                                 </div>
                                 <button onclick="cancelParticipantBooking('${booking.id}', '${slot.id}'); event.stopPropagation();" 
@@ -1906,6 +1916,14 @@ async function displaySlotsList(forceReload = false) {
     
     console.log('📋 Toutes les réservations finales avec profils:', allBookings);
     
+    // Patients ayant au moins un commentaire (pour icône dans la vue Réservations)
+    const allPatientIdsList = [...new Set(allBookings.map(b => b.user_id || b.linked_patient_id).filter(Boolean))];
+    let patientIdsWithCommentsList = new Set();
+    if (allPatientIdsList.length > 0) {
+        const { data: commentsRowsList } = await adminState.supabase.from('patient_comments').select('patient_id').in('patient_id', allPatientIdsList);
+        if (commentsRowsList && commentsRowsList.length > 0) patientIdsWithCommentsList = new Set(commentsRowsList.map(r => r.patient_id));
+    }
+    
     // Grouper les réservations par créneau (en utilisant date, time, service_type)
     const bookingsBySlot = {};
     if (allBookings && allBookings.length > 0) {
@@ -2087,6 +2105,7 @@ async function displaySlotsList(forceReload = false) {
                                     ${userName.charAt(0).toUpperCase()}
                                 </div>
                                 <span class="text-gray-700 flex-1 font-medium group-hover:text-primary transition-colors">${userName}${isLinkedPatient ? ' (Patient lié)' : ''}</span>
+                                ${patientIdsWithCommentsList.has(patientId) ? '<i class="fas fa-comment text-primary flex-shrink-0" title="A des commentaires"></i>' : ''}
                                 <i class="fas fa-chevron-right text-gray-400 text-xs group-hover:text-primary group-hover:translate-x-1 transition-all"></i>
                             </div>
                             <button onclick="cancelParticipantBooking('${booking.id}', '${slot.id}'); event.stopPropagation();" 
@@ -2842,6 +2861,14 @@ async function displayBookingsList() {
         return;
     }
     
+    // Patients ayant au moins un commentaire (pour icône sur les cartes)
+    const allPatientIdsBookingsList = [...new Set(futureBookings.map(b => b.user_id || b.linked_patient_id).filter(Boolean))];
+    let patientIdsWithCommentsBookingsList = new Set();
+    if (allPatientIdsBookingsList.length > 0) {
+        const { data: commentsRowsBookings } = await adminState.supabase.from('patient_comments').select('patient_id').in('patient_id', allPatientIdsBookingsList);
+        if (commentsRowsBookings && commentsRowsBookings.length > 0) patientIdsWithCommentsBookingsList = new Set(commentsRowsBookings.map(r => r.patient_id));
+    }
+    
     // Générer le HTML
     let html = '<div class="space-y-3 sm:space-y-4">';
     
@@ -2900,6 +2927,7 @@ async function displayBookingsList() {
         const detailPatientId = booking.linked_patient_id || booking.user_id;
         const detailIsLinked = !!booking.linked_patient_id;
         const detailOnclick = detailPatientId ? `showPatientDetails('${detailPatientId}', ${detailIsLinked}); event.stopPropagation();` : 'event.stopPropagation();';
+        const hasCommentsIcon = detailPatientId && patientIdsWithCommentsBookingsList.has(detailPatientId);
         
         html += `
             <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
@@ -2909,7 +2937,7 @@ async function displayBookingsList() {
                             ${userName.charAt(0).toUpperCase()}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold text-gray-800 text-base sm:text-lg group-hover:text-primary transition-colors">${userName}</h3>
+                            <h3 class="font-semibold text-gray-800 text-base sm:text-lg group-hover:text-primary transition-colors flex items-center gap-1.5 flex-wrap">${userName}${hasCommentsIcon ? '<i class="fas fa-comment text-primary flex-shrink-0" title="A des commentaires"></i>' : ''}</h3>
                             <p class="text-sm text-gray-600 mt-1">
                                 <i class="fas fa-calendar mr-1"></i>${formattedDate}
                             </p>
@@ -4570,13 +4598,12 @@ async function savePatientComment(commentId, patientId, isLinkedPatient = false)
             return;
         }
         
-        // Mettre à jour le commentaire
+        // Mettre à jour le commentaire (sans updated_at si la colonne n'existe pas en base)
         const { error: updateError } = await adminState.supabase
             .from('patient_comments')
             .update({
                 comment: commentText.trim(),
-                comment_type: commentType,
-                updated_at: new Date().toISOString()
+                comment_type: commentType
             })
             .eq('id', commentId);
         
