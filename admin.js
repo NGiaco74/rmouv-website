@@ -2896,11 +2896,15 @@ async function displayBookingsList() {
         
         // Ne pas afficher le bouton annuler si la réservation est déjà annulée
         const canCancel = booking.status === 'confirmed';
+        // Pour le clic détail: patient lié => linked_patient_id + true, sinon user_id + false (évite profiles?id=eq.null)
+        const detailPatientId = booking.linked_patient_id || booking.user_id;
+        const detailIsLinked = !!booking.linked_patient_id;
+        const detailOnclick = detailPatientId ? `showPatientDetails('${detailPatientId}', ${detailIsLinked}); event.stopPropagation();` : 'event.stopPropagation();';
         
         html += `
             <div class="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 shadow-sm">
                 <div class="flex items-start gap-3 sm:gap-4">
-                    <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all" onclick="showPatientDetails('${booking.user_id}'); event.stopPropagation();">
+                    <div class="flex items-center gap-2 sm:gap-3 flex-1 cursor-pointer hover:bg-primary/10 active:bg-primary/20 rounded-lg p-1.5 sm:p-2 -m-1.5 sm:-m-2 transition-all" onclick="${detailOnclick}">
                         <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm sm:text-base flex-shrink-0 hover:scale-110 transition-transform">
                             ${userName.charAt(0).toUpperCase()}
                         </div>
@@ -3655,18 +3659,30 @@ async function displayPatients() {
             return;
         }
         
-        // Récupérer tous les patients liés
-        const { data: linkedPatients, error: linkedError } = await adminState.supabase
+        // Récupérer tous les patients liés (sans relation profiles pour éviter id=eq.null si linked_to_user_id null)
+        const { data: linkedPatientsRaw, error: linkedError } = await adminState.supabase
             .from('linked_patients')
-            .select(`
-                *,
-                linked_account:profiles!linked_to_user_id(id, email, first_name, last_name)
-            `)
+            .select('*')
             .order('last_name', { ascending: true })
             .order('first_name', { ascending: true });
         
         if (linkedError) {
             console.error('❌ Erreur chargement patients liés:', linkedError);
+        }
+        
+        // Charger les comptes parent (profiles) uniquement pour les linked_to_user_id non null
+        let linkedPatients = (linkedPatientsRaw || []).map(p => ({ ...p, linked_account: null }));
+        const linkedToUserIds = [...new Set((linkedPatientsRaw || []).map(p => p.linked_to_user_id).filter(Boolean))];
+        if (linkedToUserIds.length > 0) {
+            const { data: accountProfiles } = await adminState.supabase
+                .from('profiles')
+                .select('id, email, first_name, last_name')
+                .in('id', linkedToUserIds);
+            const accountMap = (accountProfiles || []).reduce((acc, pr) => { acc[pr.id] = pr; return acc; }, {});
+            linkedPatients = linkedPatients.map(p => ({
+                ...p,
+                linked_account: p.linked_to_user_id ? accountMap[p.linked_to_user_id] || null : null
+            }));
         }
         
         console.log('✅ Profils récupérés:', profiles?.length || 0);
@@ -4200,6 +4216,10 @@ async function handlePatientFormSubmit(event) {
 
 // Afficher les détails d'un patient avec commentaires
 async function showPatientDetails(patientId, isLinkedPatient = false) {
+    if (!patientId) {
+        console.warn('showPatientDetails appelé sans id patient');
+        return;
+    }
     const modal = document.getElementById('patient-details-modal');
     const title = document.getElementById('patient-details-title');
     const content = document.getElementById('patient-details-content');
@@ -4210,22 +4230,28 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
         let patient;
         
         if (isLinkedPatient) {
-            // Charger un patient lié avec les infos du compte parent
-            const { data, error: patientError } = await adminState.supabase
+            // Charger le patient lié sans la relation profiles (évite profiles?id=eq.null si linked_to_user_id est null)
+            const { data: linkedData, error: patientError } = await adminState.supabase
                 .from('linked_patients')
-                .select(`
-                    *,
-                    linked_account:profiles!linked_to_user_id(id, email, first_name, last_name)
-                `)
+                .select('*')
                 .eq('id', patientId)
                 .single();
             
-            if (patientError || !data) {
+            if (patientError || !linkedData) {
                 alert('Erreur lors du chargement du patient lié');
                 return;
             }
             
-            patient = data;
+            patient = { ...linkedData, linked_account: null };
+            // Charger le compte parent uniquement si linked_to_user_id est défini (évite requête id=eq.null)
+            if (linkedData.linked_to_user_id) {
+                const { data: accountData } = await adminState.supabase
+                    .from('profiles')
+                    .select('id, email, first_name, last_name')
+                    .eq('id', linkedData.linked_to_user_id)
+                    .maybeSingle();
+                if (accountData) patient.linked_account = accountData;
+            }
         } else {
             // Charger un profil (compte personnel)
             const { data, error: patientError } = await adminState.supabase
@@ -4242,22 +4268,18 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
             patient = data;
         }
         
-        // Charger les commentaires (pour les patients liés, on utilise aussi patient_comments mais avec patient_id = linked_patient.id)
-        // Note: Il faudrait peut-être créer une table séparée pour les commentaires des patients liés
-        // Pour l'instant, on ne charge les commentaires que pour les comptes personnels
+        // Charger les commentaires (même table pour profils et patients liés ; patient_id = id profil ou id patient lié)
         let comments = [];
-        if (!isLinkedPatient) {
-            const { data: commentsData, error: commentsError } = await adminState.supabase
-                .from('patient_comments')
-                .select('*')
-                .eq('patient_id', patientId)
-                .order('created_at', { ascending: false });
-            
-            if (commentsError) {
-                console.error('Erreur chargement commentaires:', commentsError);
-            } else {
-                comments = commentsData || [];
-            }
+        const { data: commentsData, error: commentsError } = await adminState.supabase
+            .from('patient_comments')
+            .select('*')
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false });
+        
+        if (commentsError) {
+            console.error('Erreur chargement commentaires:', commentsError);
+        } else {
+            comments = commentsData || [];
         }
         
         // Récupérer l'utilisateur actuel pour vérifier les permissions
@@ -4299,14 +4321,13 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
                     </div>
                 </div>
                 
-                <!-- Section commentaires (uniquement pour les comptes personnels) -->
-                ${!isLinkedPatient ? `
+                <!-- Section commentaires (comptes personnels et patients liés) -->
                 <div class="border-t pt-6">
                     <h4 class="text-lg font-semibold mb-4">Commentaires</h4>
                     
                     <!-- Formulaire d'ajout de commentaire -->
                     <div class="bg-blue-50 rounded-lg p-4 mb-4">
-                        <form id="add-comment-form" onsubmit="event.preventDefault(); addPatientComment('${patientId}');">
+                        <form id="add-comment-form" onsubmit="event.preventDefault(); addPatientComment('${patientId}', ${isLinkedPatient});">
                             <div class="mb-3">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Type de commentaire</label>
                                 <select id="comment-type" class="w-full px-3 py-2 border border-gray-300 rounded-md">
@@ -4330,10 +4351,8 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
                     <div id="comments-list" class="space-y-3">
                         ${comments && comments.length > 0 
                             ? comments.map(comment => {
-                                // Vérifier si l'utilisateur actuel est l'auteur du commentaire
                                 const isAuthor = currentUser && comment.created_by === currentUser.id;
                                 const wasUpdated = comment.updated_at && comment.updated_at !== comment.created_at;
-                                
                                 return `
                                 <div class="bg-white border border-gray-200 rounded-lg p-4" id="comment-${comment.id}">
                                     <div class="flex justify-between items-start mb-2">
@@ -4347,10 +4366,10 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">${getCommentTypeLabel(comment.comment_type)}</span>
                                             ${isAuthor ? `
-                                                <button onclick="editPatientComment('${comment.id}', '${patientId}')" class="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50" title="Modifier">
+                                                <button onclick="editPatientComment('${comment.id}', '${patientId}', ${isLinkedPatient})" class="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50" title="Modifier">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button onclick="deletePatientComment('${comment.id}', '${patientId}')" class="text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50" title="Supprimer">
+                                                <button onclick="deletePatientComment('${comment.id}', '${patientId}', ${isLinkedPatient})" class="text-xs text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50" title="Supprimer">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             ` : ''}
@@ -4364,7 +4383,6 @@ async function showPatientDetails(patientId, isLinkedPatient = false) {
                         }
                     </div>
                 </div>
-                ` : '<div class="border-t pt-6"><p class="text-gray-500 text-center py-4">Les commentaires ne sont pas disponibles pour les patients liés.</p></div>'}
             </div>
         `;
         
@@ -4395,8 +4413,8 @@ function closePatientDetailsModal() {
     }
 }
 
-// Ajouter un commentaire pour un patient
-async function addPatientComment(patientId) {
+// Ajouter un commentaire pour un patient (compte personnel ou patient lié)
+async function addPatientComment(patientId, isLinkedPatient = false) {
     const commentText = document.getElementById('comment-text').value;
     const commentType = document.getElementById('comment-type').value;
     
@@ -4419,7 +4437,7 @@ async function addPatientComment(patientId) {
             ? `${currentProfile.first_name || ''} ${currentProfile.last_name || ''}`.trim() || user.email
             : user.email;
         
-        // Créer le commentaire
+        // Créer le commentaire (patient_id = id profil ou id patient lié)
         const { error } = await adminState.supabase
             .from('patient_comments')
             .insert({
@@ -4433,7 +4451,7 @@ async function addPatientComment(patientId) {
         if (error) throw error;
         
         // Réafficher les détails du patient (pour mettre à jour les commentaires)
-        await showPatientDetails(patientId);
+        await showPatientDetails(patientId, isLinkedPatient);
         
         // Réinitialiser le formulaire
         document.getElementById('comment-text').value = '';
@@ -4445,7 +4463,7 @@ async function addPatientComment(patientId) {
 }
 
 // Modifier un commentaire patient
-async function editPatientComment(commentId, patientId) {
+async function editPatientComment(commentId, patientId, isLinkedPatient = false) {
     try {
         // Récupérer le commentaire
         const { data: comment, error: commentError } = await adminState.supabase
@@ -4487,7 +4505,7 @@ async function editPatientComment(commentId, patientId) {
                     <textarea id="edit-comment-text-${commentId}" rows="3" required class="w-full px-3 py-2 border border-gray-300 rounded-md">${comment.comment}</textarea>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="savePatientComment('${commentId}', '${patientId}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm">
+                    <button onclick="savePatientComment('${commentId}', '${patientId}', ${isLinkedPatient})" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm">
                         <i class="fas fa-check mr-1"></i>Enregistrer
                     </button>
                     <button onclick="cancelEditComment('${commentId}', '${patientId}')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm">
@@ -4524,7 +4542,7 @@ function cancelEditComment(commentId, patientId) {
 }
 
 // Enregistrer un commentaire modifié
-async function savePatientComment(commentId, patientId) {
+async function savePatientComment(commentId, patientId, isLinkedPatient = false) {
     try {
         const commentText = document.getElementById(`edit-comment-text-${commentId}`).value;
         const commentType = document.getElementById(`edit-comment-type-${commentId}`).value;
@@ -4565,7 +4583,7 @@ async function savePatientComment(commentId, patientId) {
         if (updateError) throw updateError;
         
         // Réafficher les détails du patient (pour mettre à jour les commentaires)
-        await showPatientDetails(patientId);
+        await showPatientDetails(patientId, isLinkedPatient);
         
     } catch (error) {
         console.error('Erreur savePatientComment:', error);
@@ -4574,7 +4592,7 @@ async function savePatientComment(commentId, patientId) {
 }
 
 // Supprimer un commentaire patient
-async function deletePatientComment(commentId, patientId) {
+async function deletePatientComment(commentId, patientId, isLinkedPatient = false) {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce commentaire ?')) {
         return;
     }
@@ -4607,7 +4625,7 @@ async function deletePatientComment(commentId, patientId) {
         if (deleteError) throw deleteError;
         
         // Réafficher les détails du patient (pour mettre à jour les commentaires)
-        await showPatientDetails(patientId);
+        await showPatientDetails(patientId, isLinkedPatient);
         
     } catch (error) {
         console.error('Erreur deletePatientComment:', error);
